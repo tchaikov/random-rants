@@ -698,7 +698,7 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);
                 >，则是相反的操作。
               </li>
               <li>
-                如果是销毁这个用户态线程，则直接
+                如果希望销毁这个用户态线程，则直接
                 <code class="language-plaintext highlighter-rouge"
                   >longjmp(link-&gt;jmpbuf)</code
                 >
