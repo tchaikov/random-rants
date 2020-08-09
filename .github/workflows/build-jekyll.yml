@@ -9,20 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2.3.1
+        uses: actions/checkout@v2
         with:
           persist-credentials: false
-      - name: cache
-        uses: actions/cache@v1
+      - name: setup ruby
+        uses: ruby/setup-ruby@v1
         with:
-          path: vendor/bundle
-          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-gems-
-      - name: deploy
-        uses: helaili/jekyll-action@master
-        env:
-          JEKYLL_PAT: ${{ secrets.JEKYLL_PAT }}
+          ruby-version: 2.7
+      - name: install dependencies & build site
+        uses: limjh16/jekyll-action-ts@v2
         with:
+          enable_cache: true
+          format_output: true
+          prettier_ignore: 'about/*'
           jekyll_src: 'docs'
           gem_src: '.'
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: ${{ runner.os }}-gems-
+      - name: deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
