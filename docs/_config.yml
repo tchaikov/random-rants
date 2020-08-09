@@ -1,0 +1,12 @@
+title: some random rants
+email: tchaikov@gmail.com
+description: >-
+  我的学习记录
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+github_username:  tchaikov
+
+# Build settings
+theme: minima
+plugins:
+  - jekyll-feed
