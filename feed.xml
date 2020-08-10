@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2020-08-09T19:18:42+00:00</updated><id>/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">longjmp 和 setcontext</title><link href="/parallel/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>/parallel/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="/parallel/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
-没有特殊说明的话，下面都以 amd64 和现代的 Linux 为例。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2020-08-10T04:32:11+00:00</updated><id>/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">longjmp 和 setcontext</title><link href="/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
+因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
 
 &lt;h2 id=&quot;协程的由来&quot;&gt;协程的由来&lt;/h2&gt;
 
@@ -51,14 +51,14 @@
 
 &lt;p&gt;x86 很贴心的提供了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RET&lt;/code&gt; 两个指令。前者把 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%ip&lt;/code&gt; 压栈，再根据 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL&lt;/code&gt; 的参数更新 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%ip&lt;/code&gt;。要是大家还能回忆相对寻址、绝对寻址的话，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL&lt;/code&gt; 是支持这些寻址方式的。要是目标地址不在一个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%cs&lt;/code&gt; 段，它还能把当前 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%cs&lt;/code&gt; 也一并保存了。&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RET&lt;/code&gt; 执行的是相反的功能。它把栈上的地址恢复回 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%cs&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%ip&lt;/code&gt;，如果 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RET&lt;/code&gt; 还有参数的话，还顺带着把栈上的垃圾清理一下，也就是退栈。通常来说，调用方会把一些参数放到栈上，而参数的个数一般是确定的。所以被调用方在返回的时候，把那些参数从栈上清除也是理所当然的事情。&lt;/p&gt;
 
-&lt;p&gt;可以说 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RET&lt;/code&gt; 给了线程订了一张往返票，让它从一个地方走到另外一个地方出个差，然后再回来。 除了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%ip&lt;/code&gt;，根据 x86-64 的调用规范，在函数调用的时候，下面的寄存器是调用方负责的:&lt;/p&gt;
+&lt;p&gt;可以说 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RET&lt;/code&gt; 给了线程订了一张往返票，让它从一个地方走到另外一个地方出个差，然后再回来。 除了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%ip&lt;/code&gt;，根据 amd64 或者 x86-64 的 ABI 调用规范，在函数调用的时候，下面的寄存器是调用方负责的:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;​&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rax&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;​&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rcx​&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;​%rdx&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;​%rdi&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;​%rsi&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rdi&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rsi&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%r8&lt;/code&gt; 到 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%r11&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -68,8 +68,8 @@
 
 &lt;ul&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rbx&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rsp&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rbp&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%rsp&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%r12&lt;/code&gt; 到 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%r15&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -108,6 +108,13 @@
 &lt;/ul&gt;
 
 &lt;p&gt;可以参考 &lt;a href=&quot;http://git.musl-libc.org/cgit/musl/tree/src/setjmp/x86_64/setjmp.s&quot;&gt;musl-libc 的实现&lt;/a&gt;。可以说 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setjmp()&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp()&lt;/code&gt; 是相当简练的。只提供了两个功能，一个是记录当前的位置，另一个是跳转到指定的位置。&lt;/p&gt;
+
+&lt;p&gt;但是 &lt;a href=&quot;https://sourceware.org/git/?p=glibc.git;a=blob;f=setjmp/longjmp.c;h=686ab1964b4cf5848cd7505d6ca2c00dce5722aa;hb=HEAD&quot;&gt;glibc 的 longjmp&lt;/a&gt; 还更啰嗦一些，它在调用平台相关的&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__longjmp()&lt;/code&gt;之前，还调用了&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_longjmp_unwind()&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__sigprocmask()&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
 
 &lt;h3 id=&quot;libc-的-context&quot;&gt;libc 的 context&lt;/h3&gt;
 
@@ -157,4 +164,26 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);
   &lt;li&gt;下一次要 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;yield&lt;/code&gt; 就简单很多，只需要 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setjmp(this-&amp;gt;jmpbuf)&lt;/code&gt;，然后 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp(link-&amp;gt;jmpbuf)&lt;/code&gt; 就行了。&lt;/li&gt;
   &lt;li&gt;类似的，如果是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;resume&lt;/code&gt;，则是相反的操作。&lt;/li&gt;
   &lt;li&gt;如果希望销毁这个用户态线程，则直接 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp(link-&amp;gt;jmpbuf)&lt;/code&gt; 。跳过保留上下文的步骤。&lt;/li&gt;
-&lt;/ol&gt;</content><author><name></name></author><category term="parallel" /><summary type="html">这篇文章起源于 seastar-devel 上的一个讨论。在开始之前，我们先说一下协程的背景。 没有特殊说明的话，下面都以 amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T05:10:10+00:00</published><updated>2020-08-08T05:10:10+00:00</updated><id>/misc/2020/08/08/hello-world</id><content type="html" xml:base="/misc/2020/08/08/hello-world.html">&lt;p&gt;为了记录，也为了提高自己，写个 blog。&lt;/p&gt;</content><author><name></name></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;boostcontext&quot;&gt;Boost::context&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Boost::context&lt;/code&gt; 用汇编实现了平台相关的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcontext_t&lt;/code&gt; ，它的性能据说比 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ucontext_&lt;/code&gt; &lt;a href=&quot;https://www.boost.org/doc/libs/1_73_0/libs/context/doc/html/context/performance.html&quot;&gt;高一到两个数量级&lt;/a&gt; 。&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcontext_&lt;/code&gt; &lt;a href=&quot;https://github.com/boostorg/context/blob/7c481a8fb6db3a3b6c981e7b27f02064d1efb499/src/asm/jump_x86_64_sysv_elf_gas.S&quot;&gt;保存的上下文&lt;/a&gt; 有&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MXCSR&lt;/code&gt; 中的控制字。x86 上 &lt;a href=&quot;https://xem.github.io/minix86/manual/intel-x86-and-64-manual-vol1/o_7281d5ea06a5b67a-240.html&quot;&gt;SSE/SSE2 用于保存浮点控制和状态的寄存器&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;FPCR&lt;/code&gt; 即 X87 FPU control word。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;这两个寄存器状态和 &lt;a href=&quot;https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions&quot;&gt;Intel TSX&lt;/a&gt; 机制有关系。TSX (Intel Transactional Synchronisation Extensions) 是 Intel 实现的硬件内存事务机制，可以粗略地理解，它使用 L1 cache 跟踪读集合和写集合，如果出现冲突的话，就放弃当前核上的修改，不把它刷到内存里面去，导致不一致。我们可以在另外一篇文章里面继续讨论内存一致性、可见性和多核系统里面乱序执行的问题。不过这里保存它们的原因是因为，如果浮点 TSX 的事务中发现浮点状态字有变化，那么这个事务肯定会&lt;a href=&quot;https://www.boost.org/doc/libs/master/libs/fiber/doc/html/fiber/speculation.html&quot;&gt;终止&lt;/a&gt;。所以为了支持 TSX，Boost 也保存这些浮点寄存器。顺便说一下，内核里面是不能用浮点操作的。所以那边我们不需要关心这种问题。&lt;/p&gt;
+
+&lt;p&gt;基于这套实现，Boost 实现了自己的协程库。&lt;/p&gt;
+
+&lt;p&gt;seastar-devel 上的&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt; 也是围绕着这一点。 Christian 觉得手工实现 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp()&lt;/code&gt; 会比较高效。Avi 提到当初他也考虑过 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Boost::context&lt;/code&gt;。因为它比较简单明了，同时没有 glibc 中 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_longjmp_unwind()&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__sigprocmask()&lt;/code&gt; 的开销，所以对于广大的 glibc 用户来说，使用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Boost::context&lt;/code&gt; 性能会更好一些。 不过 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Boost::context&lt;/code&gt; 在 1.55/1.56 中的实现还不成熟。为了精炼版的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp()&lt;/code&gt;，只能有两条路，&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;要求用户使用新版的 Boost&lt;/li&gt;
+  &lt;li&gt;把 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcontext_t&lt;/code&gt; 使用的汇编代码移植到 Seastar 里面去。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;不过 Avi 提到，glibc 中的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp()&lt;/code&gt; 在上下文切换操作中占用的时间其实并不算多。所以就没有必要手撸汇编了。&lt;/p&gt;</content><author><name></name></author><category term="x86" /><summary type="html">这篇文章起源于 seastar-devel 上的一个讨论。在开始之前，我们先说一下协程的背景。 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T05:10:10+00:00</published><updated>2020-08-08T05:10:10+00:00</updated><id>/misc/2020/08/08/hello-world</id><content type="html" xml:base="/misc/2020/08/08/hello-world.html">&lt;p&gt;为了记录，也为了提高自己，写个 blog。&lt;/p&gt;</content><author><name></name></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>
