@@ -123,7 +123,7 @@ x86 很贴心的提供了 ``CALL`` 和 ``RET`` 两个指令。前者把 ``%ip`` 
 - 过于完整的线程支持。``setcontext()`` 和 ``swapcontext()`` 除了做了 ``longjmp()`` 的工作，还：
   - 用系统调用设置 ``sigprocmask``
   - 设置 ``%fs``，这是段寄存器。TLS 的变量都保存在这里面。
-- 不跨平台。[POSIX.1][6] 已经把这几个函数去掉了。musl-libc 干脆不实现他们。
+- 不跨平台。[POSIX.1][6] 已经把这几个函数去掉了。musl-libc 干脆[12][不实现他们]。
 - 把 ``context`` 串起来。调用当初设置的函数，要是执行完了，看看 ``uc_link``，要是还有下一个 context。有的话，再调用 ``setcontext()``，开始执行它。
 
 ### Seastar 的 thread
@@ -175,3 +175,4 @@ seastar-devel 上的[讨论][1] 也是围绕着这一点。 Christian 觉得手�
 [9]: https://xem.github.io/minix86/manual/intel-x86-and-64-manual-vol1/o_7281d5ea06a5b67a-240.html
 [10]: https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions
 [11]: https://www.boost.org/doc/libs/master/libs/fiber/doc/html/fiber/speculation.html
+[12]: https://wiki.musl-libc.org/open-issues.html#ucontext.h
