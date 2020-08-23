@@ -8,5 +8,6 @@ github_username:  tchaikov
 
 # Build settings
 theme: minima
+highlighter: rouge
 plugins:
   - jekyll-feed
