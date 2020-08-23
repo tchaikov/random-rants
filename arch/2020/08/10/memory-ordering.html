@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+    <title>多核和顺序 | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="多核和顺序" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      name="description"
+      content="两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。"
+    />
+    <meta
+      property="og:description"
+      content="两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。"
+    />
+    <link rel="canonical" href="/arch/2020/08/10/memory-ordering.html" />
+    <meta property="og:url" content="/arch/2020/08/10/memory-ordering.html" />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2020-08-10T15:44:17+00:00"
+    />
+    <script type="application/ld+json">
+      {
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "/arch/2020/08/10/memory-ordering.html"
+        },
+        "@type": "BlogPosting",
+        "description": "两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。",
+        "url": "/arch/2020/08/10/memory-ordering.html",
+        "headline": "多核和顺序",
+        "dateModified": "2020-08-10T15:44:17+00:00",
+        "datePublished": "2020-08-10T15:44:17+00:00",
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+    <link rel="stylesheet" href="/assets/main.css" />
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="/feed.xml"
+      title="some random rants"
+    />
+  </head>
+  <body>
+    <header class="site-header" role="banner">
+      <div class="wrapper">
+        <a class="site-title" rel="author" href="/">some random rants</a>
+        <nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewBox="0 0 18 15" width="18px" height="15px">
+                <path
+                  d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"
+                />
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+            <a class="page-link" href="/about/">About</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article
+          class="post h-entry"
+          itemscope
+          itemtype="http://schema.org/BlogPosting"
+        >
+          <header class="post-header">
+            <h1 class="post-title p-name" itemprop="name headline">
+              多核和顺序
+            </h1>
+            <p class="post-meta">
+              <time
+                class="dt-published"
+                datetime="2020-08-10T15:44:17+00:00"
+                itemprop="datePublished"
+                >Aug 10, 2020
+              </time>
+            </p>
+          </header>
+
+          <div class="post-content e-content" itemprop="articleBody">
+            <p>
+              两三天前，忽然发觉自己其实是不了解多核编程的。以前，<code
+                class="language-plaintext highlighter-rouge"
+                >mutex</code
+              >
+              和
+              <code class="language-plaintext highlighter-rouge"
+                >condition_variable</code
+              >
+              走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些
+              CPU 和内存的交互，这样对工作会更有帮助。
+            </p>
+
+            <h2 id="mutex-的问题">mutex 的问题</h2>
+
+            <p>
+              在多核环境下，要实现无锁编程或者尽量减少锁的使用，就不能用
+              mutex。其实，为了最大程度上优化，内核里的 mutex
+              在加锁的时候为了避免不必要的开销甚至分了<a
+                href="https://www.kernel.org/doc/html/latest/locking/mutex-design.html"
+                >三种情况</a
+              >：
+            </p>
+
+            <ol>
+              <li>
+                用
+                <code class="language-plaintext highlighter-rouge"
+                  >lock cmpxchg()</code
+                >
+                指令，检查 mutex 的 owner 是否为空。
+              </li>
+              <li>如果 mutex 的所有者正在运行，那么用 spin lock 等待它。</li>
+              <li>
+                把希望得到锁的线程阻塞，挂到等待队列。等到锁释放的时候，再调度自己。
+              </li>
+            </ol>
+
+            <p>
+              这个机制叫做
+              <code class="language-plaintext highlighter-rouge">futex</code
+              >。在 Linux、NetBSD、FreeBSD、Windows 以及
+              <a
+                href="https://fuchsia.dev/fuchsia-src/concepts/kernel/concepts#futexes"
+                >Zicron</a
+              >
+              中都实现了它。在 FreeBSD 中甚至有明确的 spin/sleep mutex 和 spin
+              mutex 的<a
+                href="https://www.freebsd.org/cgi/man.cgi?query=mutex&amp;sektion=9"
+                >概念</a
+              >。而在 Linux 中，futex 则是一个<a
+                href="https://www.man7.org/linux/man-pages/man2/futex.2.html"
+                >系统调用</a
+              >。
+            </p>
+
+            <p>不过，这些原语有两个问题</p>
+
+            <ul>
+              <li>
+                系统调用是个原罪。
+                <ul>
+                  <li>鉴权。</li>
+                  <li>
+                    切换栈。即使 x86 使用 syscall
+                    来实现系统调用，因为内核的地址空间和用户态程序不同，进入内核要求修改段寄存器，相应的带来
+                    TLB 的刷新。
+                  </li>
+                  <li>缓存的刷新。</li>
+                </ul>
+              </li>
+              <li>
+                <a
+                  href="https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_11"
+                  >POSIX.1</a
+                >
+                要求 mutex 同步内存。
+              </li>
+            </ul>
+
+            <p>
+              前者大家做了很多实验，说明不管如何系统调用都比
+              <code class="language-plaintext highlighter-rouge">longjmp</code>
+              的开销都要大很多。而今天我想把后者展开说一下。
+            </p>
+
+            <h2 id="内存一致性">内存一致性</h2>
+
+            <p>
+              首先，什么叫同步内存？在多核系统里面，每个核都有自己的一个小天地，为了加快对内存的访问，CPU
+              核在内存中间有多层的
+              cache。这个设计有点像现在大家说的朋友圈。根据一些权衡，这个朋友圈中的
+              cache 根据亲疏远近又分了三六九等，即 L1、L2 和 L3
+              缓存。通常每个核都有自己的 L1 cache，L1 其中又分数据 cache 和指令
+              cache。L2 不分这么细。L3 缓存由多个核共享。CPU
+              的片内总线设计很大程度就是各个核和片内缓存的关系网的拓扑。
+              和硬盘一样，cache 对内存的映射也是有最小单位的，硬盘的单位是
+              block，而 cache 的单位叫做 cache
+              line。所以，从硬盘往内存读数据是以页为单位，通常大小是
+              4K。从内存往缓存读数据以 cache line 为单位，大小一般是 64
+              字节。另外，还有一种特殊的缓存叫
+              TLB，它是用来缓存线性地址到物理地址映射的页表。每个进程都有自己的地址空间，所以每个进程的
+              TLB
+              表项也各自不同。这里涉及内存的寻址、分配和管理，我们可以另外说。
+            </p>
+
+            <p>既然是缓存，就会有缓存的一系列问题</p>
+
+            <ul>
+              <li>
+                替换策略。比如大家耳熟能详的 LRU。再啰嗦一句，替换的最小单位也是
+                cache line。
+              </li>
+              <li>
+                写策略。
+                <ul>
+                  <li>
+                    write through 写数据的时候，数据不仅写进
+                    cache，而且也同时刷新内存。
+                  </li>
+                  <li>
+                    write back 写数据的时候，数据仅仅写到 cache 里面，把相应的
+                    cache line 标记成
+                    dirty。在真正需要刷内存的时候再把数据“写回”去，一旦内存和缓存同步，这个
+                    cache line 又是 clean 得了。因为 write back
+                    性能比较好，缓存通常用它。
+                  </li>
+                </ul>
+              </li>
+              <li>
+                一致性。既然每个核读写都是通过自己的
+                cache，而不是直接访问内存，那么怎么保证各个核看到的数据是一致的？
+              </li>
+            </ul>
+
+            <h3 id="mesi">MESI</h3>
+
+            <p>
+              这里主要就写策略和一致性展开来说一下。为了解决一致性的问题，CPU
+              的设计者会用
+              <a href="https://en.wikipedia.org/wiki/MESI_protocol">MESI</a>
+              的某种改进版来保证缓存之间的同步问题。
+            </p>
+
+            <ul>
+              <li>
+                Modified 我的这份数据是被修改过的最新版。这个数据所在的 cache
+                line 被标记成 dirty。这个状态要求其他人的状态是
+                <code class="language-plaintext highlighter-rouge">I</code
+                >。别人想要读这个数据，必须等我把它写回内存。一旦写回去，状态成为
+                <code class="language-plaintext highlighter-rouge">S</code> 了。
+              </li>
+              <li>
+                Exclusive 我的这个 cache line
+                别人都没有缓存，所以如果修改它的话，不会产生不一致。
+              </li>
+              <li>
+                Shared
+                我的版本和别人的版本是一样的，我们的版本都是最新的。不过，我们都是“读”者，如果要写的话，得先获得排他锁。
+              </li>
+              <li>
+                Invalid 我的版本比较老了。对于一个缓存来说，一个 cache line
+                如果是
+                <code class="language-plaintext highlighter-rouge">I</code>
+                的状态，那就相当于它不存在。要是内核希望读它的话，会得到一个
+                cache miss。
+              </li>
+            </ul>
+
+            <p>
+              假设
+              <code class="language-plaintext highlighter-rouge">core#0</code>
+              想写
+              <code class="language-plaintext highlighter-rouge">0x1347</code>
+              地址，它写的不仅仅这个地址对应的内存空间，它写的是这个地址映射到的整个
+              cache line。
+            </p>
+
+            <ol>
+              <li>
+                <code class="language-plaintext highlighter-rouge">core#0</code>
+                告诉内存说，请把
+                <code class="language-plaintext highlighter-rouge">0x1347</code>
+                所在的 cache line 交给我。
+              </li>
+              <li>
+                内存说，好的，这里是
+                <code class="language-plaintext highlighter-rouge">0x1347</code>
+                所在 cache line 的 64 字节数据。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">core#0</code>
+                告诉其它核，你们的 cache 里要是有这个 cache
+                line，立即把它作废掉。因为它的值就快过时了。
+              </li>
+              <li>
+                其它核听到这个消息纷纷回应
+                <ul>
+                  <li>
+                    好的，我把那个 cache line
+                    给作废了。或者干脆清除，或者把它标记成
+                    <code class="language-plaintext highlighter-rouge">I</code
+                    >。
+                  </li>
+                  <li>
+                    好的。虽然我这里没有那个 cache line。不过你可以放心了。
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">core#0</code>
+                找到 cache line 中对应
+                <code class="language-plaintext highlighter-rouge">0x1347</code>
+                的字节，改成自己想要的值，把那个 cache line 标记成
+                <code class="language-plaintext highlighter-rouge">M</code>。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">core#1</code>
+                想读
+                <code class="language-plaintext highlighter-rouge">0x1347</code
+                >，但是它对应的 cache line 是
+                <code class="language-plaintext highlighter-rouge">I</code>
+                状态。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">core#1</code>
+                问内存，请把
+                <code class="language-plaintext highlighter-rouge">0x1347</code>
+                所在的 cache line 交给我。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">core#0</code>
+                不得已，把那个 cache line 写回内存。<code
+                  class="language-plaintext highlighter-rouge"
+                  >core#1</code
+                >
+                立即读到了最新的 cache line，这时他们缓存对应 cache line
+                的状态都改成了
+                <code class="language-plaintext highlighter-rouge">S</code>。
+              </li>
+            </ol>
+
+            <h3 id="硬件重排序">硬件重排序</h3>
+
+            <p>这带来了另外一个问题，MESI 协议里面有两种操作会比较慢。</p>
+
+            <p>
+              其中，写一个 cache line 需要好几步。如果 cache line
+              不在本地缓存，或者是
+              <code class="language-plaintext highlighter-rouge">I</code>
+              状态。这就是个 cache
+              miss。那么这种情况下，还需要读内存。然后为了获得 cache line
+              的排他锁，还需要得到其它核的确认。要是
+              <code class="language-plaintext highlighter-rouge">core#1</code>
+              的缓存在收到 invalidate 消息的时候正在忙其它事情呢？这会
+              <code class="language-plaintext highlighter-rouge">core#0</code>
+              的写操作。更何况现代处理器的核那么多，<code
+                class="language-plaintext highlighter-rouge"
+                >core#0</code
+              >
+              的写操作的瓶颈之一是最慢的一个核对 invalidate 请求的回应。所以
+              <code class="language-plaintext highlighter-rouge">core#0</code>
+              的 invalidate 最好能立即返回。所以我们在每个核的缓存前面放一个
+              invalidation queue，让这个操作成为异步的。<code
+                class="language-plaintext highlighter-rouge"
+                >core#0</code
+              >
+              只要把消息放在队列里面，就可以继续执行下一条指令。等
+              <code class="language-plaintext highlighter-rouge">core#1</code>
+              的缓存忙完了手里的事情，就会检查它的队列更新对应 cache line
+              的状态。CPU
+              的设计者没有就此止步，因为只是读内存，往每家的队列里面投递消息也很耗时，<code
+                class="language-plaintext highlighter-rouge"
+                >core#0</code
+              >
+              的流水线还有余力做其他工作，它不希望因为这个 cache miss
+              就干等着。最好能并行地多做几件事情。所以我们在本地的核边上也加了一个队列，叫做
+              store buffer 或者 write buffer。把写操作扔到 store buffer
+              里面，就可以立即返回。而本地缓存一旦做完那些准备工作，它就会从
+              store buffer 里面拿到要修改的数据，更新自己的 cache
+              line。反之，要是等待本地缓存和其他各方把所有这些步骤完成再循规蹈矩往下执行下一条指令，就太慢了！
+            </p>
+
+            <p>
+              而读一个 cache line 也不容易。类似的，要是 cache miss
+              的话，那么当前核就会要求另外一个核把它的数据先刷到内存。这将引起一个内存事务。
+            </p>
+
+            <p>
+              但是这样引入了一个问题————内存读写操作的乱序执行。这不仅让单核的顺序执行成为一个有前提的表象，更让多核的环境下的内存一致性和顺序执行更加错综复杂。对于特定的内核来说，可能会在一个写操作完成之前，就开始执行下一条指令。而对于其他内核来说，读指令可能会得到一个事实上过时
+              (invalid)
+              的数据。因为即使是写操作的发出者也还没有真正完成这个写操作，它只是把这个操作提交给了
+              store
+              buffer。不过和其他内核相比，它是可以读到最新的数据的，在它执行读指令的时候，可以先检查
+              store buffer，如果 store buffer
+              里面没有对应的数据，再检查缓存。这个叫做 store buffer
+              forwarding。因为它在当前核通过 buffer
+              把数据”转交”给将来要执行的读指令。这个设计保证了数据依赖和控制依赖，也就是单核上下一个操作的结果如果依赖上个操作的副作用，那么下个操作必须能看到上个操作的副作用。换句话说，如果从单核的角度出发，看不出这种“依赖”问题，那么
+              CPU
+              就认为它可以把读写操作重新排列，以此获得更高的并发度。另外，store
+              buffer
+              的存在也催生了另外一些优化，如果有两个写操作修改的是连续的内存地址，在刷内存的时候，这两个写操作就可以合并成一个大的写操作，从而减轻内存总线的负担。这个技术叫做
+              write combining。<a
+                href="https://www.amd.com/system/files/TechDocs/24593.pdf#page=224"
+                >write combining buffer</a
+              >
+              就是处在 store buffer
+              和系统总线中间的地方。如果有往同一地址的写操作，那么时间顺序上后面操作就会覆盖前面的操作，这个技术叫
+              write collapsing。
+            </p>
+
+            <p>
+              这种读写指令的乱序执行破坏了严格意义上的顺序一致性。对很多人来说，如果你要的是咖啡加奶，那么做法应该是先加咖啡再加奶，但是对一个追求效率的人来说，可能就会应该先做咖啡，在咖啡机哼哧的时候，把奶加进去，等咖啡机好了，再把咖啡倒进去。不过要是有原教旨主义者看到这个顺序可能会很不高兴，他说顺序和比例一样重要！简单说，顺序对自己可能不那么重要，但是旁人可能会很在意。
+            </p>
+
+            <p>
+              但是甚至在不对齐写的情况下也会造成不一致的结果。说到 store buffer
+              forwarding，之前 Linus 举了一个<a
+                href="https://yarchive.net/comp/linux/store_buffer.html"
+                >例子</a
+              >。
+            </p>
+
+            <p>
+              假设有个系统有三个核，开始的时候
+              <code class="language-plaintext highlighter-rouge"
+                >dword [mem]</code
+              >
+              的内容是
+              <code class="language-plaintext highlighter-rouge">0</code
+              >。执行下面的程序
+            </p>
+
+            <pre><code class="language-asm">xor %eax, %eax
+cmpxchl $0x01010101, (mem) 
+</code></pre>
+
+            <pre><code class="language-asm">movl $0x01010101, %eax
+cmpxchl $0x02020202, (mem) 
+</code></pre>
+
+            <pre><code class="language-asm">movb $0x03, (mem), 
+movl (mem), reg
+</code></pre>
+
+            <p>
+              程序结束的时候，<code class="language-plaintext highlighter-rouge"
+                >dword [mem]</code
+              >
+              可能是
+              <code class="language-plaintext highlighter-rouge"
+                >0x02020203</code
+              >
+              ，但是有趣的是，这时第三个核上
+              <code class="language-plaintext highlighter-rouge">reg</code>
+              里面则会是
+              <code class="language-plaintext highlighter-rouge"
+                >0x01010103</code
+              >。因为 MESI 协议保证了 cache coherency，<code
+                class="language-plaintext highlighter-rouge"
+                >dword [mem]</code
+              >
+              的值先后是
+              <code class="language-plaintext highlighter-rouge">0</code> -&gt;
+              <code class="language-plaintext highlighter-rouge"
+                >0x01010101</code
+              >
+              -&gt;
+              <code class="language-plaintext highlighter-rouge"
+                >0x02020202</code
+              >
+              -&gt;
+              <code class="language-plaintext highlighter-rouge"
+                >0x02020203</code
+              >。因为最后一次第三个核的
+              <code class="language-plaintext highlighter-rouge">mov</code>
+              也获得了排他锁，然后把整个 cache line
+              刷到了内存里面。但是第三个核的寄存器为什么读到了一个奇怪的值。这个值甚至在
+              cache line 里面没有缓存过。原因是第三个核会这样解释：
+            </p>
+
+            <pre><code class="language-asm">movb $0x03, store_buffer[mem] ; 把 [mem] &lt;- 0x03 的操作放到，store buffer，写操作比较慢。先继续执行读操作
+movl (mem), reg              ; 把 [mem] 的内容读出来
+movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看手里面最新的数据
+</code></pre>
+
+            <p>
+              所以第三个核寄存器中看到是一个脏数据。这个数据从来没有在内存中出现过。它有两个来源：高
+              24 位是第一个核写进去的，低 8 位是自己写的。而按照
+              <code class="language-plaintext highlighter-rouge">cmpxch</code>
+              的原子操作的语义，这个过程中是不可能有这样的不一致出现的。这也是为什么
+              amd64 不能保证非对齐写操作的原子性的原因。
+            </p>
+
+            <p>
+              话说回来，不仅仅是写数据上的核可能看到脏数据，也因为 store buffer
+              的存在，使得各个核看到的内存并不一样
+              (coherent)。如果某个核的对某个 cache line 的修改存在 store buffer
+              里面，那么这个 cache line
+              在其它核眼中则是旧的数据。另外，就算本地缓存检查了 store
+              buffer，发送了 invalidate 消息给其他核。但是在其它核在检查
+              invalidation queue 之前，仍然会认为那个 cache line
+              是有效的。有人可能会说，其他内核可以在读缓存之前看看 invalidation
+              queue 啊，可能是因为 invalidation queue 只是个
+              queue，内核在读缓存之前不会去检查 invalidation
+              queue。所以如果多个内核共享一块内存，那么某个核上读写顺序重新排列会导致程序有不同的执行的结果。有的时候我们不在乎，但是有的时候这种不一致的结果是致命的。再举个例子，在餐馆吃饭。有的餐馆在顾客点菜之后会给一个电子闹钟，等闹钟响了，就可以去自助取餐。以此为背景，我们想象有两个核分别代表等餐的顾客老王
+              (wong)，和面馆老马 (mars)：
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">bool</span> <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="kt">bool</span> <span class="n">beep</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="kt">char</span> <span class="n">meal</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+
+<span class="kt">void</span> <span class="nf">wong</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">);</span>
+  <span class="n">claim</span><span class="p">(</span><span class="n">meal</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">mars</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">);</span>
+  <span class="n">cook</span><span class="p">(</span><span class="n">meal</span><span class="p">);</span>
+  <span class="n">beep</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              要是平时写这个程序，大家可能会很自然地用
+              <code class="language-plaintext highlighter-rouge"
+                >atomic&lt;bool&gt;</code
+              >
+              来定义
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >
+              和
+              <code class="language-plaintext highlighter-rouge">beep</code
+              >。但是既然 amd64 保证了<a
+                href="https://www.amd.com/system/files/TechDocs/24593.pdf#page=234"
+                >单字节数据访问的原子性</a
+              >
+            </p>
+
+            <blockquote>
+              <p>
+                Cacheable, naturally-aligned single loads or stores of up to a
+                quadword are atomic on any processor model, as are misaligned
+                loads or stores of less than a quadword that are contained
+                entirely within a naturally-aligned quadword.
+              </p>
+            </blockquote>
+
+            <p>
+              所以
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >
+              的读写都是原子的。那么我们为什么还要用
+              <code class="language-plaintext highlighter-rouge"
+                >atomic&lt;bool&gt;</code
+              >
+              呢？所以上面的代码就直接用
+              <code class="language-plaintext highlighter-rouge">bool</code>
+              了。接下来，我们在老王和兰州拉面的互动中加入 store
+              buffer，看看会发生什么：
+            </p>
+
+            <ol>
+              <li>
+                老王来到面馆，大碗牛肉面！于是更新
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order</code
+                >。但是
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order</code
+                >
+                是在内存里面，写内存太慢了。先更新自己桌上的的 store buffer
+                吧。等会儿结账的时候再一起更新
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order</code
+                >
+                好了。
+              </li>
+              <li>
+                老王看着桌上的闹钟，焦急地等待。<code
+                  class="language-plaintext highlighter-rouge"
+                  >beep</code
+                >
+                啊，你怎么还是
+                <code class="language-plaintext highlighter-rouge">false</code>
+                呢？都十秒钟过去了。
+              </li>
+              <li>
+                面馆的马老板看着老王，这个人没有下单，眼神呆滞，从一坐下来就盯着桌上的闹钟不动。怕是昨晚加班到三点，还没缓过劲？
+              </li>
+              <li>
+                又过了十秒钟……两个人都隐约觉得有点不对，但是不知道出了什么问题。
+              </li>
+            </ol>
+
+            <p>
+              对老王和老马来说，这都是个僵局。而这个僵局是 store-load
+              重排造成的。所以即使从单核的角度看，数据依赖和控制依赖是能够保证的，多核环境下也无法确保程序的“顺序”执行。换言之，cache
+              conherence 不等于 sequential
+              consistency。后者的语义需要引入更强约束。但是因为后者的约束太强了，我们在实际工作中往往会采用一些折中。
+            </p>
+
+            <p>
+              另外，如果文献中提到 load buffer 或者 load
+              queue，它是用来保存读请求的。比如说，如果处理器预测某个写请求之后会读取地址
+              X，它会把这个请求放到 load buffer
+              里面。一个读请求的地址计算出来之后，这个请求也会保存在 load cache
+              里面。对于那个写请求，它在写内存之前则会检查 load
+              buffer，如果发现命中的话，就会让读取 X
+              的请求返回写请求要写入的值。load buffer 可以让内存读取批次化，使得
+              cache miss 的处理更有效率。
+            </p>
+
+            <h2 id="一致性模型">一致性模型</h2>
+
+            <p>
+              不同体系结构在 consistency
+              这个问题上有着不同的答案，这些答案就是不同的一致性模型：
+            </p>
+
+            <ul>
+              <li>
+                sequential consistency: 顺序一致，简称
+                SC。这是最死板的一致性模型。即使看上去没有危险，每个核也会以完全忠实原著的方式执行，除了缓存，不加入任何可能产生乱序的设计。所以
+                store buffer 和 invalidation queue
+                这种东西是禁止的。这种简单粗暴的限制对 CPU
+                的自尊心和性能是一种强烈的伤害。
+              </li>
+              <li>
+                weak consistency: 弱一致。在一定程度上允许重排序，受到
+                <a
+                  href="https://www.kernel.org/doc/Documentation/memory-barriers.txt"
+                  >memory barrier</a
+                >
+                的约束。
+              </li>
+              <li>relaxed consistency: 处理器完全可以<del>乱来</del>乱序。</li>
+            </ul>
+
+            <p>
+              大家对性能都有自己的坚持，没有一个有追求的处理器是顺序一致的。或者说，做到高性能的严格的顺序一致会非常困难。不过
+              amd64 是最接近的。它只会把代码里面的 store-load 顺序打乱，变成
+              load-store。像刚才老王吃面的例子里面，本来老王先点面，再看闹钟，被处理器一乱序，优化成了先看闹钟，再点面。完全乱了套。
+            </p>
+
+            <p>
+              除此之外，还有下面几种排列。对于它们，amd64 就完全按照脚本执行了。
+            </p>
+
+            <ul>
+              <li>store / store</li>
+              <li>load / store</li>
+              <li>load / load</li>
+            </ul>
+
+            <p>
+              在各种架构里面，amd64
+              是比较保守的。其他架构就比较放飞自我，比如对于 aarch64 中的
+              ARMv8-A 架构，<a
+                href="https://developer.arm.com/documentation/den0024/a/memory-ordering"
+                >它的文档</a
+              >提到
+            </p>
+
+            <blockquote>
+              <p>
+                The ARMv8 architecture employs a <em>weakly-ordered</em> model
+                of memory. In general terms, this means that the order of memory
+                accesses is not required to be the same as the program order for
+                load and store operations. The processor is able to re-order
+                memory read operations with respect to each other.
+              </p>
+            </blockquote>
+
+            <p>
+              而 Alpha 处理器则是另外一个极端。有这么一个<a
+                href="http://www.cs.umd.edu/~pugh/java/memoryModel/AlphaReordering.html"
+                >例子</a
+              >
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">p1</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">mb</span><span class="p">();</span>
+  <span class="n">p</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">y</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">p2</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              在处理器两个核分头运行完这个程序，<code
+                class="language-plaintext highlighter-rouge"
+                >i</code
+              >
+              竟然可能是
+              <code class="language-plaintext highlighter-rouge">0</code>！
+              可以这样解释
+            </p>
+
+            <ol>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p2</code>
+                开始前就缓存了
+                <code class="language-plaintext highlighter-rouge">y</code
+                >，它知道
+                <code class="language-plaintext highlighter-rouge">y</code>
+                的地址保存的值是
+                <code class="language-plaintext highlighter-rouge">0</code>
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p1</code>
+                执行
+                <code class="language-plaintext highlighter-rouge">y = 1</code>
+                ，发了一个 invalidate 消息给
+                <code class="language-plaintext highlighter-rouge">p2</code
+                >，然后立即返回了。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p2</code>
+                收到了
+                <code class="language-plaintext highlighter-rouge">y</code> 的
+                invalidate 消息，但是它并不急着处理，人家前面又没有
+                <code class="language-plaintext highlighter-rouge">mb()</code>
+                催着，于是这个消息在 invalidation queue 里躺着。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p1</code>
+                这边因为 invalidate 消息立即返回，满足了
+                <code class="language-plaintext highlighter-rouge">mb()</code>
+                的要求，所以程序得以继续往下执行
+                <code class="language-plaintext highlighter-rouge"
+                  >p = &amp;y</code
+                >。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p2</code>
+                为了得到
+                <code class="language-plaintext highlighter-rouge">*p</code>
+                的值，先读取
+                <code class="language-plaintext highlighter-rouge">p</code>。读
+                <code class="language-plaintext highlighter-rouge">p</code>
+                并不要求刷 invalidation queue，所以它得到了
+                <code class="language-plaintext highlighter-rouge">y</code>
+                的地址。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p2</code>
+                根据这个地址，索引到了自己的缓存。缓存里面有，为什么不用呢？
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge">p2</code>
+                把原来缓存的
+                <code class="language-plaintext highlighter-rouge">y</code> 的值
+                <code class="language-plaintext highlighter-rouge">0</code>
+                赋给了
+                <code class="language-plaintext highlighter-rouge">i</code>。
+              </li>
+            </ol>
+
+            <p>
+              这里，Alpha 没有根据数据依赖来刷 invalidation queue，因为为了得到
+              <code class="language-plaintext highlighter-rouge">*p</code>
+              读了两次内存。分别是
+            </p>
+
+            <ol>
+              <li>
+                <code class="language-plaintext highlighter-rouge"
+                  >mov p, %reg</code
+                >
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge"
+                  >mov (%reg), reg</code
+                >
+              </li>
+            </ol>
+
+            <p>
+              这里有一个数据依赖的关系，因为第二次的输入是第一次的输出。本来很明显，最后
+              <code class="language-plaintext highlighter-rouge">reg</code>
+              的值至少应该是一致的。也就是说，不会出现历史上
+              <code class="language-plaintext highlighter-rouge">*p</code>
+              从来没有过的值。就像这个夏天你一直喝啤酒，从没喝过汽水。但是年前和一个朋友吃饭的时候，他说你们七月份在日本玩儿的时候，一起还喝过可乐。这一定是个错觉。你会觉得他记错了，把你记成另外一个人了。并不是说你从没喝过汽水，你小时候还挺喜欢喝。而是你和这个朋友才认识一年，你这一年的确没喝过汽水啊。
+            </p>
+
+            <p>
+              不过这些选择并没有高下之分。如果只允许重排一两种读写序列，好处是程序员可以按照直觉编写多核程序，而不用太关心读写重排的问题。问题在于处理器的设计会有一些限制。要是需要同时有高并发，和严格顺序，那么处理器就必须把这些读写序列组织成一个个内存事务，如果处理器发觉因为乱序执行破坏了事务，那么就必须把乱序执行的操作取消掉。这使得高性能的并行处理器的设计变得更复杂了。如果处理器遵循的内存模型允许处理器做很多类型的重排序，那么处理器的设计会有很高的自由度，能无所顾虑地应用一些提高并发性的技术，来提高访问内存的效率，比如
+            </p>
+
+            <ul>
+              <li>out-of-order issue</li>
+              <li>speculative read</li>
+              <li>write-combining</li>
+              <li>write-collasping</li>
+            </ul>
+
+            <p>
+              如果处理器不需要保证访存的顺序，在相同性能指标下，功耗也低一些。在保证数据依赖和控制依赖的前提下，处理器有最大的自由度重新排序读写指令的顺序。但是对程序员的要求就更高了。他们需要再需要顺序的地方安插一些指令，手动加入
+              memory barrier，让处理器在那些地方收敛一下。这些 memory barrier
+              要求当前的内核把自己的 invalidation queue 里所有的 invalidate
+              消息都处理完毕，再处理读写请求。而程序员也可以帮助处理器做一些猜测，比如说
+              <code class="language-plaintext highlighter-rouge">prefetch</code>
+              和
+              <code class="language-plaintext highlighter-rouge">clflush</code>
+              具体影响处理器的 cache 行为。
+            </p>
+
+            <h3 id="memory-barrier-和-lock">memory barrier 和 lock</h3>
+
+            <p>
+              <code class="language-plaintext highlighter-rouge">lfence</code>,
+              <code class="language-plaintext highlighter-rouge">sfence</code>,
+              <code class="language-plaintext highlighter-rouge">mfence</code>
+              是 SSE1/SSE2 指令集提供的指令：
+            </p>
+
+            <p>
+              <a
+                href="https://www.amd.com/system/files/TechDocs/24593.pdf#page=228"
+                >AMD64 Architecture Programmer’s Manual 卷 2，7.13</a
+              >
+              ：
+            </p>
+
+            <blockquote>
+              <p>
+                The LFENCE, SFENCE, and MFENCE instructions are provided as
+                dedicated read, write, and read/write barrier instructions
+                (respectively). Serializing instructions, I/O instructions, and
+                locked instructions (including the implicitly locked XCHG
+                instruction) can also be used as read/write barriers.
+              </p>
+            </blockquote>
+
+            <dl>
+              <dt>lfence</dt>
+              <dd>
+                Load Fence: 即 read barrier。以
+                <code class="language-plaintext highlighter-rouge">lfence</code>
+                调用的地方为界，定义了读操作的偏序集合。保证系统在执行到它的时候，把之前的所有
+                load 指令全部完成，同时，在其之后的所有 load
+                指令必须在其之后完成，不能调度到它的前面。换句话说，它要求刷
+                invalidation queue，这样当前核所有的 invalidate 的 cache line
+                都会被标记成
+                <code class="language-plaintext highlighter-rouge">I</code
+                >，因此，接下来对它们的读操作就会 cache
+                miss，从而乖乖地从内存读取最新数据。
+              </dd>
+              <dt>sfence</dt>
+              <dd>
+                Store Fence: 即 write barrier。以
+                <code class="language-plaintext highlighter-rouge">mfence</code>
+                调用的地方为界，定义了写操作的偏序集合。保证系统在执行到它的时候，把之前的所有
+                store 指令全部完成，同时，在其之后的所有 store
+                指令必须在其之后完成，不能调度到它的前面。它要求刷 store
+                buffer，这样当前核所有积攒的写操作都会发送到缓存，缓存刷新的时候会发送
+                invalidate 消息到其他核的缓存。sfence 是 SSE1 提供的指令。
+              </dd>
+              <dt>mfence</dt>
+              <dd>
+                memory Fence: 即 read/write barrier。以
+                <code class="language-plaintext highlighter-rouge">mfence</code>
+                调用为界，定义了读和写操作的偏序集合。确保系统在执行到它的时候，把之前的所有
+                store 和 load 指令悉数完成，同事，在其之后的所有 store 和 load
+                指令必须在其之后完成，不能调度到它的签名。也就是说，它会清空
+                store buffer 和 invalidation queue。
+              </dd>
+              <dt>lock</dt>
+              <dd>
+                <code class="language-plaintext highlighter-rouge">lock</code>
+                前缀：它本身不是指令。但是我们用它来修饰一些 read-modify-write
+                指令，确保它们是原子的。带有
+                <code class="language-plaintext highlighter-rouge">lock</code>
+                前缀的指令的效果和
+                <code class="language-plaintext highlighter-rouge">mfence</code>
+                相同。另外，文档告诉我们，<code
+                  class="language-plaintext highlighter-rouge"
+                  >xchg</code
+                >
+                缺省带有
+                <code class="language-plaintext highlighter-rouge">lock</code>
+                属性，所以也可以作为 read/write barrier。所以在<a
+                  href="https://lore.kernel.org/patchwork/cover/639819/"
+                  >内核</a
+                >里面有时会看到类似
+                <code class="language-plaintext highlighter-rouge"
+                  >lock; addl $0, 0(%%esp)</code
+                >
+                的代码，这里就是在加 memory barrier，同时检查
+                <code class="language-plaintext highlighter-rouge"
+                  >0(%%esp)</code
+                >
+                是否为零。
+              </dd>
+            </dl>
+
+            <p>
+              其实 x86 还有一些指令也有 memory barrier
+              的作用，但是它们本身有很强的副作用，比如
+              <code class="language-plaintext highlighter-rouge">IRET</code>
+              会改变处理器的控制流，所以一般来说，要控制内存访问的顺序还是用专门的
+              memory barrier 和
+              <code class="language-plaintext highlighter-rouge">lock</code>
+              指令比较容易驾驭。
+            </p>
+
+            <p>
+              所以有了
+              <code class="language-plaintext highlighter-rouge">lfence</code>
+              我们可以这么改
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">void</span> <span class="nf">p2</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span><span class="o">*</span> <span class="n">local_p</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>
+  <span class="n">lfence</span><span class="p">();</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="o">*</span><span class="n">local_p</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              禁止处理器重排这两个
+              <code class="language-plaintext highlighter-rouge">load</code>
+              指令。
+            </p>
+
+            <h3 id="c-的一致性模型">C++ 的一致性模型</h3>
+
+            <p>
+              C++ 程序员一般不会直接使用这些 memory
+              barrier，它们太接近硬件，可移植性也很差。比如说 aarch64 上的
+              memory barrier 就叫别的<a
+                href="https://developer.arm.com/documentation/den0024/a/the-a64-instruction-set/memory-access-instructions/memory-barrier-and-fence-instructions"
+                >名字</a
+              >，功能也有些许的不同。所以 C++11
+              以及之后的标准规定了几种内存一致性模型，用更抽象的工具来解决这些问题。
+            </p>
+
+            <p>
+              在解释这些一致性模型之前，我们先回到刚才的面馆。假设老王顺利地下了单，老马也看到了老王的
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >
+              ，开始做面条。但是问题来了，处理器不知道
+              <code class="language-plaintext highlighter-rouge">beep</code> 和
+              <code class="language-plaintext highlighter-rouge">noodle</code>
+              是有先后关系的，所以负责老马的那个核就自作主张，先刷新了
+              <code class="language-plaintext highlighter-rouge">beep</code
+              >，而把
+              <code class="language-plaintext highlighter-rouge">noodle</code>
+              的写操作放在 store buffer 里面了。这是一种 store-store 重排，在
+              amd64 上不会发生，但是在其它架构是有可能的。
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">bool</span> <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="kt">bool</span> <span class="n">beep</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="kt">uint64_t</span> <span class="n">noodle</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">wong</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">);</span>
+  <span class="n">consume</span><span class="p">(</span><span class="n">noodle</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">mars</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">);</span>
+  <span class="n">noodle</span> <span class="o">=</span> <span class="n">cook</span><span class="p">();</span>
+  <span class="n">beep</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>这里有两种数据</p>
+
+            <ul>
+              <li>
+                被保护的数据
+                <code class="language-plaintext highlighter-rouge">noodle</code>
+              </li>
+              <li>
+                用来表示
+                <code class="language-plaintext highlighter-rouge">noodle</code>
+                状态的标志 –
+                <code class="language-plaintext highlighter-rouge">beep</code>
+              </li>
+            </ul>
+
+            <p>
+              这有点像使用 mutex 的情况。mutex
+              一般用来保护共享的数据，它自己则是有明确的状态的，即 mutex
+              当前的所有者。在这里也是如此，
+            </p>
+
+            <dl>
+              <dt>老王</dt>
+              <dd>
+                通过读取
+                <code class="language-plaintext highlighter-rouge">beep</code>
+                的状态，获取锁，一旦
+                <code class="language-plaintext highlighter-rouge">beep</code>
+                告诉他，“可以通过”，那么他就可以放心访问被保护的
+                <code class="language-plaintext highlighter-rouge">noodle</code
+                >。这个过程叫做 acquire。 老马
+              </dd>
+              <dd>
+                开始的时候，老马其实已经是锁的所有者了。正是因为这样，他才得以放心地煮面，修改
+                <code class="language-plaintext highlighter-rouge">noodle</code>
+                。一旦完成了修改，他就可以通过修改
+                <code class="language-plaintext highlighter-rouge">beep</code>
+                的值来放弃锁。告诉别人，你们看到
+                <code class="language-plaintext highlighter-rouge">beep</code>
+                没有，它现在是响着的，可以来访问这个
+                <code class="language-plaintext highlighter-rouge">noodle</code>
+                了！这个过程叫做 release。
+              </dd>
+            </dl>
+
+            <p>
+              所以，为了避免 store-store 重排，我们用 release-acquire
+              语义改进了实现：
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">bool</span> <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">beep</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="kt">uint64_t</span> <span class="n">noodle</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">wong</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">));</span>
+  <span class="n">consume</span><span class="p">(</span><span class="n">noodle</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">mars</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">);</span>
+  <span class="n">noodle</span> <span class="o">=</span> <span class="n">cook</span><span class="p">();</span>
+  <span class="n">beep</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>这里除了避免 store-store 重排，其实还确保 load-load 的顺序：</p>
+
+            <ul>
+              <li>
+                <code class="language-plaintext highlighter-rouge"
+                  >beep.store(true, std::memory_order_release)</code
+                >
+                确保
+                <code class="language-plaintext highlighter-rouge"
+                  >noodle = cook()</code
+                >
+                产生的读写操作不会被放到
+                <code class="language-plaintext highlighter-rouge"
+                  >beep.store()</code
+                >
+                后面去。你想想，<code
+                  class="language-plaintext highlighter-rouge"
+                  >beep</code
+                >
+                一响，就像泼出去的水，如果这时候告诉顾客，我还在擀面，那不是很让人恼火？所以我们一定要保证
+                <code class="language-plaintext highlighter-rouge"
+                  >beep.store()</code
+                >
+                之前事情不会拖到后面去。
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge"
+                  >beep.load(std::memory_order_acquire)</code
+                >
+                确保
+                <code class="language-plaintext highlighter-rouge"
+                  >consume(noodle)</code
+                >
+                产生的读写操作不会放到
+                <code class="language-plaintext highlighter-rouge"
+                  >beep.load()</code
+                >
+                之前。否则就会出现老王在
+                <code class="language-plaintext highlighter-rouge">beep</code>
+                响之前，就直接去拿面的情况。让正在擀面的老马措手不及。
+              </li>
+            </ul>
+
+            <p>
+              我们再回到 load-store 的问题。这个问题其实很难用 release-acquire
+              的模型描述，因为
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >
+              不是用来保护一个共享的数据的，或者说它本身就是一个共享的标记。在老王下单之前，他没有加老马家拉面的微信号，也没有填写老马搞的调查问卷。不过这个问题可以这么思考，<code
+                class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >
+              应该在老马看到它之后重新设置成
+              <code class="language-plaintext highlighter-rouge">false</code
+              >，这样老马再次看到它的时候就不会以为老王又要了一碗面了。老王这边其实也有类似的问题，和他一起去吃面的老李也会改
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >，要是两个人都把
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >
+              改成了
+              <code class="language-plaintext highlighter-rouge">true</code
+              >，那么老马做的下一碗面到底归谁呢？所以程序应该这么改：
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">bool</span> <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+<span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">beep</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="kt">uint64_t</span> <span class="n">noodle</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">wong</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">placed_order</span><span class="p">);</span>
+  <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">));</span>
+  <span class="n">consume</span><span class="p">(</span><span class="n">noodle</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">mars</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">);</span>
+  <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="n">noodle</span> <span class="o">=</span> <span class="n">cook</span><span class="p">();</span>
+  <span class="n">beep</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>这样还是有问题，因为老李搞不好会中途插一脚</p>
+
+            <ol>
+              <li>
+                老王看到没人下单了，正准备把
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order</code
+                >
+                改成
+                <code class="language-plaintext highlighter-rouge">true</code
+                >。他还没开始
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order = true</code
+                >
+                就开小差了，看着门外突如其来的暴雨，又陷入了沉思。
+              </li>
+              <li>
+                老李也注意到了，他立即把
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order</code
+                >
+                改成了
+                <code class="language-plaintext highlighter-rouge">true</code
+                >。开始看着
+                <code class="language-plaintext highlighter-rouge">beep</code>
+                焦急地等待自己的大碗牛肉面。
+              </li>
+              <li>
+                老王回过神来，也把
+                <code class="language-plaintext highlighter-rouge"
+                  >placed_order</code
+                >
+                改成了
+                <code class="language-plaintext highlighter-rouge">true</code>。
+              </li>
+              <li>两个人一起焦急地等待那碗面。</li>
+            </ol>
+
+            <p>
+              所以我们应该用原子操作来修改
+              <code class="language-plaintext highlighter-rouge"
+                >placed_order</code
+              >，让 read-modify-write 一气呵成，用 compare-and-exchange 正合适：
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">placed_order</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="n">beep</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span>
+<span class="kt">uint64_t</span> <span class="n">noodle</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">wong</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">bool</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> 
+                                             <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">,</span>
+                                             <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">));</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">));</span>
+  <span class="n">consume</span><span class="p">(</span><span class="n">noodle</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">mars</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">bool</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> 
+                                             <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">,</span>
+                                             <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">));</span>
+  <span class="n">noodle</span> <span class="o">=</span> <span class="n">cook</span><span class="p">();</span>
+  <span class="n">beep</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="nb">true</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">memory_order_release</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>在 amd64 上</p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code>  <span class="kt">bool</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> 
+                                             <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">,</span>
+                                             <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">));</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>会被 GCC 翻译成</p>
+
+            <div class="language-nasm highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code>  <span class="nf">movb</span>   <span class="kc">$</span><span class="mh">0x0</span><span class="p">,</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">(</span><span class="o">%</span><span class="nb">rsp</span><span class="p">)</span> <span class="c1">; expected = false</span>
+  <span class="nf">mov</span>    <span class="kc">$</span><span class="mh">0x1</span><span class="p">,</span> <span class="o">%</span><span class="nb">edx</span>       <span class="c1">; desired = true</span>
+<span class="nl">retry:</span>
+  <span class="nf">movzbl</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">(</span><span class="o">%</span><span class="nb">rsp</span><span class="p">),</span> <span class="o">%</span><span class="nb">eax</span> <span class="c1">; expected =&gt; %al</span>
+  <span class="nf">lock</span>   <span class="nv">cmpxchg</span> <span class="o">%</span><span class="nb">dl</span><span class="p">,</span> <span class="mh">0x2ee2</span><span class="p">(</span><span class="o">%</span><span class="nv">rip</span><span class="p">)</span>
+  <span class="nf">je</span>     <span class="nv">while_beep_load</span>
+  <span class="nf">mov</span>    <span class="o">%</span><span class="nb">al</span><span class="p">,</span> <span class="o">-</span><span class="mh">0x1</span><span class="p">(</span><span class="o">%</span><span class="nb">rsp</span><span class="p">)</span>  <span class="c1">; %al =&gt; expected</span>
+  <span class="nf">jmp</span>    <span class="nv">retry</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              因为我们只需要原子操作， 所以这里只用了
+              <code class="language-plaintext highlighter-rouge"
+                >std::memory_order_relaxed</code
+              >，它对内存的访问顺序没有限制。但是前面提到，<code
+                class="language-plaintext highlighter-rouge"
+                >xchg</code
+              >
+              缺省带有
+              <code class="language-plaintext highlighter-rouge">lock</code>
+              属性，而
+              <code class="language-plaintext highlighter-rouge">lock</code>
+              前缀的效果和
+              <code class="language-plaintext highlighter-rouge">mfence</code>
+              相同。所以用不着专门加入
+              <code class="language-plaintext highlighter-rouge">mfence</code
+              >，我们也能要求处理器顺序访问内存了。否则的话，我们需要这么写
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code>  <span class="n">placed_order</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">atomic_thread_fence</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_seq_cst</span><span class="p">);</span>
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">);</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>这样 GCC 会产生</p>
+
+            <div class="language-nasm highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code>  <span class="nf">movb</span>   <span class="kc">$</span><span class="mh">0x1</span><span class="p">,</span><span class="mh">0x2ef2</span><span class="p">(</span><span class="o">%</span><span class="nv">rip</span><span class="p">)</span>
+  <span class="nf">lock</span>   <span class="nv">orq</span> <span class="kc">$</span><span class="mh">0x0</span><span class="p">,(</span><span class="o">%</span><span class="nb">rsp</span><span class="p">)</span>
+  <span class="nf">nopl</span>   <span class="mh">0x0</span><span class="p">(</span><span class="o">%</span><span class="nb">rax</span><span class="p">)</span>
+<span class="nl">retry:</span>
+  <span class="nf">movzbl</span> <span class="mh">0x2ed9</span><span class="p">(</span><span class="o">%</span><span class="nv">rip</span><span class="p">),</span><span class="o">%</span><span class="nb">eax</span>
+  <span class="nf">test</span>   <span class="o">%</span><span class="nb">al</span><span class="p">,</span><span class="o">%</span><span class="nb">al</span>
+  <span class="nf">je</span>     <span class="nv">retry</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              clang 则会用
+              <code class="language-plaintext highlighter-rouge">mfence</code>
+              代替
+              <code class="language-plaintext highlighter-rouge">lock orq</code>
+              指令。效果是一样的。根据查到的文献，两者的性能不分伯仲。
+            </p>
+
+            <p>
+              <code class="language-plaintext highlighter-rouge">load</code> 和
+              <code class="language-plaintext highlighter-rouge">store</code>
+              一般成对使用：
+            </p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>load</th>
+                  <th>store</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>memory_order_seq_cst</td>
+                  <td>memory_order_seq_cst</td>
+                </tr>
+                <tr>
+                  <td>memory_order_acquire</td>
+                  <td>memory_order_release</td>
+                </tr>
+                <tr>
+                  <td>memory_order_consume</td>
+                  <td>memory_order_release</td>
+                </tr>
+                <tr>
+                  <td>memory_order_relaxed</td>
+                  <td>memory_order_relaxed</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>在 x86 下：</p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>C++</th>
+                  <th>汇编</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>load(relaxed)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov (mem), reg</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>load(consume)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov (mem), reg</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>load(acquire)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov (mem), reg</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>load(seq_cst)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov (mem), reg</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>store(relaxed)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov reg, (mem)</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>store(release)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov reg, (mem)</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>store(seq_cst)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >xchg reg, (mem)</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>store(relaxed)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov reg (mem)</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>store(relaxed)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov reg (mem)</code
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>
+              其中，<code class="language-plaintext highlighter-rouge"
+                >load(seq_cst)</code
+              >
+              和
+              <code class="language-plaintext highlighter-rouge"
+                >store(seq_cst)</code
+              >
+              也可以这么实现
+            </p>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>C++</th>
+                  <th>汇编</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>load(seq_cst)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >xchg (mem), reg</code
+                    >
+                  </td>
+                </tr>
+                <tr>
+                  <td>store(seq_cst)</td>
+                  <td>
+                    <code class="language-plaintext highlighter-rouge"
+                      >mov reg, (mem)</code
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p>刚才我们用了</p>
+
+            <ul>
+              <li>
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_relaxed</code
+                >
+                /
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_relaxed</code
+                >
+              </li>
+              <li>
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_acquire</code
+                >
+                /
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_release</code
+                >
+              </li>
+            </ul>
+
+            <p>
+              帮老王和老马摆脱了困境。如果要解决 Alpha 处理器的问题的话，可以
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">atomic</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">*&gt;</span> <span class="n">p</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">p1</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">p</span><span class="p">.</span><span class="n">store</span><span class="p">(</span><span class="o">&amp;</span><span class="n">y</span><span class="p">,</span> <span class="n">memory_order_release</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">p2</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_consume</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              好在只有 Alpha
+              处理器这么粗犷，敢于无视数据依赖，用刚从内存里面读出来的数据作为地址，来索引缓存里面的老数据，得到指针指向的数值。其他体系架构都会重视数据依赖问题，在这个数据依赖链条上顺序执行。因为
+              amd64 不会重新排列
+              load-load，所以它天生对这个问题免疫。另外，C++17 说
+            </p>
+
+            <blockquote>
+              <p>
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_consume</code
+                >: a load operation performs a consume operation on the affected
+                memory location. [ <em>Note</em>: Prefer
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_acquire</code
+                >, which provides stronger guarantees than
+                <code class="language-plaintext highlighter-rouge"
+                  >memory order_consume</code
+                >. Implementations have found it infeasible to provide
+                performance better than that of
+                <code class="language-plaintext highlighter-rouge"
+                  >memory_order_acquire</code
+                >. Specification revisions are under consideration.
+              </p>
+            </blockquote>
+
+            <p>
+              看起来要实现依赖链条的分析很麻烦，几家 C++
+              编译器都懒得矫情，干脆杀鸡用牛刀，所以性能没提高。标准也向现实低头，那么我们如果一定要把依赖关系写得明明白白，做好跨平台的工作，还是用
+              <code class="language-plaintext highlighter-rouge"
+                >memory_order_acquire</code
+              >
+              吧。图个省事儿，图个放心。等到真的有要求再手写汇编。这背离了设计
+              <code class="language-plaintext highlighter-rouge"
+                >memory_order_consume</code
+              >
+              的<a
+                href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2664.htm"
+                >初衷</a
+              >，但是也是现阶段比较实际的办法。
+            </p>
+
+            <p>
+              前面为了让程序更好懂，这些 memory barrier 都和一个
+              <code class="language-plaintext highlighter-rouge"
+                >atomic&lt;&gt;</code
+              >
+              变量放在了一起了。毕竟活生生的变量对于描述程序的逻辑才是有意义的。memory
+              barrier 只是用来保证执行的顺序而已。它就像
+              <code class="language-plaintext highlighter-rouge">xchg</code>
+              的前缀一样。但是我们也可以直接加入 memory barrier：<code
+                class="language-plaintext highlighter-rouge"
+                >atomic_thread_fence</code
+              >。前面如果不能用 CAS 的话，我们可能就只能用这一招了。
+            </p>
+
+            <div class="language-c++ highlighter-rouge">
+              <div class="highlight">
+                <pre
+                  class="highlight"
+                ><code><span class="n">std</span><span class="o">::</span><span class="n">atomic_thread_fence</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+</code></pre>
+              </div>
+            </div>
+
+            <p>
+              它简单直接地在代码里面加入 memory barrier。它能和
+              <code class="language-plaintext highlighter-rouge"
+                >atomic&lt;&gt;</code
+              >
+              ，也能和其他
+              <code class="language-plaintext highlighter-rouge"
+                >atomic_thread_fence&lt;&gt;</code
+              >
+              一起使用。效果是相同的。
+            </p>
+          </div>
+          <a
+            class="u-url"
+            href="/arch/2020/08/10/memory-ordering.html"
+            hidden
+          ></a>
+        </article>
+      </div>
+    </main>
+    <footer class="site-footer h-card">
+      <data class="u-url" href="/"></data>
+
+      <div class="wrapper">
+        <h2 class="footer-heading">some random rants</h2>
+
+        <div class="footer-col-wrapper">
+          <div class="footer-col footer-col-1">
+            <ul class="contact-list">
+              <li class="p-name">some random rants</li>
+              <li>
+                <a class="u-email" href="mailto:tchaikov@gmail.com"
+                  >tchaikov@gmail.com</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-col footer-col-2">
+            <ul class="social-media-list">
+              <li>
+                <a href="https://github.com/tchaikov"
+                  ><svg class="svg-icon">
+                    <use
+                      xlink:href="/assets/minima-social-icons.svg#github"
+                    ></use>
+                  </svg>
+                  <span class="username">tchaikov</span></a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-col footer-col-3">
+            <p>我的学习记录</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
