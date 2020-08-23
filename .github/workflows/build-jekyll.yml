@@ -16,7 +16,10 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.7
-      - name: install dependencies & build site
+      - name: install packages
+        run: |
+          sudo apt-get install ditaa
+      - name: build and push the jekyll site
         uses: limjh16/jekyll-action-ts@v2
         with:
           enable_cache: true
