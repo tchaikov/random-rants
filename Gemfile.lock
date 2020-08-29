@@ -5,10 +5,12 @@ GEM
       public_suffix (>= 2.0.2, < 5.0)
     colorator (1.1.0)
     concurrent-ruby (1.1.7)
+    duktape (2.3.0.0)
     em-websocket (0.5.1)
       eventmachine (>= 0.12.9)
       http_parser.rb (~> 0.6.0)
     eventmachine (1.2.7)
+    execjs (2.7.0)
     ffi (1.13.1)
     forwardable-extended (2.6.0)
     http_parser.rb (0.6.0)
@@ -39,6 +41,9 @@ GEM
       listen (~> 3.0)
     kramdown (2.3.0)
       rexml
+    kramdown-math-sskatex (1.0.0)
+      kramdown (~> 2.0)
+      sskatex (>= 0.9.37)
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
     launchy (2.5.0)
@@ -64,6 +69,8 @@ GEM
     safe_yaml (1.0.5)
     sassc (2.4.0)
       ffi (~> 1.9)
+    sskatex (0.9.39)
+      execjs (~> 2.7)
     terminal-table (1.8.0)
       unicode-display_width (~> 1.1, >= 1.1.1)
     unicode-display_width (1.7.0)
@@ -72,8 +79,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  duktape
+  execjs
   jekyll (~> 4.1.1)
   jekyll-feed (~> 0.12)
+  kramdown-math-sskatex
   launchy (~> 2.5)
   minima (~> 2.5)
   rake (~> 13.0)

@@ -6,6 +6,14 @@ baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  tchaikov
 
+markdown: kramdown
+kramdown:
+  math_engine: sskatex
+  math_engine_opts:
+    katex_js: 'js/katex.min.js'
+    katex_opts:
+      output: 'mathml'
+      throwOnError: true
 # Build settings
 theme: minima
 highlighter: rouge
