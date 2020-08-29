@@ -1,4 +1,87 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2020-08-29T06:43:22+00:00</updated><id>/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">多核和顺序</title><link href="/arch/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T15:44:17+00:00</published><updated>2020-08-10T15:44:17+00:00</updated><id>/arch/2020/08/10/memory-ordering</id><content type="html" xml:base="/arch/2020/08/10/memory-ordering.html">&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-08-29T09:37:00+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T10:00:00+00:00</published><updated>2020-08-23T10:00:00+00:00</updated><id>https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html">&lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
+
+&lt;p&gt;和平时一样，我们假设客户端是 Linux。这可能不是一个生造出来的问题，想一想，如果我们希望设计一个支持长连接的代理服务器呢？如果有海量的客户端希望连接被代理的服务器呢？或者说我们希望为用户提供实时的消息服务呢？这是一种 c1000k 问题。&lt;/p&gt;
+
+&lt;p&gt;我们从 TCP 协议开始，慢慢往外推，到操作系统直到硬件。看看一路上都有哪些限制。我们可以假设服务器是个怪物，它在 TCP 的框架下面可以有无穷的计算能力和带宽，各种资源取之不尽用之不竭。那么问题到了 TCP。&lt;/p&gt;
+
+&lt;h1 id=&quot;tcp&quot;&gt;TCP&lt;/h1&gt;
+
+&lt;h2 id=&quot;数据库问题&quot;&gt;数据库问题&lt;/h2&gt;
+
+&lt;p&gt;有人说，这是个数据库问题。因为 TCP 实现为了区别 TCP 连接，用了个四元组标记每个 TCP 报文&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;source ip: 32 bit for IPv4&lt;/li&gt;
+  &lt;li&gt;source port: 16 bit&lt;/li&gt;
+  &lt;li&gt;destination ip: 16 bit (fixed)&lt;/li&gt;
+  &lt;li&gt;destination port: 32 bit for IPv4 (fixed)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;所以这四个数字合起来，就是数据库的复合主键。其中，目标服务的 IP 和端口都是固定的，所以我们只能从客户端这边发掘潜力：&lt;/p&gt;
+
+&lt;h3 id=&quot;source-ip&quot;&gt;source ip&lt;/h3&gt;
+
+&lt;p&gt;用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;iproute2&lt;/code&gt; 可以为同一块网卡添加多个 IP 地址。理论上说，这就是 &lt;span class=&quot;katex&quot;&gt;&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;&lt;semantics&gt;&lt;mrow&gt;&lt;msup&gt;&lt;mn&gt;2&lt;/mn&gt;&lt;mn&gt;32&lt;/mn&gt;&lt;/msup&gt;&lt;/mrow&gt;&lt;annotation encoding=&quot;application/x-tex&quot;&gt;2^{32}&lt;/annotation&gt;&lt;/semantics&gt;&lt;/math&gt;&lt;/span&gt; 个地址。&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ip addr add &amp;lt;ip&amp;gt;/&amp;lt;network&amp;gt; dev &amp;lt;interface&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;source-port&quot;&gt;source port&lt;/h3&gt;
+
+&lt;p&gt;对于特定目标地址，本地端口可以选择的区间是由 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt&quot;&gt;net.ipv4.ip_local_port_range&lt;/a&gt; 决定的。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-shellsession&quot;&gt;$ cat /proc/sys/net/ipv4/ip_local_port_range
+32768	60999
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;对于给定的目标地址，以及给定的本地 IP，可以发出的连接数量就是本地端口区间的大小。所以单个本地 IP 最多可以产生 65535 个 TCP 连接。为了打破这个限制，我们必须为网卡添加多个虚拟 IP。满打满算，这就是 &lt;span class=&quot;katex&quot;&gt;&lt;math xmlns=&quot;http://www.w3.org/1998/Math/MathML&quot;&gt;&lt;semantics&gt;&lt;mrow&gt;&lt;msup&gt;&lt;mn&gt;2&lt;/mn&gt;&lt;mrow&gt;&lt;mn&gt;32&lt;/mn&gt;&lt;mo&gt;+&lt;/mo&gt;&lt;mn&gt;16&lt;/mn&gt;&lt;/mrow&gt;&lt;/msup&gt;&lt;/mrow&gt;&lt;annotation encoding=&quot;application/x-tex&quot;&gt;2^{32+16}&lt;/annotation&gt;&lt;/semantics&gt;&lt;/math&gt;&lt;/span&gt; 个链接，约为 281万亿。打个比方，我想开个公司，先从员工的工号的编码方式开始计划！嗯，就用 IPv4 的地址和 16 位的端口号来吧，所以，我的公司最多支持 281万亿个员工。这个思路扩展性很好，很强大！但是每个人都得发工资啊，我陷入了沉思……&lt;/p&gt;
+
+&lt;h2 id=&quot;tcp-的运行时开销&quot;&gt;TCP 的运行时开销&lt;/h2&gt;
+
+&lt;h3 id=&quot;什么是-tcp-连接&quot;&gt;什么是 TCP 连接&lt;/h3&gt;
+
+&lt;p&gt;我们熟知的三次握手就能建立一个 TCP 连接&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;SYN&lt;/li&gt;
+  &lt;li&gt;等待对方回应 SYN/ACK&lt;/li&gt;
+  &lt;li&gt;最后回答 ACK&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;一旦双方完成这个规定的礼仪，就可以说这个连接建立了。一旦两边接上头，剩下的事情就是运行时的开销。&lt;/p&gt;
+
+&lt;h3 id=&quot;系统-tcp-协议栈&quot;&gt;系统 TCP 协议栈&lt;/h3&gt;
+
+&lt;p&gt;如果服务使用系统的 TCP 协议栈，那么每个连接都需要占用一个文件描述符。回忆一下 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;send()&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;recv()&lt;/code&gt;，它们的第一个参数是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;socket&lt;/code&gt;，而&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;socket&lt;/code&gt; 可不就是个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fd&lt;/code&gt; 嘛。所以操作系统文件描述符的最大值，这个全局的 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/sysctl/fs.txt&quot;&gt;设置&lt;/a&gt; 是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fs.file-max&lt;/code&gt;。在我的 RHEL8 上，它的值是 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;19603816&lt;/code&gt;，接近两千万了。如果我们希望用单进程实现这个服务，还需要改 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ulimit -n&lt;/code&gt; 的限制。当然，如果内存够大，多操作系统或者用容器化的实现，以及用多进程的实现都可以越过这些限制。代价就是更多的额外开销。&lt;/p&gt;
+
+&lt;p&gt;另外，还需要关注协议栈用到的缓冲区，看看 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;net.ipv4.tcp_wmem&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;net.ipv4.tcp_rmem&lt;/code&gt;，在 RHEL8 上，它们的缺省大小分别是 85K 和 16K。设置都有三组数字，分别是下限、缺省值和上限。以及 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;net.ipv4.tcp_mem&lt;/code&gt;，它控制着整个系统中所有 TCP 缓冲区的总大小的上限。这个设置表示的是内存页的数量，有三组数字，分别是下限、警戒值和上限。如果 TCP 缓冲空间总使用量达到上限之前，TCP 就会开始减少每个 TCP 连接缓冲区的分配。一旦达到上限，TCP 实现就开始丢包，希望减轻对内存系统的压力。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-shellsession&quot;&gt;$ grep . /proc/sys/net/ipv4/tcp*mem
+/proc/sys/net/ipv4/tcp_mem:2295903	3061204	4591806
+/proc/sys/net/ipv4/tcp_rmem:4096	87380	6291456
+/proc/sys/net/ipv4/tcp_wmem:4096	16384	4194304
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;所以缺省设置下，最多使用 17G 内存，可以同时支持二百万以上的长连接。&lt;/p&gt;
+
+&lt;p&gt;Linux 下新的防火墙是使用 netfilter 实现的，如果开启了防火墙那么还需要关注&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;net.ipv4.ip_conntrack_max&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;net.ipv4.netfilter.ip_conntrack_max&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;netfilter 维护着一张哈希表用来跟踪所有的 TCP 连接，所以如果这张表放不下新的 TCP 连接，TCP 就会开始丢包。&lt;/p&gt;
+
+&lt;h3 id=&quot;用户态-tcp-协议栈&quot;&gt;用户态 TCP 协议栈&lt;/h3&gt;
+
+&lt;h3 id=&quot;带宽&quot;&gt;带宽&lt;/h3&gt;
+
+&lt;p&gt;需要估计所有连接中活跃的比例，并且需要了解活跃连接需要的带宽是多少。&lt;/p&gt;
+
+&lt;h3 id=&quot;内存&quot;&gt;内存&lt;/h3&gt;
+
+&lt;p&gt;前面如果使用系统的 TCP/IP 栈，就需要为每个连接保证 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tcp_rmem.min&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tcp_wmem.min&lt;/code&gt; 的空间。&lt;/p&gt;</content><author><name></name></author><category term="networking" /><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T15:44:17+00:00</published><updated>2020-08-10T15:44:17+00:00</updated><id>https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html">&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。&lt;/p&gt;
 
 &lt;p&gt;十年前，用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mutex&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;condition_variable&lt;/code&gt; 似乎就能走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
 
@@ -599,7 +682,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
       &lt;li&gt;load-load&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="arch" /><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
+&lt;/ul&gt;</content><author><name></name></author><category term="arch" /><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
 
 &lt;h2 id=&quot;协程的由来&quot;&gt;协程的由来&lt;/h2&gt;
@@ -787,4 +870,4 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);
   &lt;li&gt;把 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fcontext_t&lt;/code&gt; 使用的汇编代码移植到 Seastar 里面去。&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;不过 Avi 提到，glibc 中的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp()&lt;/code&gt; 在上下文切换操作中占用的时间其实并不算多。所以就没有必要手撸汇编了。&lt;/p&gt;</content><author><name></name></author><category term="x86" /><summary type="html">这篇文章起源于 seastar-devel 上的一个讨论。在开始之前，我们先说一下协程的背景。 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T05:10:10+00:00</published><updated>2020-08-08T05:10:10+00:00</updated><id>/misc/2020/08/08/hello-world</id><content type="html" xml:base="/misc/2020/08/08/hello-world.html">&lt;p&gt;为了记录，也为了提高自己，写个 blog。&lt;/p&gt;</content><author><name></name></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>
+&lt;p&gt;不过 Avi 提到，glibc 中的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;longjmp()&lt;/code&gt; 在上下文切换操作中占用的时间其实并不算多。所以就没有必要手撸汇编了。&lt;/p&gt;</content><author><name></name></author><category term="x86" /><summary type="html">这篇文章起源于 seastar-devel 上的一个讨论。在开始之前，我们先说一下协程的背景。 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T05:10:10+00:00</published><updated>2020-08-08T05:10:10+00:00</updated><id>https://blog.k3fu.xyz/misc/2020/08/08/hello-world</id><content type="html" xml:base="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html">&lt;p&gt;为了记录，也为了提高自己，写个 blog。&lt;/p&gt;</content><author><name></name></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>
