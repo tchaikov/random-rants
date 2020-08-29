@@ -9,7 +9,7 @@ Gemfile.lock
 .jekyll-metadata
 
 # Match the Action's output directory.
-build/
+_site/
 
 # Emacs temp files
 *~
