@@ -55,17 +55,9 @@ end
 namespace :site do
   desc 'Peview the blog'
   task :preview do
-    require 'launchy'
     require 'jekyll'
 
     port = 4000
-    browser_launched = false
-    Jekyll::Hooks.register :site, :post_write do |_site|
-      next if browser_launched
-      browser_launched = true
-      Jekyll.logger.info 'Opening in browser...'
-      Launchy.open("http://localhost:#{port}")
-    end
 
     # Generate the site in server mode.
     puts 'Running Jekyll...'
@@ -78,6 +70,7 @@ namespace :site do
       'profile'     => true,
       'watch'       => true,
       'serving'     => true,
+      'open_url'    => true,
       'port'        => port,
       'livereload_port' => port + 1,
     }

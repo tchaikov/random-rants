@@ -46,8 +46,6 @@ GEM
       sskatex (>= 0.9.37)
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
-    launchy (2.5.0)
-      addressable (~> 2.7)
     liquid (4.0.3)
     listen (3.2.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
@@ -84,7 +82,6 @@ DEPENDENCIES
   jekyll (~> 4.1.1)
   jekyll-feed (~> 0.12)
   kramdown-math-sskatex
-  launchy (~> 2.5)
   minima (~> 2.5)
   rake (~> 13.0)
 
