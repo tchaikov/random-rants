@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2020-08-23T10:30:33+00:00</updated><id>/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">多核和顺序</title><link href="/arch/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T15:44:17+00:00</published><updated>2020-08-10T15:44:17+00:00</updated><id>/arch/2020/08/10/memory-ordering</id><content type="html" xml:base="/arch/2020/08/10/memory-ordering.html">&lt;p&gt;两三天前，忽然发觉自己其实是不了解多核编程的。以前，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mutex&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;condition_variable&lt;/code&gt; 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2020-08-29T06:40:08+00:00</updated><id>/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">多核和顺序</title><link href="/arch/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T15:44:17+00:00</published><updated>2020-08-10T15:44:17+00:00</updated><id>/arch/2020/08/10/memory-ordering</id><content type="html" xml:base="/arch/2020/08/10/memory-ordering.html">&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。&lt;/p&gt;
+
+&lt;p&gt;十年前，用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mutex&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;condition_variable&lt;/code&gt; 似乎就能走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
 
 &lt;h2 id=&quot;mutex-的问题&quot;&gt;mutex 的问题&lt;/h2&gt;
 
@@ -110,7 +112,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 
 &lt;p&gt;所以第三个核寄存器中看到是一个脏数据。这个数据从来没有在内存中出现过。它有两个来源：高 24 位是第一个核写进去的，低 8 位是自己写的。而按照 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cmpxch&lt;/code&gt; 的原子操作的语义，这个过程中是不可能有这样的不一致出现的。这也是为什么 amd64 不能保证非对齐写操作的原子性的原因。&lt;/p&gt;
 
-&lt;p&gt;话说回来，不仅仅是写数据上的核可能看到脏数据，也因为 store buffer 的存在，使得各个核看到的内存并不一样 (coherent)。如果某个核的对某个 cache line 的修改存在 store buffer 里面，那么这个 cache line 在其它核眼中则是旧的数据。另外，就算本地缓存检查了 store buffer，发送了 invalidate 消息给其他核。但是在其它核在检查 invalidation queue 之前，仍然会认为那个 cache line 是有效的。有人可能会说，其他内核可以在读缓存之前看看 invalidation queue 啊，可能是因为 invalidation queue 只是个 queue，内核在读缓存之前不会去检查 invalidation queue。所以如果多个内核共享一块内存，那么某个核上读写顺序重新排列会导致程序有不同的执行的结果。有的时候我们不在乎，但是有的时候这种不一致的结果是致命的。再举个例子，在餐馆吃饭。有的餐馆在顾客点菜之后会给一个电子闹钟，等闹钟响了，就可以去自助取餐。以此为背景，我们想象有两个核分别代表等餐的顾客老王 (wong)，和面馆老马 (mars)：&lt;/p&gt;
+&lt;p&gt;话说回来，不仅仅是写数据上的核可能看到脏数据，也因为 store buffer 的存在，使得各个核看到的内存并不一样 (coherent)。如果某个核的对某个 cache line 的修改存在 store buffer 里面，那么这个 cache line 在其它核眼中则是旧的数据。另外，就算本地缓存检查了 store buffer，发送了 invalidate 消息给其他核。但是在其它核在检查 invalidation queue 之前，仍然会认为那个 cache line 是有效的。有人可能会说，其他内核可以在读缓存之前看看 invalidation queue 啊，可能是因为 invalidation queue 只是个 queue，内核在读缓存之前不会去检查 invalidation queue。所以如果多个内核共享一块内存，那么某个核上读写顺序重新排列会导致程序有不同的执行的结果。有的时候我们不在乎，但是有的时候这种不一致的结果是致命的。再举个例子，在餐馆吃饭。有的餐馆在顾客点菜之后会给一个电子闹钟，等闹钟响了，就可以去自助取餐。以此为背景，我们想象有两个核分别代表等餐的顾客老王 (wong) 和面馆老马 (mars)：&lt;/p&gt;
 
 &lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;placed_order&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;beep&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
@@ -552,7 +554,52 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;div class=&quot;language-c++ highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;atomic_thread_fence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;order&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;它简单直接地在代码里面加入 memory barrier。它能和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;atomic&amp;lt;&amp;gt;&lt;/code&gt; ，也能和其他 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;atomic_thread_fence&amp;lt;&amp;gt;&lt;/code&gt; 一起使用。效果是相同的。&lt;/p&gt;</content><author><name></name></author><category term="arch" /><summary type="html">两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
+&lt;p&gt;这样直接的 memory barrier，能和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;atomic&amp;lt;&amp;gt;&lt;/code&gt; ，也能和其他 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;atomic_thread_fence&amp;lt;&amp;gt;&lt;/code&gt; 一起使用。效果是相同的。&lt;/p&gt;
+
+&lt;h2 id=&quot;后记&quot;&gt;后记&lt;/h2&gt;
+
+&lt;p&gt;Ceph 是个分布式的存储系统。它里面客户端访问的数据被叫做 object。我们用 PG 来对 object 分组，把属于同一个 PG 的 object 安排在集群里的一组磁盘上。每个磁盘上都有一个服务，叫 OSD，来管理这个磁盘，同时与集群还有客户端联系。所以客户端在访问自己读写的数据时，就会直接和负责存储的服务用 TCP 进行通讯。&lt;/p&gt;
+
+&lt;p&gt;一个客户端对 OSD 的读写是原子的，这个是底线。那么我们是不是也可以乱序执行客户端发过来的读写指令呢？如果客户端发过来三个消息&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;write(obj1, data), write_xattr(obj1, xattr), read(obj1), read(obj1)&lt;/li&gt;
+  &lt;li&gt;read(obj2)&lt;/li&gt;
+  &lt;li&gt;write(obj3), write_omap(obj3, omap)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;这里还有一些背景，客户端和 OSD 之间是通过 Ceph 自定义的 RADOS 协议联系的。RADOS 协议中一来一回的叫做 message，而用来访问 object 的 message 叫做 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MOSDOp&lt;/code&gt;。它可以包含一系列的读写访问，但是同一个 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MOSDOp&lt;/code&gt; 中操作的对象只能是同一个。这很大程度上限制了一个 message 里请求的可能性。因为在执行绝大多数访问 object 的操作之前，OSD 都需要读取这个 object 的 OI，即 object info，获取它的一些元数据，比如这个 object 的大小，版本， 快照信息。有的时候因为操作的 offset 越界，这类操作就被作为无效请求，给客户端返回个错误，或者干脆忽略这个无效的请求。但是不管如何，写请求一般来说仍然是比读请求慢的，对于多副本的数据池，我们要求这些副本是一致的。这里的一致性问题和内存一致性类似，其实也可以展开说我们留着以后聊。对于 erasure coded 的数据池，我们也要求 k+m 都落地了才能返回，这些都很花时间。&lt;/p&gt;
+
+&lt;p&gt;之前在 crimson 例会上，曾经和同事讨论过 Ceph 是不是能乱序访问，Sam 说 RBD 的访问模式基本不可能有这种情况。因为 librbd 客户端的一个 message 里不会同时出现对同一个 object 的读操作和写操作。是的。块设备的访问模式和内存是完全不一样的。就算使用 RBD 的操作系统或者应用程序把一块内存 mmap 到这个设备，也会把读写尽量 cache 在缓存或者内存里面，除非不得已，比如说上层一定要 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fsync&lt;/code&gt;。但是即使这样，&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fsync&lt;/code&gt; 所对应的 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MOSDOp&lt;/code&gt; 也不会包含对所涉及的 object 的读操作。&lt;/p&gt;
+
+&lt;p&gt;那么我们换个问题，有没有可能，或者说应不应该把对 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;obj1&lt;/code&gt;、&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;obj2&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;obj3&lt;/code&gt; 的访问乱序执行呢？先假设这几个 object 都同属于一个 PG，毕竟两个连续的操作的 object 同属于一个 PG 的可能性很小。就像是学校里面上公共选修课，随机点名的时候，你和室友都被抽中一样。&lt;/p&gt;
+
+&lt;p&gt;我们从有没有可能开始吧。librados 提供了两种操作，一种是同步的，另一种是异步的。同步的操作执行完毕才能返回，也就是说如果这个函数返回了，那么就可以认为集群已经把请求里面的写操作作为一个事务写到磁盘上了。异步的函数调用直接返回，不等待执行的操作落地。另外调用方需要给异步调用一个回调函数，这样 librados 就知道这个操作完成的时候该怎么处理了。前者相当于天然的 sequential consistency。后者就给 OSD 以可乘之机，在保证操作原子性的前提下，有一定的自由度可以调度队列里面的操作。&lt;/p&gt;
+
+&lt;p&gt;在这个框架下，还有个很强的限制。Ceph 有个测试叫做 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ceph_test_rados&lt;/code&gt;，它根据配置向集群发送一系列异步的读写操作，每组操作都有个单调递增的编号。异步操作完成的时候，根据这个操作的编号我们能知道它的返回是不是顺序的。如果不是顺序的，这个测试会失败。换句话说，这个测试要求 sequential consistency。如果这个测试是合理的，或者即使不合理也是无法变动的，比如说更高层的客户端，比如说 qemu 的 RBD 插件把这个作为一个协定，并且依赖这个行为，那么我们就必须比 amd64 更自律才行。当然，我们也可以异步返回，然后再在 librados 这一层再让新的调用阻塞在老的调用上，使得它们的返回看上去像是顺序的。&lt;/p&gt;
+
+&lt;p&gt;为了满足 sequential consistency 的要求，我们有两个选择。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;执行上的 sequential consistency。这很明显是最稳妥的办法。把罪恶扼杀在摇篮之中，通讯层甚至可以等 MOSDOp 完成之后再读取下一个 message，但是这和&lt;del&gt;咸鱼&lt;/del&gt;完全同步有什么区别呢？客户端之所以选择异步操作就是希望更高的并发啊。当然，即便如此，异步的操作仍然是有意义的。异步往 OSD 发射指令，而在 OSD 上顺序执行可以避免网络上的延迟。&lt;/li&gt;
+  &lt;li&gt;表现上的 sequential consistency。这个说法并不严谨，其实表现上的顺序一致也需要执行层面的支持。我们权且把第一个的选择作为最直接了当的、完全阻塞的实现吧。这个选择的执行需要更小心一些。因为执行层面上可能的乱序，我们可能需要考虑下面几种读写序列的乱序
+    &lt;ul&gt;
+      &lt;li&gt;store-store
+        &lt;ul&gt;
+          &lt;li&gt;写同一 object。倘若 object 没有支持快照，只要最终的结果和顺序执行的结果一样，即可以认为这两次操作是顺序的。况且要是能在 object store 层面上实现 write collapsing 或者 write combining，岂不是一桩美事？&lt;/li&gt;
+          &lt;li&gt;写不同 object。回到老问题，这两个写操作是不是带有 acquire-release 语义？会不会有老马和老王的问题？&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;store-load
+        &lt;ul&gt;
+          &lt;li&gt;读写同一 object。和前文中讨论的 CPU 的读写指令不同，RADOS 里面 store 和 load 指令的操作数都是立即数。所以不存在读写数据本身的数据依赖的问题。但是如果读的 extent 和之前写的 extent 有重叠，那么我们就必须小心了，至少需要先把写指令下发到 object store，然后由 object store 把 cache 修改了，并标记成 dirty 才能算是这个操作提交完成。这样等到执行 load 指令的时候才能读到最新的数据。&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;load-store&lt;/li&gt;
+      &lt;li&gt;load-load&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="arch" /><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
 
 &lt;h2 id=&quot;协程的由来&quot;&gt;协程的由来&lt;/h2&gt;

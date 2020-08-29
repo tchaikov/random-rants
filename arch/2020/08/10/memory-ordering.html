@@ -11,11 +11,11 @@
     <meta property="og:locale" content="en_US" />
     <meta
       name="description"
-      content="两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。"
+      content="有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。"
     />
     <meta
       property="og:description"
-      content="两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。"
+      content="有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。"
     />
     <link rel="canonical" href="/arch/2020/08/10/memory-ordering.html" />
     <meta property="og:url" content="/arch/2020/08/10/memory-ordering.html" />
@@ -32,7 +32,7 @@
           "@id": "/arch/2020/08/10/memory-ordering.html"
         },
         "@type": "BlogPosting",
-        "description": "两三天前，忽然发觉自己其实是不了解多核编程的。以前，mutex 和 condition_variable 走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。",
+        "description": "有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。",
         "url": "/arch/2020/08/10/memory-ordering.html",
         "headline": "多核和顺序",
         "dateModified": "2020-08-10T15:44:17+00:00",
@@ -94,15 +94,16 @@
 
           <div class="post-content e-content" itemprop="articleBody">
             <p>
-              两三天前，忽然发觉自己其实是不了解多核编程的。以前，<code
-                class="language-plaintext highlighter-rouge"
-                >mutex</code
-              >
-              和
+              有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。
+            </p>
+
+            <p>
+              十年前，用
+              <code class="language-plaintext highlighter-rouge">mutex</code> 和
               <code class="language-plaintext highlighter-rouge"
                 >condition_variable</code
               >
-              走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下无锁编程，在体系结构上多理解一些
+              似乎就能走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下多核系统中的无锁编程，在体系结构上多理解一些
               CPU 和内存的交互，这样对工作会更有帮助。
             </p>
 
@@ -499,7 +500,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
               queue 啊，可能是因为 invalidation queue 只是个
               queue，内核在读缓存之前不会去检查 invalidation
               queue。所以如果多个内核共享一块内存，那么某个核上读写顺序重新排列会导致程序有不同的执行的结果。有的时候我们不在乎，但是有的时候这种不一致的结果是致命的。再举个例子，在餐馆吃饭。有的餐馆在顾客点菜之后会给一个电子闹钟，等闹钟响了，就可以去自助取餐。以此为背景，我们想象有两个核分别代表等餐的顾客老王
-              (wong)，和面馆老马 (mars)：
+              (wong) 和面馆老马 (mars)：
             </p>
 
             <div class="language-c++ highlighter-rouge">
@@ -1595,7 +1596,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
             </div>
 
             <p>
-              它简单直接地在代码里面加入 memory barrier。它能和
+              这样直接的 memory barrier，能和
               <code class="language-plaintext highlighter-rouge"
                 >atomic&lt;&gt;</code
               >
@@ -1605,6 +1606,148 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
               >
               一起使用。效果是相同的。
             </p>
+
+            <h2 id="后记">后记</h2>
+
+            <p>
+              Ceph 是个分布式的存储系统。它里面客户端访问的数据被叫做
+              object。我们用 PG 来对 object 分组，把属于同一个 PG 的 object
+              安排在集群里的一组磁盘上。每个磁盘上都有一个服务，叫
+              OSD，来管理这个磁盘，同时与集群还有客户端联系。所以客户端在访问自己读写的数据时，就会直接和负责存储的服务用
+              TCP 进行通讯。
+            </p>
+
+            <p>
+              一个客户端对 OSD
+              的读写是原子的，这个是底线。那么我们是不是也可以乱序执行客户端发过来的读写指令呢？如果客户端发过来三个消息
+            </p>
+
+            <ol>
+              <li>
+                write(obj1, data), write_xattr(obj1, xattr), read(obj1),
+                read(obj1)
+              </li>
+              <li>read(obj2)</li>
+              <li>write(obj3), write_omap(obj3, omap)</li>
+            </ol>
+
+            <p>
+              这里还有一些背景，客户端和 OSD 之间是通过 Ceph 自定义的 RADOS
+              协议联系的。RADOS 协议中一来一回的叫做 message，而用来访问 object
+              的 message 叫做
+              <code class="language-plaintext highlighter-rouge">MOSDOp</code
+              >。它可以包含一系列的读写访问，但是同一个
+              <code class="language-plaintext highlighter-rouge">MOSDOp</code>
+              中操作的对象只能是同一个。这很大程度上限制了一个 message
+              里请求的可能性。因为在执行绝大多数访问 object 的操作之前，OSD
+              都需要读取这个 object 的 OI，即 object
+              info，获取它的一些元数据，比如这个 object 的大小，版本，
+              快照信息。有的时候因为操作的 offset
+              越界，这类操作就被作为无效请求，给客户端返回个错误，或者干脆忽略这个无效的请求。但是不管如何，写请求一般来说仍然是比读请求慢的，对于多副本的数据池，我们要求这些副本是一致的。这里的一致性问题和内存一致性类似，其实也可以展开说我们留着以后聊。对于
+              erasure coded 的数据池，我们也要求 k+m
+              都落地了才能返回，这些都很花时间。
+            </p>
+
+            <p>
+              之前在 crimson 例会上，曾经和同事讨论过 Ceph 是不是能乱序访问，Sam
+              说 RBD 的访问模式基本不可能有这种情况。因为 librbd 客户端的一个
+              message 里不会同时出现对同一个 object
+              的读操作和写操作。是的。块设备的访问模式和内存是完全不一样的。就算使用
+              RBD 的操作系统或者应用程序把一块内存 mmap
+              到这个设备，也会把读写尽量 cache
+              在缓存或者内存里面，除非不得已，比如说上层一定要
+              <code class="language-plaintext highlighter-rouge">fsync</code
+              >。但是即使这样，<code
+                class="language-plaintext highlighter-rouge"
+                >fsync</code
+              >
+              所对应的
+              <code class="language-plaintext highlighter-rouge">MOSDOp</code>
+              也不会包含对所涉及的 object 的读操作。
+            </p>
+
+            <p>
+              那么我们换个问题，有没有可能，或者说应不应该把对
+              <code class="language-plaintext highlighter-rouge">obj1</code
+              >、<code class="language-plaintext highlighter-rouge">obj2</code>
+              和
+              <code class="language-plaintext highlighter-rouge">obj3</code>
+              的访问乱序执行呢？先假设这几个 object 都同属于一个
+              PG，毕竟两个连续的操作的 object 同属于一个 PG
+              的可能性很小。就像是学校里面上公共选修课，随机点名的时候，你和室友都被抽中一样。
+            </p>
+
+            <p>
+              我们从有没有可能开始吧。librados
+              提供了两种操作，一种是同步的，另一种是异步的。同步的操作执行完毕才能返回，也就是说如果这个函数返回了，那么就可以认为集群已经把请求里面的写操作作为一个事务写到磁盘上了。异步的函数调用直接返回，不等待执行的操作落地。另外调用方需要给异步调用一个回调函数，这样
+              librados 就知道这个操作完成的时候该怎么处理了。前者相当于天然的
+              sequential consistency。后者就给 OSD
+              以可乘之机，在保证操作原子性的前提下，有一定的自由度可以调度队列里面的操作。
+            </p>
+
+            <p>
+              在这个框架下，还有个很强的限制。Ceph 有个测试叫做
+              <code class="language-plaintext highlighter-rouge"
+                >ceph_test_rados</code
+              >，它根据配置向集群发送一系列异步的读写操作，每组操作都有个单调递增的编号。异步操作完成的时候，根据这个操作的编号我们能知道它的返回是不是顺序的。如果不是顺序的，这个测试会失败。换句话说，这个测试要求
+              sequential
+              consistency。如果这个测试是合理的，或者即使不合理也是无法变动的，比如说更高层的客户端，比如说
+              qemu 的 RBD
+              插件把这个作为一个协定，并且依赖这个行为，那么我们就必须比 amd64
+              更自律才行。当然，我们也可以异步返回，然后再在 librados
+              这一层再让新的调用阻塞在老的调用上，使得它们的返回看上去像是顺序的。
+            </p>
+
+            <p>为了满足 sequential consistency 的要求，我们有两个选择。</p>
+
+            <ul>
+              <li>
+                执行上的 sequential
+                consistency。这很明显是最稳妥的办法。把罪恶扼杀在摇篮之中，通讯层甚至可以等
+                MOSDOp 完成之后再读取下一个
+                message，但是这和<del>咸鱼</del>完全同步有什么区别呢？客户端之所以选择异步操作就是希望更高的并发啊。当然，即便如此，异步的操作仍然是有意义的。异步往
+                OSD 发射指令，而在 OSD 上顺序执行可以避免网络上的延迟。
+              </li>
+              <li>
+                表现上的 sequential
+                consistency。这个说法并不严谨，其实表现上的顺序一致也需要执行层面的支持。我们权且把第一个的选择作为最直接了当的、完全阻塞的实现吧。这个选择的执行需要更小心一些。因为执行层面上可能的乱序，我们可能需要考虑下面几种读写序列的乱序
+                <ul>
+                  <li>
+                    store-store
+                    <ul>
+                      <li>
+                        写同一 object。倘若 object
+                        没有支持快照，只要最终的结果和顺序执行的结果一样，即可以认为这两次操作是顺序的。况且要是能在
+                        object store 层面上实现 write collapsing 或者 write
+                        combining，岂不是一桩美事？
+                      </li>
+                      <li>
+                        写不同 object。回到老问题，这两个写操作是不是带有
+                        acquire-release 语义？会不会有老马和老王的问题？
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    store-load
+                    <ul>
+                      <li>
+                        读写同一 object。和前文中讨论的 CPU
+                        的读写指令不同，RADOS 里面 store 和 load
+                        指令的操作数都是立即数。所以不存在读写数据本身的数据依赖的问题。但是如果读的
+                        extent 和之前写的 extent
+                        有重叠，那么我们就必须小心了，至少需要先把写指令下发到
+                        object store，然后由 object store 把 cache
+                        修改了，并标记成 dirty
+                        才能算是这个操作提交完成。这样等到执行 load
+                        指令的时候才能读到最新的数据。
+                      </li>
+                    </ul>
+                  </li>
+                  <li>load-store</li>
+                  <li>load-load</li>
+                </ul>
+              </li>
+            </ul>
           </div>
           <a
             class="u-url"
