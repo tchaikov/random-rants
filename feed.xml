@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-08-29T10:09:47+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T10:00:00+00:00</published><updated>2020-08-23T10:00:00+00:00</updated><id>https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html">&lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-09-02T03:26:29+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T10:00:00+00:00</published><updated>2020-08-23T10:00:00+00:00</updated><id>https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html">&lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
 
 &lt;p&gt;和平时一样，我们假设客户端是 Linux。这可能不是一个生造出来的问题，想一想，如果我们希望设计一个支持长连接的代理服务器呢？如果有海量的客户端希望连接被代理的服务器呢？或者说我们希望为用户提供实时的消息服务呢？这是一种 c1000k 问题。&lt;/p&gt;
 
@@ -83,9 +83,25 @@
 
 &lt;h3 id=&quot;内存&quot;&gt;内存&lt;/h3&gt;
 
-&lt;p&gt;前面如果使用系统的 TCP/IP 栈，就需要为每个连接保证 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tcp_rmem.min&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tcp_wmem.min&lt;/code&gt; 的空间。&lt;/p&gt;</content><author><name></name></author><category term="networking" /><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T15:44:17+00:00</published><updated>2020-08-10T15:44:17+00:00</updated><id>https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html">&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。&lt;/p&gt;
+&lt;p&gt;前面如果使用系统的 TCP/IP 栈，就需要为每个连接保证 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tcp_rmem.min&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tcp_wmem.min&lt;/code&gt; 的空间。&lt;/p&gt;</content><author><name></name></author><category term="networking" /><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T15:44:17+00:00</published><updated>2020-08-10T15:44:17+00:00</updated><id>https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html">&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个&lt;a href=&quot;https://www.youtube.com/watch?v=Nb2tebYAaOA&quot;&gt;比方&lt;/a&gt;，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如&lt;/p&gt;
 
-&lt;p&gt;十年前，用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mutex&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;condition_variable&lt;/code&gt; 似乎就能走天下。在今天，这些同步原语仍然很重要，但是如果我们对高并发有更高的追求。就应该多了解一下多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;He is tall and smart and …&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;可以改成&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;He is smart and tall and …&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;但是这个句子如果打乱顺序的话，”red” 修饰的对象可能就不对了&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Tall man who is wearing a red shirt&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;句子里面的元素之间有依赖关系。&lt;/p&gt;
 
 &lt;h2 id=&quot;mutex-的问题&quot;&gt;mutex 的问题&lt;/h2&gt;
 
@@ -684,7 +700,9 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
       &lt;li&gt;load-load&lt;/li&gt;
     &lt;/ul&gt;
   &lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="arch" /><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
+&lt;/ul&gt;
+
+&lt;p&gt;十年前，用 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mutex&lt;/code&gt; 和 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;condition_variable&lt;/code&gt; 就能解决很多多线程的问题。在今天，这些同步原语仍然很重要。但是如果我们对高并发有更高的追求，就需要更深入了解多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;</content><author><name></name></author><category term="arch" /><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T07:11:43+00:00</published><updated>2020-08-09T07:11:43+00:00</updated><id>https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/x86/2020/08/09/setjmp-setcontext.html">&lt;p&gt;这篇文章起源于 seastar-devel 上的一个&lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
 
 &lt;h2 id=&quot;协程的由来&quot;&gt;协程的由来&lt;/h2&gt;
