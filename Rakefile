@@ -81,6 +81,6 @@ namespace :site do
   desc 'Push the changes to remote repo'
   task :push do
     current_branch = `git branch`.to_s.strip.match(%r!^\* (.+)$!)[1]
-    sh "git push origin #{current_branch}"
+    sh "git push me #{current_branch}"
   end
 end
