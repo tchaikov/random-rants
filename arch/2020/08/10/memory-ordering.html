@@ -33,16 +33,16 @@
     />
     <script type="application/ld+json">
       {
-        "@type": "BlogPosting",
-        "url": "https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html",
-        "headline": "多核和顺序",
-        "dateModified": "2020-08-10T15:44:17+00:00",
         "datePublished": "2020-08-10T15:44:17+00:00",
+        "@type": "BlogPosting",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html"
         },
         "description": "有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如",
+        "headline": "多核和顺序",
+        "dateModified": "2020-08-10T15:44:17+00:00",
+        "url": "https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html",
         "@context": "https://schema.org"
       }
     </script>
@@ -395,6 +395,12 @@
             </p>
 
             <p>
+              <img
+                src="/images/ditaa/ditaa-3f09879b8bb6ff93fcf43ce62d085ba749948d1b.png"
+              />
+            </p>
+
+            <p>
               而读一个 cache line 也不容易。类似的，要是 cache miss
               的话，那么当前核就会要求另外一个核把它的数据先刷到内存。这将引起一个内存事务。
             </p>
@@ -445,14 +451,14 @@
             </p>
 
             <pre><code class="language-asm">xor %eax, %eax
-cmpxchl $0x01010101, (mem) 
+cmpxchl $0x01010101, (mem)
 </code></pre>
 
             <pre><code class="language-asm">movl $0x01010101, %eax
-cmpxchl $0x02020202, (mem) 
+cmpxchl $0x02020202, (mem)
 </code></pre>
 
-            <pre><code class="language-asm">movb $0x03, (mem), 
+            <pre><code class="language-asm">movb $0x03, (mem),
 movl (mem), reg
 </code></pre>
 
@@ -1238,7 +1244,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 
 <span class="kt">void</span> <span class="nf">wong</span><span class="p">()</span> <span class="p">{</span>
   <span class="kt">bool</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
-  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> 
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span>
                                              <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">,</span>
                                              <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">));</span>
   <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">beep</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">));</span>
@@ -1247,7 +1253,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 
 <span class="kt">void</span> <span class="nf">mars</span><span class="p">()</span> <span class="p">{</span>
   <span class="kt">bool</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
-  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span> 
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">false</span><span class="p">,</span>
                                              <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">,</span>
                                              <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">));</span>
   <span class="n">noodle</span> <span class="o">=</span> <span class="n">cook</span><span class="p">();</span>
@@ -1264,7 +1270,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
                 <pre
                   class="highlight"
                 ><code>  <span class="kt">bool</span> <span class="n">expected</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
-  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span> 
+  <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">placed_order</span><span class="p">.</span><span class="n">compare_exchange_weak</span><span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="nb">true</span><span class="p">,</span>
                                              <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">,</span>
                                              <span class="n">std</span><span class="o">::</span><span class="n">memory_order_relaxed</span><span class="p">));</span>
 </code></pre>
