@@ -1,0 +1,13 @@
+= Ceph 的一致性模型
+:categories: ceph
+:date: 2020-08-29 14:41:32 +0800
+:page-layout: post
+:published: false
+
+== strong consistency
+
+== weak consisteny
+
+最终一致 (eventually consistency)。
+
+=== quorum consistency

@@ -8,4 +8,9 @@ upgrade:
 	bundle update
 
 s serve:
-	bundle exec jekyll serve --source docs --destination _site/ --livereload --trace
+	bundle exec jekyll serve     \
+      --livereload           \
+      --trace                \
+      --open-url             \
+      --incremental          \
+      --watch

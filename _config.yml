@@ -1,0 +1,28 @@
+title: some random rants
+email: tchaikov@gmail.com
+description: 我的学习记录
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://blog.k3fu.xyz"
+github_username:  tchaikov
+
+exclude:
+  - Gemfile.lock
+  - Gemfile
+  - vendor/
+  - Rakefile
+  - Makefile
+  - README.adoc
+  - LICENSE
+keep_files:
+  - images
+asciidoc: {}
+asciidoctor:
+  base_dir: :docdir
+  safe: unsafe
+  attributes:
+    - stem
+    - icons=font
+    - imagesdir=/images
+    - source-highlighter=rouge
+# Build settings
+theme: minima

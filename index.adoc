@@ -1,0 +1,4 @@
+:showtitle:
+:page-title: 笔记本
+:page-description: yet another blog
+:page-layout: home

@@ -25,7 +25,7 @@ jobs:
           enable_cache: true
           format_output: true
           prettier_ignore: 'about/*'
-          jekyll_src: 'docs'
+          jekyll_src: '.'
           gem_src: '.'
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
           restore-keys: ${{ runner.os }}-gems-
