@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-09-26T09:54:34+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/ceph/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T11:39:40+00:00</published><updated>2020-09-20T11:39:40+00:00</updated><id>https://blog.k3fu.xyz/ceph/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/ceph/2020/09/20/out-of-order-in-ceph.html">&lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-09-28T01:41:52+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/ceph/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T11:39:40+00:00</published><updated>2020-09-20T11:39:40+00:00</updated><id>https://blog.k3fu.xyz/ceph/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/ceph/2020/09/20/out-of-order-in-ceph.html">&lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;集群。比如说数据保存在 RADOS 集群里。&lt;/li&gt;
@@ -101,7 +101,7 @@
 
 &lt;p&gt;倘若写操作的偏移量不是 m x chunk size 对齐的，那么这个写操作就会升级成 rmw (read modifiy write) 操作，因为它需要把自己少的那部分先读出来，解码，然后再和自己的没对齐的部分拼起来再重新拆分编码。&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;/images/ditaa/ditaa-350efd60fb2519a2b85df44096e8666e8fe5c994.png&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/ditaa/ditaa-525f1de75d0c2c3f4d404026f3ae96ef10a20a3b.png&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;在上图中，在编码的时候产生了 6 块数据，其中 4 块是原始数据，2 块是校验数据。为了修改这个对象，而修改的位置正好落在了 3 里面，我们必须把整个数据都读进来，然后再把写请求的数据嫁接到 3 的对应位置，重新编码。得到被修改过的 3 和全新 4，以及融合了老数据和新数据的 5 和 6。正因为 erasure coded 的写操作事实上包含了&lt;/p&gt;
 
@@ -118,7 +118,7 @@
   &lt;li&gt;读操作可以和读操作并行&lt;/li&gt;
   &lt;li&gt;写操作可以和写操作并行&lt;/li&gt;
   &lt;li&gt;RMW 不能和任何操作并行&lt;/li&gt;
-&lt;/ul&gt;</content><author><name></name></author><category term="ceph" /><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">我的博客</title><link href="https://blog.k3fu.xyz/jekyll/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="我的博客" /><published>2020-09-05T15:49:18+00:00</published><updated>2020-09-05T15:49:18+00:00</updated><id>https://blog.k3fu.xyz/jekyll/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/jekyll/2020/09/05/my-blog.html">&lt;p&gt;我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Rakefile&lt;/code&gt; 。它比 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Makefile&lt;/code&gt; 更灵活，但是还是有点变扭。还是记一下子。&lt;/p&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="ceph" /><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">我的博客</title><link href="https://blog.k3fu.xyz/jekyll/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="我的博客" /><published>2020-09-05T15:49:18+00:00</published><updated>2020-09-05T15:49:18+00:00</updated><id>https://blog.k3fu.xyz/jekyll/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/jekyll/2020/09/05/my-blog.html">&lt;p&gt;我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Rakefile&lt;/code&gt; 。它比 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Makefile&lt;/code&gt; 更灵活，但是还是有点变扭。这里记一下子。&lt;/p&gt;
 
 &lt;p&gt;新建帖子&lt;/p&gt;
 
@@ -140,7 +140,7 @@
 &lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;bundle &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;就行了。&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><summary type="html">我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 Rakefile 。它比 Makefile 更灵活，但是还是有点变扭。还是记一下子。</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T10:00:00+00:00</published><updated>2020-08-23T10:00:00+00:00</updated><id>https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html">&lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
+&lt;p&gt;就行了。&lt;/p&gt;</content><author><name></name></author><category term="jekyll" /><summary type="html">我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 Rakefile 。它比 Makefile 更灵活，但是还是有点变扭。这里记一下子。</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T10:00:00+00:00</published><updated>2020-08-23T10:00:00+00:00</updated><id>https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/networking/2020/08/23/tcp-connections.html">&lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
 
 &lt;p&gt;和平时一样，我们假设客户端是 Linux。这可能不是一个生造出来的问题，想一想，如果我们希望设计一个支持长连接的代理服务器呢？如果有海量的客户端希望连接被代理的服务器呢？或者说我们希望为用户提供实时的消息服务呢？这是一种 c1000k 问题。&lt;/p&gt;
 
