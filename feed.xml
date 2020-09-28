@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-09-28T14:14:54+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-09-28T15:34:39+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
@@ -424,7 +424,7 @@
 &lt;/div&gt;</content><author><name></name></author><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T00:00:00+00:00</published><updated>2020-08-10T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个https://www.youtube.com/watch?v=Nb2tebYAaOA[比方]，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如&lt;/p&gt;
+&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 &lt;a href=&quot;https://www.youtube.com/watch?v=Nb2tebYAaOA&quot;&gt;比方&lt;/a&gt;，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;quoteblock&quot;&gt;
 &lt;blockquote&gt;
@@ -462,7 +462,7 @@
 &lt;h2 id=&quot;mutex-的问题&quot;&gt;mutex 的问题&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;在多核环境下，要实现无锁编程或者尽量减少锁的使用，就不能用 mutex。其实，为了最大程度上优化，内核里的 mutex 在加锁的时候为了避免不必要的开销甚至分了https://www.kernel.org/doc/html/latest/locking/mutex-design.html[三种情况]：&lt;/p&gt;
+&lt;p&gt;在多核环境下，要实现无锁编程或者尽量减少锁的使用，就不能用 mutex。其实，为了最大程度上优化，内核里的 mutex 在加锁的时候为了避免不必要的开销甚至分了 &lt;a href=&quot;https://www.kernel.org/doc/html/latest/locking/mutex-design.html&quot;&gt;三种情况&lt;/a&gt;：&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot;&gt;
@@ -478,7 +478,7 @@
 &lt;/ol&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这个机制叫做 &lt;code&gt;futex&lt;/code&gt;。在 Linux、NetBSD、FreeBSD、Windows 以及 &lt;a href=&quot;https://fuchsia.dev/fuchsia-src/concepts/kernel/concepts#futexes&quot;&gt;Zicron&lt;/a&gt; 中都实现了它。在 FreeBSD 中甚至有明确的 spin/sleep mutex 和 spin mutex 的https://www.freebsd.org/cgi/man.cgi?query=mutex&amp;amp;sektion=9[概念]。而在 Linux 中，futex 则是一个https://www.man7.org/linux/man-pages/man2/futex.2.html[系统调用]。&lt;/p&gt;
+&lt;p&gt;这个机制叫做 &lt;code&gt;futex&lt;/code&gt;。在 Linux、NetBSD、FreeBSD、Windows 以及 &lt;a href=&quot;https://fuchsia.dev/fuchsia-src/concepts/kernel/concepts#futexes&quot;&gt;Zicron&lt;/a&gt; 中都实现了它。在 FreeBSD 中甚至有明确的 spin/sleep mutex 和 spin mutex 的 &lt;a href=&quot;https://www.freebsd.org/cgi/man.cgi?query=mutex&amp;amp;sektion=9&quot;&gt;概念&lt;/a&gt;。而在 Linux 中，futex 则是一个 &lt;a href=&quot;https://www.man7.org/linux/man-pages/man2/futex.2.html&quot;&gt;系统调用&lt;/a&gt;。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;不过，这些原语有两个问题&lt;/p&gt;
@@ -623,13 +623,13 @@
 &lt;p&gt;而读一个 cache line 也不容易。类似的，要是 cache miss 的话，那么当前核就会要求另外一个核把它的数据先刷到内存。这将引起一个内存事务。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是这样引入了一个问题--------内存读写操作的乱序执行。这不仅让单核的顺序执行成为一个有前提的表象，更让多核的环境下的内存一致性和顺序执行更加错综复杂。对于特定的内核来说，可能会在一个写操作完成之前，就开始执行下一条指令。而对于其他内核来说，读指令可能会得到一个事实上过时 (invalid) 的数据。因为即使是写操作的发出者也还没有真正完成这个写操作，它只是把这个操作提交给了 store buffer。不过和其他内核相比，它是可以读到最新的数据的，在它执行读指令的时候，可以先检查 store buffer，如果 store buffer 里面没有对应的数据，再检查缓存。这个叫做 store buffer forwarding。因为它在当前核通过 buffer 把数据&quot;转交&quot;给将来要执行的读指令。这个设计保证了数据依赖和控制依赖，也就是单核上下一个操作的结果如果依赖上个操作的副作用，那么下个操作必须能看到上个操作的副作用。换句话说，如果从单核的角度出发，看不出这种&quot;`依赖`&quot;问题，那么 CPU 就认为它可以把读写操作重新排列，以此获得更高的并发度。另外，store buffer 的存在也催生了另外一些优化，如果有两个写操作修改的是连续的内存地址，在刷内存的时候，这两个写操作就可以合并成一个大的写操作，从而减轻内存总线的负担。这个技术叫做 write combining。https://www.amd.com/system/files/TechDocs/24593.pdf#page=224[write combining buffer] 就是处在 store buffer 和系统总线中间的地方。如果有往同一地址的写操作，那么时间顺序上后面操作就会覆盖前面的操作，这个技术叫 write collapsing。&lt;/p&gt;
+&lt;p&gt;但是这样引入了一个问题--------内存读写操作的乱序执行。这不仅让单核的顺序执行成为一个有前提的表象，更让多核的环境下的内存一致性和顺序执行更加错综复杂。对于特定的内核来说，可能会在一个写操作完成之前，就开始执行下一条指令。而对于其他内核来说，读指令可能会得到一个事实上过时 (invalid) 的数据。因为即使是写操作的发出者也还没有真正完成这个写操作，它只是把这个操作提交给了 store buffer。不过和其他内核相比，它是可以读到最新的数据的，在它执行读指令的时候，可以先检查 store buffer，如果 store buffer 里面没有对应的数据，再检查缓存。这个叫做 store buffer forwarding。因为它在当前核通过 buffer 把数据&quot;转交&quot;给将来要执行的读指令。这个设计保证了数据依赖和控制依赖，也就是单核上下一个操作的结果如果依赖上个操作的副作用，那么下个操作必须能看到上个操作的副作用。换句话说，如果从单核的角度出发，看不出这种&quot;`依赖`&quot;问题，那么 CPU 就认为它可以把读写操作重新排列，以此获得更高的并发度。另外，store buffer 的存在也催生了另外一些优化，如果有两个写操作修改的是连续的内存地址，在刷内存的时候，这两个写操作就可以合并成一个大的写操作，从而减轻内存总线的负担。这个技术叫做 write combining。 &lt;a href=&quot;https://www.amd.com/system/files/TechDocs/24593.pdf#page=224&quot;&gt;write combining buffer&lt;/a&gt; 就是处在 store buffer 和系统总线中间的地方。如果有往同一地址的写操作，那么时间顺序上后面操作就会覆盖前面的操作，这个技术叫 write collapsing。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;这种读写指令的乱序执行破坏了严格意义上的顺序一致性。对很多人来说，如果你要的是咖啡加奶，那么做法应该是先加咖啡再加奶，但是对一个追求效率的人来说，可能就会应该先做咖啡，在咖啡机哼哧的时候，把奶加进去，等咖啡机好了，再把咖啡倒进去。不过要是有原教旨主义者看到这个顺序可能会很不高兴，他说顺序和比例一样重要！简单说，顺序对自己可能不那么重要，但是旁人可能会很在意。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是甚至在不对齐写的情况下也会造成不一致的结果。说到 store buffer forwarding，之前 Linus 举了一个https://yarchive.net/comp/linux/store_buffer.html[例子]。&lt;/p&gt;
+&lt;p&gt;但是甚至在不对齐写的情况下也会造成不一致的结果。说到 store buffer forwarding，之前 Linus 举了一个 &lt;a href=&quot;https://yarchive.net/comp/linux/store_buffer.html&quot;&gt;例子&lt;/a&gt;。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;假设有个系统有三个核，开始的时候 &lt;code&gt;dword [mem]&lt;/code&gt; 的内容是 &lt;code&gt;0&lt;/code&gt;。执行下面的程序&lt;/p&gt;
@@ -688,7 +688,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;要是平时写这个程序，大家可能会很自然地用 &lt;code&gt;atomic&amp;lt;bool&amp;gt;&lt;/code&gt; 来定义 &lt;code&gt;placed_order&lt;/code&gt; 和 &lt;code&gt;beep&lt;/code&gt;。但是既然 amd64 保证了https://www.amd.com/system/files/TechDocs/24593.pdf#page=234[单字节数据访问的原子性]&lt;/p&gt;
+&lt;p&gt;要是平时写这个程序，大家可能会很自然地用 &lt;code&gt;atomic&amp;lt;bool&amp;gt;&lt;/code&gt; 来定义 &lt;code&gt;placed_order&lt;/code&gt; 和 &lt;code&gt;beep&lt;/code&gt;。但是既然 amd64 保证了 &lt;a href=&quot;https://www.amd.com/system/files/TechDocs/24593.pdf#page=234&quot;&gt;单字节数据访问的原子性&lt;/a&gt;&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;quoteblock&quot;&gt;
 &lt;blockquote&gt;
@@ -740,7 +740,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;p&gt;weak consistency: 弱一致。在一定程度上允许重排序，受到 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/memory-barriers.txt&quot;&gt;memory barrier&lt;/a&gt; 的约束。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;relaxed consistency: 处理器完全可以[.line-through]#乱来#乱序。&lt;/p&gt;
+&lt;p&gt;relaxed consistency: 处理器完全可以&lt;span class=&quot;line-through&quot;&gt;乱来&lt;/span&gt;乱序。&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
@@ -764,7 +764,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;在各种架构里面，amd64 是比较保守的。其他架构就比较放飞自我，比如对于 aarch64 中的 ARMv8-A 架构，https://developer.arm.com/documentation/den0024/a/memory-ordering[它的文档]提到&lt;/p&gt;
+&lt;p&gt;在各种架构里面，amd64 是比较保守的。其他架构就比较放飞自我，比如对于 aarch64 中的 ARMv8-A 架构， &lt;a href=&quot;https://developer.arm.com/documentation/den0024/a/memory-ordering&quot;&gt;它的文档&lt;/a&gt;提到&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;quoteblock&quot;&gt;
 &lt;blockquote&gt;
@@ -774,7 +774,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;/blockquote&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;而 Alpha 处理器则是另外一个极端。有这么一个http://www.cs.umd.edu/~pugh/java/memoryModel/AlphaReordering.html[例子]&lt;/p&gt;
+&lt;p&gt;而 Alpha 处理器则是另外一个极端。有这么一个 &lt;a href=&quot;http://www.cs.umd.edu/~pugh/java/memoryModel/AlphaReordering.html&quot;&gt;例子&lt;/a&gt;&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
@@ -890,7 +890,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;/dd&gt;
 &lt;dt class=&quot;hdlist1&quot;&gt;lock&lt;/dt&gt;
 &lt;dd&gt;
-&lt;p&gt;&lt;code&gt;lock&lt;/code&gt; 前缀：它本身不是指令。但是我们用它来修饰一些 read-modify-write 指令，确保它们是原子的。带有 &lt;code&gt;lock&lt;/code&gt; 前缀的指令的效果和 &lt;code&gt;mfence&lt;/code&gt; 相同。另外，文档告诉我们，&lt;code&gt;xchg&lt;/code&gt; 缺省带有 &lt;code&gt;lock&lt;/code&gt; 属性，所以也可以作为 read/write barrier。所以在https://lore.kernel.org/patchwork/cover/639819/[内核]里面有时会看到类似 &lt;code&gt;lock; addl $0, 0(%%esp)&lt;/code&gt; 的代码，这里就是在加 memory barrier，同时检查 &lt;code&gt;0(%%esp)&lt;/code&gt; 是否为零。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;lock&lt;/code&gt; 前缀：它本身不是指令。但是我们用它来修饰一些 read-modify-write 指令，确保它们是原子的。带有 &lt;code&gt;lock&lt;/code&gt; 前缀的指令的效果和 &lt;code&gt;mfence&lt;/code&gt; 相同。另外，文档告诉我们，&lt;code&gt;xchg&lt;/code&gt; 缺省带有 &lt;code&gt;lock&lt;/code&gt; 属性，所以也可以作为 read/write barrier。所以在 &lt;a href=&quot;https://lore.kernel.org/patchwork/cover/639819/&quot;&gt;内核&lt;/a&gt;里面有时会看到类似 &lt;code&gt;lock; addl $0, 0(%%esp)&lt;/code&gt; 的代码，这里就是在加 memory barrier，同时检查 &lt;code&gt;0(%%esp)&lt;/code&gt; 是否为零。&lt;/p&gt;
 &lt;/dd&gt;
 &lt;/dl&gt;
 &lt;/div&gt;
@@ -916,7 +916,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;div class=&quot;sect2&quot;&gt;
 &lt;h3 id=&quot;c-的一致性模型&quot;&gt;C&amp;#43;&amp;#43; 的一致性模型&lt;/h3&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;C&amp;#43;&amp;#43; 程序员一般不会直接使用这些 memory barrier，它们太接近硬件，可移植性也很差。比如说 aarch64 上的 memory barrier 就叫别的https://developer.arm.com/documentation/den0024/a/the-a64-instruction-set/memory-access-instructions/memory-barrier-and-fence-instructions[名字]，功能也有些许的不同。所以 C&amp;#43;&amp;#43;11 以及之后的标准规定了几种内存一致性模型，用更抽象的工具来解决这些问题。&lt;/p&gt;
+&lt;p&gt;C&amp;#43;&amp;#43; 程序员一般不会直接使用这些 memory barrier，它们太接近硬件，可移植性也很差。比如说 aarch64 上的 memory barrier 就叫别的 &lt;a href=&quot;https://developer.arm.com/documentation/den0024/a/the-a64-instruction-set/memory-access-instructions/memory-barrier-and-fence-instructions&quot;&gt;名字&lt;/a&gt;，功能也有些许的不同。所以 C&amp;#43;&amp;#43;11 以及之后的标准规定了几种内存一致性模型，用更抽象的工具来解决这些问题。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;在解释这些一致性模型之前，我们先回到刚才的面馆。假设老王顺利地下了单，老马也看到了老王的 &lt;code&gt;placed_order&lt;/code&gt; ，开始做面条。但是问题来了，处理器不知道 &lt;code&gt;beep&lt;/code&gt; 和 &lt;code&gt;noodle&lt;/code&gt; 是有先后关系的，所以负责老马的那个核就自作主张，先刷新了 &lt;code&gt;beep&lt;/code&gt;，而把 &lt;code&gt;noodle&lt;/code&gt; 的写操作放在 store buffer 里面了。这是一种 store-store 重排，在 amd64 上不会发生，但是在其它架构是有可能的。&lt;/p&gt;
@@ -1278,7 +1278,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;/blockquote&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;看起来要实现依赖链条的分析很麻烦，几家 C&amp;#43;&amp;#43; 编译器都懒得矫情，干脆杀鸡用牛刀，所以性能没提高。标准也向现实低头，那么我们如果一定要把依赖关系写得明明白白，做好跨平台的工作，还是用 &lt;code&gt;memory_order_acquire&lt;/code&gt; 吧。图个省事儿，图个放心。等到真的有要求再手写汇编。这背离了设计 &lt;code&gt;memory_order_consume&lt;/code&gt; 的http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2664.htm[初衷]，但是也是现阶段比较实际的办法。&lt;/p&gt;
+&lt;p&gt;看起来要实现依赖链条的分析很麻烦，几家 C&amp;#43;&amp;#43; 编译器都懒得矫情，干脆杀鸡用牛刀，所以性能没提高。标准也向现实低头，那么我们如果一定要把依赖关系写得明明白白，做好跨平台的工作，还是用 &lt;code&gt;memory_order_acquire&lt;/code&gt; 吧。图个省事儿，图个放心。等到真的有要求再手写汇编。这背离了设计 &lt;code&gt;memory_order_consume&lt;/code&gt; 的 &lt;a href=&quot;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2664.htm&quot;&gt;初衷&lt;/a&gt;，但是也是现阶段比较实际的办法。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;前面为了让程序更好懂，这些 memory barrier 都和一个 &lt;code&gt;atomic&amp;lt;&amp;gt;&lt;/code&gt; 变量放在了一起了。毕竟活生生的变量对于描述程序的逻辑才是有意义的。memory barrier 只是用来保证执行的顺序而已。它就像 &lt;code&gt;xchg&lt;/code&gt; 的前缀一样。但是我们也可以直接加入 memory barrier：&lt;code&gt;atomic_thread_fence&lt;/code&gt;。前面如果不能用 CAS 的话，我们可能就只能用这一招了。&lt;/p&gt;
@@ -1337,7 +1337,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;执行上的 sequential consistency。这很明显是最稳妥的办法。把罪恶扼杀在摇篮之中，通讯层甚至可以等 MOSDOp 完成之后再读取下一个 message，但是这和[.line-through]#咸鱼#完全同步有什么区别呢？客户端之所以选择异步操作就是希望更高的并发啊。当然，即便如此，异步的操作仍然是有意义的。异步往 OSD 发射指令，而在 OSD 上顺序执行可以避免网络上的延迟。&lt;/p&gt;
+&lt;p&gt;执行上的 sequential consistency。这很明显是最稳妥的办法。把罪恶扼杀在摇篮之中，通讯层甚至可以等 MOSDOp 完成之后再读取下一个 message，但是这和&lt;span class=&quot;line-through&quot;&gt;咸鱼&lt;/span&gt;完全同步有什么区别呢？客户端之所以选择异步操作就是希望更高的并发啊。当然，即便如此，异步的操作仍然是有意义的。异步往 OSD 发射指令，而在 OSD 上顺序执行可以避免网络上的延迟。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;表现上的 sequential consistency。这个说法并不严谨，其实表现上的顺序一致也需要执行层面的支持。我们权且把第一个的选择作为最直接了当的、完全阻塞的实现吧。这个选择的执行需要更小心一些。因为执行层面上可能的乱序，我们可能需要考虑下面几种读写序列的乱序&lt;/p&gt;
@@ -1381,7 +1381,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;p&gt;十年前，用 &lt;code&gt;mutex&lt;/code&gt; 和 &lt;code&gt;condition_variable&lt;/code&gt; 就能解决很多多线程的问题。在今天，这些同步原语仍然很重要。但是如果我们对高并发有更高的追求，就需要更深入了解多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个https://www.youtube.com/watch?v=Nb2tebYAaOA[比方]，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T00:00:00+00:00</published><updated>2020-08-09T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;</content><author><name></name></author><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T00:00:00+00:00</published><updated>2020-08-09T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。
