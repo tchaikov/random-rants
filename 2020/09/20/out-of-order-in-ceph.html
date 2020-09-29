@@ -286,7 +286,9 @@
     <meta itemprop="keywords" content="ceph"><div class="js-article-content"><div class="layout--article"><!-- start custom article top snippet -->
 
 <!-- end custom article top snippet -->
-<div class="article__content" itemprop="articleBody"><div class="paragraph">
+<div class="article__content" itemprop="articleBody"><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
 <p>RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</p>
 </div>
 <div class="ulist">
@@ -308,6 +310,11 @@
 <div class="paragraph">
 <p>这次我们从协议出发，讨论一下 OSD 对读写顺序的处理。它和前面的 <a href="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html">多核和顺序</a> 提到的乱序访问内存的问题非常相似。</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="librados-的访问顺序">librados 的访问顺序</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>客户端如果要访问集群中的数据，就需要向相关的 OSD 发送 <code>MOSDOp</code> 请求，OSD 则会用 <code>MOSDOpReply</code> 进行回应。它们两个是 RADOS 协议用来传输数据的很重要的消息类型。每个 <code>MOSDOp</code> 都包含</p>
 </div>
@@ -375,6 +382,11 @@
 <div class="paragraph">
 <p>虽然 Ceph 也可以不坚持顺序。我的理解是，sequential consistency 是便于客户端编程的一个模型，所以 Ceph 选择顺序返回是很自然的事情。后来想了一下，对于 RBD 来说，如果系统先发了一个写请求，然后再发一个读请求，那么我们一定要先完成写请求吗？答案是&#8230;&#8203;&#8230;&#8203;哪有那么巧啊！"`我们`"在这里其实是某个特定的 OSD，这两个时间上相邻的请求，如果不是访问同一个对象，那么怎么会这么巧，这两个对象都被分配到同一个 OSD，而且先后被访问到。就好像你和大学室友在市郊的加油站排队的时候遇见了。如果是同一个对象，那么问题来了。RBD 的使用者为什么会有这种需求呢？先写一块数据，然后不等写完，开始读同一块数据，而且不关心这个读到的数据是不是之前写下去的。RBD 使用者一般来说 Linux 的本地文件系统，它们对一致性还是有要求的，所以一般不会忍受这种脏数据。所以，按照 RBD 的需求分析，这种 load-store 的乱序执行是没有意义的，而且是错误的。</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="osd-里的内存屏障">OSD 里的内存屏障</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>在 OSD 的这一边，它可能会看到多个 <code>MOSDOp</code> 同时访问一个对象。这些请求可能来自同一客户端，也可能来自不同的客户端。在保证原子性的前提下，为了提高并发度，我们要区别对待这些 <code>MOSDOp</code> 对应的事务。事务可以分为三种：</p>
 </div>
@@ -524,6 +536,8 @@
 <p>RMW 不能和任何操作并行</p>
 </li>
 </ul>
+</div>
+</div>
 </div></div><div class="d-print-none"><footer class="article__footer"><meta itemprop="dateModified" content="2020-09-20T00:00:00+00:00"><!-- start custom article footer snippet -->
 
 <!-- end custom article footer snippet -->

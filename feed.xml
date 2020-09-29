@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T09:53:17+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T10:06:16+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
@@ -20,6 +22,11 @@
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;这次我们从协议出发，讨论一下 OSD 对读写顺序的处理。它和前面的 &lt;a href=&quot;https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html&quot;&gt;多核和顺序&lt;/a&gt; 提到的乱序访问内存的问题非常相似。&lt;/p&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;librados-的访问顺序&quot;&gt;librados 的访问顺序&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;客户端如果要访问集群中的数据，就需要向相关的 OSD 发送 &lt;code&gt;MOSDOp&lt;/code&gt; 请求，OSD 则会用 &lt;code&gt;MOSDOpReply&lt;/code&gt; 进行回应。它们两个是 RADOS 协议用来传输数据的很重要的消息类型。每个 &lt;code&gt;MOSDOp&lt;/code&gt; 都包含&lt;/p&gt;
 &lt;/div&gt;
@@ -87,6 +94,11 @@
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;虽然 Ceph 也可以不坚持顺序。我的理解是，sequential consistency 是便于客户端编程的一个模型，所以 Ceph 选择顺序返回是很自然的事情。后来想了一下，对于 RBD 来说，如果系统先发了一个写请求，然后再发一个读请求，那么我们一定要先完成写请求吗？答案是&amp;#8230;&amp;#8203;&amp;#8230;&amp;#8203;哪有那么巧啊！&quot;`我们`&quot;在这里其实是某个特定的 OSD，这两个时间上相邻的请求，如果不是访问同一个对象，那么怎么会这么巧，这两个对象都被分配到同一个 OSD，而且先后被访问到。就好像你和大学室友在市郊的加油站排队的时候遇见了。如果是同一个对象，那么问题来了。RBD 的使用者为什么会有这种需求呢？先写一块数据，然后不等写完，开始读同一块数据，而且不关心这个读到的数据是不是之前写下去的。RBD 使用者一般来说 Linux 的本地文件系统，它们对一致性还是有要求的，所以一般不会忍受这种脏数据。所以，按照 RBD 的需求分析，这种 load-store 的乱序执行是没有意义的，而且是错误的。&lt;/p&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;osd-里的内存屏障&quot;&gt;OSD 里的内存屏障&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;在 OSD 的这一边，它可能会看到多个 &lt;code&gt;MOSDOp&lt;/code&gt; 同时访问一个对象。这些请求可能来自同一客户端，也可能来自不同的客户端。在保证原子性的前提下，为了提高并发度，我们要区别对待这些 &lt;code&gt;MOSDOp&lt;/code&gt; 对应的事务。事务可以分为三种：&lt;/p&gt;
 &lt;/div&gt;
@@ -236,6 +248,8 @@
 &lt;p&gt;RMW 不能和任何操作并行&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：&lt;/p&gt;
 &lt;/div&gt;
