@@ -1,1373 +1,881 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, user-scalable=no"
-    />
-    <title>TCP 长连接的最大个数 - some random rants</title>
+<!DOCTYPE html><html lang="en">
+  <head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>TCP 长连接的最大个数 - some random rants</title>
 
-    <meta
-      name="description"
-      content="提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？"
-    />
-    <link
-      rel="canonical"
-      href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html"
-    />
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title="some random rants"
-      href="/feed.xml"
-    />
-    <!-- start favicons snippet, use https://realfavicongenerator.net/ -->
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="/assets/apple-touch-icon.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/assets/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/assets/favicon-16x16.png"
-    />
-    <link rel="manifest" href="/assets/site.webmanifest" />
-    <link
-      rel="mask-icon"
-      href="/assets/safari-pinned-tab.svg"
-      color="#fc4d50"
-    />
-    <link rel="shortcut icon" href="/assets/favicon.ico" />
+<meta name="description" content="提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？">
+<link rel="canonical" href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html"><link rel="alternate" type="application/rss+xml" title="some random rants" href="/feed.xml"><!-- start favicons snippet, use https://realfavicongenerator.net/ --><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png"><link rel="manifest" href="/assets/site.webmanifest"><link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#fc4d50"><link rel="shortcut icon" href="/assets/favicon.ico">
 
-    <meta name="msapplication-TileColor" content="#ffc40d" />
-    <meta name="msapplication-config" content="/assets/browserconfig.xml" />
+<meta name="msapplication-TileColor" content="#ffc40d"><meta name="msapplication-config" content="/assets/browserconfig.xml">
 
-    <meta name="theme-color" content="#ffffff" />
-    <!-- end favicons snippet -->
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css"
-    />
-    <!-- start custom head snippets -->
+<meta name="theme-color" content="#ffffff">
+<!-- end favicons snippet --><link rel="stylesheet" href="/assets/css/main.css"><link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css" ><!-- start custom head snippets -->
 
-    <!-- end custom head snippets -->
-    <script>
-      (function () {
-        window.isArray = function (val) {
-          return Object.prototype.toString.call(val) === "[object Array]";
-        };
-        window.isString = function (val) {
-          return typeof val === "string";
-        };
+<!-- end custom head snippets -->
+<script>(function() {
+  window.isArray = function(val) {
+    return Object.prototype.toString.call(val) === '[object Array]';
+  };
+  window.isString = function(val) {
+    return typeof val === 'string';
+  };
 
-        window.hasEvent = function (event) {
-          return "on".concat(event) in window.document;
-        };
+  window.hasEvent = function(event) {
+    return 'on'.concat(event) in window.document;
+  };
 
-        window.isOverallScroller = function (node) {
-          return (
-            node === document.documentElement ||
-            node === document.body ||
-            node === window
-          );
-        };
+  window.isOverallScroller = function(node) {
+    return node === document.documentElement || node === document.body || node === window;
+  };
 
-        window.isFormElement = function (node) {
-          var tagName = node.tagName;
-          return (
-            tagName === "INPUT" ||
-            tagName === "SELECT" ||
-            tagName === "TEXTAREA"
-          );
-        };
+  window.isFormElement = function(node) {
+    var tagName = node.tagName;
+    return tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA';
+  };
 
-        window.pageLoad = (function () {
-          var loaded = false,
-            cbs = [];
-          window.addEventListener("load", function () {
-            var i;
-            loaded = true;
-            if (cbs.length > 0) {
-              for (i = 0; i < cbs.length; i++) {
-                cbs[i]();
-              }
-            }
-          });
-          return {
-            then: function (cb) {
-              cb && (loaded ? cb() : cbs.push(cb));
-            },
-          };
-        })();
-      })();
-      (function () {
-        window.throttle = function (func, wait) {
-          var args,
-            result,
-            thisArg,
-            timeoutId,
-            lastCalled = 0;
+  window.pageLoad = (function () {
+    var loaded = false, cbs = [];
+    window.addEventListener('load', function () {
+      var i;
+      loaded = true;
+      if (cbs.length > 0) {
+        for (i = 0; i < cbs.length; i++) {
+          cbs[i]();
+        }
+      }
+    });
+    return {
+      then: function(cb) {
+        cb && (loaded ? cb() : (cbs.push(cb)));
+      }
+    };
+  })();
+})();
+(function() {
+  window.throttle = function(func, wait) {
+    var args, result, thisArg, timeoutId, lastCalled = 0;
 
-          function trailingCall() {
-            lastCalled = new Date();
-            timeoutId = null;
-            result = func.apply(thisArg, args);
+    function trailingCall() {
+      lastCalled = new Date;
+      timeoutId = null;
+      result = func.apply(thisArg, args);
+    }
+    return function() {
+      var now = new Date,
+        remaining = wait - (now - lastCalled);
+
+      args = arguments;
+      thisArg = this;
+
+      if (remaining <= 0) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+        lastCalled = now;
+        result = func.apply(thisArg, args);
+      } else if (!timeoutId) {
+        timeoutId = setTimeout(trailingCall, remaining);
+      }
+      return result;
+    };
+  };
+})();
+(function() {
+  var Set = (function() {
+    var add = function(item) {
+      var i, data = this._data;
+      for (i = 0; i < data.length; i++) {
+        if (data[i] === item) {
+          return;
+        }
+      }
+      this.size ++;
+      data.push(item);
+      return data;
+    };
+
+    var Set = function(data) {
+      this.size = 0;
+      this._data = [];
+      var i;
+      if (data.length > 0) {
+        for (i = 0; i < data.length; i++) {
+          add.call(this, data[i]);
+        }
+      }
+    };
+    Set.prototype.add = add;
+    Set.prototype.get = function(index) { return this._data[index]; };
+    Set.prototype.has = function(item) {
+      var i, data = this._data;
+      for (i = 0; i < data.length; i++) {
+        if (this.get(i) === item) {
+          return true;
+        }
+      }
+      return false;
+    };
+    Set.prototype.is = function(map) {
+      if (map._data.length !== this._data.length) { return false; }
+      var i, j, flag, tData = this._data, mData = map._data;
+      for (i = 0; i < tData.length; i++) {
+        for (flag = false, j = 0; j < mData.length; j++) {
+          if (tData[i] === mData[j]) {
+            flag = true;
+            break;
           }
-          return function () {
-            var now = new Date(),
-              remaining = wait - (now - lastCalled);
+        }
+        if (!flag) { return false; }
+      }
+      return true;
+    };
+    Set.prototype.values = function() {
+      return this._data;
+    };
+    return Set;
+  })();
 
-            args = arguments;
-            thisArg = this;
-
-            if (remaining <= 0) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-              lastCalled = now;
-              result = func.apply(thisArg, args);
-            } else if (!timeoutId) {
-              timeoutId = setTimeout(trailingCall, remaining);
-            }
-            return result;
-          };
-        };
-      })();
-      (function () {
-        var Set = (function () {
-          var add = function (item) {
-            var i,
-              data = this._data;
-            for (i = 0; i < data.length; i++) {
-              if (data[i] === item) {
-                return;
+  window.Lazyload = (function(doc) {
+    var queue = {js: [], css: []}, sources = {js: {}, css: {}}, context = this;
+    var createNode = function(name, attrs) {
+      var node = doc.createElement(name), attr;
+      for (attr in attrs) {
+        if (attrs.hasOwnProperty(attr)) {
+          node.setAttribute(attr, attrs[attr]);
+        }
+      }
+      return node;
+    };
+    var end = function(type, url) {
+      var s, q, qi, cbs, i, j, cur, val, flag;
+      if (type === 'js' || type ==='css') {
+        s = sources[type], q = queue[type];
+        s[url] = true;
+        for (i = 0; i < q.length; i++) {
+          cur = q[i];
+          if (cur.urls.has(url)) {
+            qi = cur, val = qi.urls.values();
+            qi && (cbs = qi.callbacks);
+            for (flag = true, j = 0; j < val.length; j++) {
+              cur = val[j];
+              if (!s[cur]) {
+                flag = false;
               }
             }
-            this.size++;
-            data.push(item);
-            return data;
-          };
-
-          var Set = function (data) {
-            this.size = 0;
-            this._data = [];
-            var i;
-            if (data.length > 0) {
-              for (i = 0; i < data.length; i++) {
-                add.call(this, data[i]);
+            if (flag && cbs && cbs.length > 0) {
+              for (j = 0; j < cbs.length; j++) {
+                cbs[j].call(context);
+              }
+              qi.load = true;
+            }
+          }
+        }
+      }
+    };
+    var load = function(type, urls, callback) {
+      var s, q, qi, node, i, cur,
+        _urls = typeof urls === 'string' ? new Set([urls]) : new Set(urls), val, url;
+      if (type === 'js' || type ==='css') {
+        s = sources[type], q = queue[type];
+        for (i = 0; i < q.length; i++) {
+          cur = q[i];
+          if (_urls.is(cur.urls)) {
+            qi = cur;
+            break;
+          }
+        }
+        val = _urls.values();
+        if (qi) {
+          callback && (qi.load || qi.callbacks.push(callback));
+          callback && (qi.load && callback());
+        } else {
+          q.push({
+            urls: _urls,
+            callbacks: callback ? [callback] : [],
+            load: false
+          });
+          for (i = 0; i < val.length; i++) {
+            node = null, url = val[i];
+            if (s[url] === undefined) {
+              (type === 'js' ) && (node = createNode('script', { src: url }));
+              (type === 'css') && (node = createNode('link', { rel: 'stylesheet', href: url }));
+              if (node) {
+                node.onload = (function(type, url) {
+                  return function() {
+                    end(type, url);
+                  };
+                })(type, url);
+                (doc.head || doc.body).appendChild(node);
+                s[url] = false;
               }
             }
-          };
-          Set.prototype.add = add;
-          Set.prototype.get = function (index) {
-            return this._data[index];
-          };
-          Set.prototype.has = function (item) {
-            var i,
-              data = this._data;
-            for (i = 0; i < data.length; i++) {
-              if (this.get(i) === item) {
-                return true;
-              }
-            }
-            return false;
-          };
-          Set.prototype.is = function (map) {
-            if (map._data.length !== this._data.length) {
-              return false;
-            }
-            var i,
-              j,
-              flag,
-              tData = this._data,
-              mData = map._data;
-            for (i = 0; i < tData.length; i++) {
-              for (flag = false, j = 0; j < mData.length; j++) {
-                if (tData[i] === mData[j]) {
-                  flag = true;
-                  break;
-                }
-              }
-              if (!flag) {
-                return false;
-              }
-            }
-            return true;
-          };
-          Set.prototype.values = function () {
-            return this._data;
-          };
-          return Set;
-        })();
-
-        window.Lazyload = (function (doc) {
-          var queue = { js: [], css: [] },
-            sources = { js: {}, css: {} },
-            context = this;
-          var createNode = function (name, attrs) {
-            var node = doc.createElement(name),
-              attr;
-            for (attr in attrs) {
-              if (attrs.hasOwnProperty(attr)) {
-                node.setAttribute(attr, attrs[attr]);
-              }
-            }
-            return node;
-          };
-          var end = function (type, url) {
-            var s, q, qi, cbs, i, j, cur, val, flag;
-            if (type === "js" || type === "css") {
-              (s = sources[type]), (q = queue[type]);
-              s[url] = true;
-              for (i = 0; i < q.length; i++) {
-                cur = q[i];
-                if (cur.urls.has(url)) {
-                  (qi = cur), (val = qi.urls.values());
-                  qi && (cbs = qi.callbacks);
-                  for (flag = true, j = 0; j < val.length; j++) {
-                    cur = val[j];
-                    if (!s[cur]) {
-                      flag = false;
-                    }
-                  }
-                  if (flag && cbs && cbs.length > 0) {
-                    for (j = 0; j < cbs.length; j++) {
-                      cbs[j].call(context);
-                    }
-                    qi.load = true;
-                  }
-                }
-              }
-            }
-          };
-          var load = function (type, urls, callback) {
-            var s,
-              q,
-              qi,
-              node,
-              i,
-              cur,
-              _urls =
-                typeof urls === "string" ? new Set([urls]) : new Set(urls),
-              val,
-              url;
-            if (type === "js" || type === "css") {
-              (s = sources[type]), (q = queue[type]);
-              for (i = 0; i < q.length; i++) {
-                cur = q[i];
-                if (_urls.is(cur.urls)) {
-                  qi = cur;
-                  break;
-                }
-              }
-              val = _urls.values();
-              if (qi) {
-                callback && (qi.load || qi.callbacks.push(callback));
-                callback && qi.load && callback();
-              } else {
-                q.push({
-                  urls: _urls,
-                  callbacks: callback ? [callback] : [],
-                  load: false,
-                });
-                for (i = 0; i < val.length; i++) {
-                  (node = null), (url = val[i]);
-                  if (s[url] === undefined) {
-                    type === "js" &&
-                      (node = createNode("script", { src: url }));
-                    type === "css" &&
-                      (node = createNode("link", {
-                        rel: "stylesheet",
-                        href: url,
-                      }));
-                    if (node) {
-                      node.onload = (function (type, url) {
-                        return function () {
-                          end(type, url);
-                        };
-                      })(type, url);
-                      (doc.head || doc.body).appendChild(node);
-                      s[url] = false;
-                    }
-                  }
-                }
-              }
-            }
-          };
-          return {
-            js: function (url, callback) {
-              load("js", url, callback);
-            },
-            css: function (url, callback) {
-              load("css", url, callback);
-            },
-          };
-        })(this.document);
-      })();
-    </script>
-    <script>
-      (function () {
-        var TEXT_VARIABLES = {
-          version: "2.2.6",
-          sources: {
-            font_awesome:
-              "https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css",
-            jquery: "https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js",
-            leancloud_js_sdk:
-              "//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js",
-            chart: "https://cdn.bootcss.com/Chart.js/2.7.2/Chart.bundle.min.js",
-            gitalk: {
-              js: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.js",
-              css: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.css",
-            },
-            valine: "https://unpkg.com/valine/dist/Valine.min.js",
-            mathjax:
-              "https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML",
-            mermaid:
-              "https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js",
-          },
-          site: {
-            toc: {
-              selectors: "h1,h2,h3",
-            },
-          },
-          paths: {
-            search_js: "/assets/search.js",
-          },
-        };
-        window.TEXT_VARIABLES = TEXT_VARIABLES;
-      })();
-    </script>
-  </head>
+          }
+        }
+      }
+    };
+    return {
+      js: function(url, callback) {
+        load('js', url, callback);
+      },
+      css: function(url, callback) {
+        load('css', url, callback);
+      }
+    };
+  })(this.document);
+})();
+</script><script>
+  (function() {
+    var TEXT_VARIABLES = {
+      version: '2.2.6',
+      sources: {
+        font_awesome: 'https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css',
+        jquery: 'https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js',
+        leancloud_js_sdk: '//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js',
+        chart: 'https://cdn.bootcss.com/Chart.js/2.7.2/Chart.bundle.min.js',
+        gitalk: {
+          js: 'https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.js',
+          css: 'https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.css'
+        },
+        valine: 'https://unpkg.com/valine/dist/Valine.min.js',
+        mathjax: 'https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML',
+        mermaid: 'https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js'
+      },
+      site: {
+        toc: {
+          selectors: 'h1,h2,h3'
+        }
+      },
+      paths: {
+        search_js: '/assets/search.js'
+      }
+    };
+    window.TEXT_VARIABLES = TEXT_VARIABLES;
+  })();
+</script>
+</head>
   <body>
     <div class="root" data-is-touch="false">
-      <div class="layout--page js-page-root">
-        <div
-          class="page__main js-page-main page__viewport has-aside cell cell--auto"
-        >
-          <div class="page__main-inner">
-            <div class="page__header d-print-none">
-              <header class="header">
-                <div class="main">
-                  <div class="header__title">
-                    <div class="header__brand">
-                      <svg
-                        version="1.1"
-                        xmlns="http://www.w3.org/2000/svg"
-                        xmlns:xlink="http://www.w3.org/1999/xlink"
-                        x="0px"
-                        y="0px"
-                        width="24px"
-                        height="24px"
-                        viewBox="0 0 24 24"
-                      >
-                        <style type="text/css">
-                          .st0 {
-                            fill: #515151;
-                          }
-                        </style>
-                        <path
-                          class="st0"
-                          d="M1.7,22.3c5.7-5.7,11.3-5.7,17,0c3.3-3.3,3.5-5.3,0.8-6c2.7,0.7,3.5-1.1,2.3-5.6s-3.3-5.2-6.3-2.1
-	c3-3,2.3-5.2-2.1-6.3S7,1.8,7.7,4.6C7,1.8,5,2.1,1.7,5.3C7.3,11,7.3,16.7,1.7,22.3"
-                        />
-                      </svg>
-                      <a title="我的学习记录" href="/">some random rants</a>
-                    </div>
-                  </div>
-                </div>
-              </header>
-            </div>
-            <div class="page__content">
-              <div class="main">
-                <div class="grid grid--reverse">
-                  <div class="col-aside d-print-none js-col-aside">
-                    <aside class="page__aside js-page-aside">
-                      <div class="toc-aside js-toc-root"></div>
-                    </aside>
-                  </div>
+      <div class="layout--page js-page-root"><div class="page__main js-page-main page__viewport has-aside cell cell--auto">
 
-                  <div class="col-main cell cell--auto">
-                    <!-- start custom main top snippet -->
+      <div class="page__main-inner"><div class="page__header d-print-none"><header class="header"><div class="main">
+      <div class="header__title">
+        <div class="header__brand"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="24px" height="24px" viewBox="0 0 24 24">
+<style type="text/css">
+	.st0{fill:#515151;}
+</style>
+<path class="st0" d="M1.7,22.3c5.7-5.7,11.3-5.7,17,0c3.3-3.3,3.5-5.3,0.8-6c2.7,0.7,3.5-1.1,2.3-5.6s-3.3-5.2-6.3-2.1
+	c3-3,2.3-5.2-2.1-6.3S7,1.8,7.7,4.6C7,1.8,5,2.1,1.7,5.3C7.3,11,7.3,16.7,1.7,22.3"/>
+</svg>
+<a title="我的学习记录" href="/">some random rants</a></div></div><nav class="navigation">
+        <ul><li class="navigation__item"><a href="/archive.html">Archive</a></li><li class="navigation__item"><a href="/about.html">About</a></li></ul>
+      </nav></div>
+  </header>
+</div><div class="page__content"><div class ="main"><div class="grid grid--reverse">
 
-                    <!-- end custom main top snippet -->
-                    <article itemscope itemtype="http://schema.org/Article">
-                      <div class="article__header">
-                        <header><h1>TCP 长连接的最大个数</h1></header>
-                      </div>
-                      <meta
-                        itemprop="headline"
-                        content="TCP 长连接的最大个数"
-                      />
-                      <div class="article__info clearfix">
-                        <ul class="left-col menu">
-                          <li>
-                            <a
-                              class="button button--secondary button--pill button--sm"
-                              href="/archive.html?tag=networking"
-                              >networking</a
-                            >
-                          </li>
-                        </ul>
-                        <ul class="right-col menu">
-                          <li>
-                            <i class="far fa-calendar-alt"></i>
-                            <span>Aug 23, 2020</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <meta itemprop="author" content="Kefu Chai" /><meta
-                        itemprop="datePublished"
-                        content="2020-08-23T00:00:00+00:00"
-                      />
-                      <meta itemprop="keywords" content="networking" />
-                      <div class="js-article-content">
-                        <div class="layout--article">
-                          <!-- start custom article top snippet -->
+              <div class="col-aside d-print-none js-col-aside"><aside class="page__aside js-page-aside"><div class="toc-aside js-toc-root"></div>
+</aside></div>
 
-                          <!-- end custom article top snippet -->
-                          <div class="article__content" itemprop="articleBody">
-                            <div id="preamble">
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    提个问题，单机单网卡最大对某个特定服务器 TCP
-                                    长连接的最大个数是多少？
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    和平时一样，我们假设客户端是
-                                    Linux。这可能不是一个生造出来的问题，想一想，如果我们希望设计一个支持长连接的代理服务器呢？如果有海量的客户端希望连接被代理的服务器呢？或者说我们希望为用户提供实时的消息服务呢？这是一种
-                                    c1000k 问题。
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    我们从 TCP
-                                    协议开始，慢慢往外推，到操作系统直到硬件。看看一路上都有哪些限制。我们可以假设服务器是个怪物，它在
-                                    TCP
-                                    的框架下面可以有无穷的计算能力和带宽，各种资源取之不尽用之不竭。那么问题到了
-                                    TCP。
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="tcp">TCP</h2>
-                              <div class="sectionbody">
-                                <div class="sect2">
-                                  <h3 id="数据库问题">数据库问题</h3>
-                                  <div class="paragraph">
-                                    <p>
-                                      有人说，这是个数据库问题。因为 TCP
-                                      实现为了区别 TCP
-                                      连接，用了个四元组标记每个 TCP 报文
-                                    </p>
-                                  </div>
-                                  <div class="ulist">
-                                    <ul>
-                                      <li>
-                                        <p>source ip: 32 bit for IPv4</p>
-                                      </li>
-                                      <li>
-                                        <p>source port: 16 bit</p>
-                                      </li>
-                                      <li>
-                                        <p>destination ip: 16 bit (fixed)</p>
-                                      </li>
-                                      <li>
-                                        <p>
-                                          destination port: 32 bit for IPv4
-                                          (fixed)
-                                        </p>
-                                      </li>
-                                    </ul>
-                                  </div>
-                                  <div class="paragraph">
-                                    <p>
-                                      所以这四个数字合起来，就是数据库的复合主键。其中，目标服务的
-                                      IP
-                                      和端口都是固定的，所以我们只能从客户端这边发掘潜力：
-                                    </p>
-                                  </div>
-                                  <div class="sect3">
-                                    <h4 id="source-ip">source ip</h4>
-                                    <div class="paragraph">
-                                      <p>
-                                        用
-                                        <code>iproute2</code>
-                                        可以为同一块网卡添加多个 IP
-                                        地址。理论上说，这就是 2<sup>32</sup>
-                                        个地址。
-                                      </p>
-                                    </div>
-                                    <div class="listingblock">
-                                      <div class="content">
-                                        <pre
-                                          class="rouge highlight"
-                                        ><code data-lang="shell">ip addr add &lt;ip&gt;/&lt;network&gt; dev &lt;interface&gt;</code></pre>
-                                      </div>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        但是要细究的话，IPv4
-                                        有很多特殊的地址段是不能使用或者使用上有限制的。如果服务器是对公网开放的，那么我们作为客户端就不能使用外部地址，只能用那些本地的地址，比如
-                                        <code>192.168.x.x</code> 或者
-                                        <code>127.x.x.x</code> 这些。如果使用
-                                        NAT/PAT 这类技术在内部实现 IP
-                                        复用，那么就需要把 NAT
-                                        设备的限制考虑进去了。不管怎么样，数量级差不多是这个。
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div class="sect3">
-                                    <h4 id="source-port">source port</h4>
-                                    <div class="paragraph">
-                                      <p>
-                                        对于特定目标地址，本地端口可以选择的区间是由
-                                        <a
-                                          href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt"
-                                          >net.ipv4.ip_local_port_range</a
-                                        >
-                                        决定的。
-                                      </p>
-                                    </div>
-                                    <div class="listingblock">
-                                      <div class="content">
-                                        <pre
-                                          class="rouge highlight"
-                                        ><code data-lang="shellsession">$ cat /proc/sys/net/ipv4/ip_local_port_range
+              <div class="col-main cell cell--auto"><!-- start custom main top snippet -->
+
+<!-- end custom main top snippet -->
+<article itemscope itemtype="http://schema.org/Article"><div class="article__header"><header><h1>TCP 长连接的最大个数</h1></header></div><meta itemprop="headline" content="TCP 长连接的最大个数"><div class="article__info clearfix"><ul class="left-col menu"><li>
+              <a class="button button--secondary button--pill button--sm"
+                href="/archive.html?tag=networking">networking</a>
+            </li></ul><ul class="right-col menu"><li><i class="far fa-calendar-alt"></i> <span>Aug 23, 2020</span>
+            </li></ul></div><meta itemprop="author" content="Kefu Chai"/><meta itemprop="datePublished" content="2020-08-23T00:00:00+00:00">
+    <meta itemprop="keywords" content="networking"><div class="js-article-content"><div class="layout--article"><!-- start custom article top snippet -->
+
+<!-- end custom article top snippet -->
+<div class="article__content" itemprop="articleBody"><div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</p>
+</div>
+<div class="paragraph">
+<p>和平时一样，我们假设客户端是 Linux。这可能不是一个生造出来的问题，想一想，如果我们希望设计一个支持长连接的代理服务器呢？如果有海量的客户端希望连接被代理的服务器呢？或者说我们希望为用户提供实时的消息服务呢？这是一种 c1000k 问题。</p>
+</div>
+<div class="paragraph">
+<p>我们从 TCP 协议开始，慢慢往外推，到操作系统直到硬件。看看一路上都有哪些限制。我们可以假设服务器是个怪物，它在 TCP 的框架下面可以有无穷的计算能力和带宽，各种资源取之不尽用之不竭。那么问题到了 TCP。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="tcp">TCP</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="数据库问题">数据库问题</h3>
+<div class="paragraph">
+<p>有人说，这是个数据库问题。因为 TCP 实现为了区别 TCP 连接，用了个四元组标记每个 TCP 报文</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>source ip: 32 bit for IPv4</p>
+</li>
+<li>
+<p>source port: 16 bit</p>
+</li>
+<li>
+<p>destination ip: 16 bit (fixed)</p>
+</li>
+<li>
+<p>destination port: 32 bit for IPv4 (fixed)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>所以这四个数字合起来，就是数据库的复合主键。其中，目标服务的 IP 和端口都是固定的，所以我们只能从客户端这边发掘潜力：</p>
+</div>
+<div class="sect3">
+<h4 id="source-ip">source ip</h4>
+<div class="paragraph">
+<p>用 <code>iproute2</code> 可以为同一块网卡添加多个 IP 地址。理论上说，这就是 2<sup>32</sup> 个地址。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">ip addr add &lt;ip&gt;/&lt;network&gt; dev &lt;interface&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>但是要细究的话，IPv4 有很多特殊的地址段是不能使用或者使用上有限制的。如果服务器是对公网开放的，那么我们作为客户端就不能使用外部地址，只能用那些本地的地址，比如 <code>192.168.x.x</code> 或者 <code>127.x.x.x</code> 这些。如果使用 NAT/PAT 这类技术在内部实现 IP 复用，那么就需要把 NAT 设备的限制考虑进去了。不管怎么样，数量级差不多是这个。</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="source-port">source port</h4>
+<div class="paragraph">
+<p>对于特定目标地址，本地端口可以选择的区间是由 <a href="https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt">net.ipv4.ip_local_port_range</a> 决定的。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ cat /proc/sys/net/ipv4/ip_local_port_range
 32768	60999</code></pre>
-                                      </div>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        对于给定的目标地址，以及给定的本地
-                                        IP，可以发出的连接数量就是本地端口区间的大小。所以单个本地
-                                        IP 最多可以产生 65535 个 TCP
-                                        连接。为了打破这个限制，我们必须为网卡添加多个虚拟
-                                        IP。满打满算，这就是 2<sup>32+16</sup>
-                                        个链接，约为
-                                        281万亿。打个比方，我想开个公司，先从员工的工号的编码方式开始计划！嗯，就用
-                                        IPv4 的地址和 16
-                                        位的端口号来吧，所以，我的公司最多支持
-                                        281万亿个员工。这个思路扩展性很好，很强大！但是每个人都得发工资啊，我陷入了沉思&#8230;&#8203;&#8230;&#8203;
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div class="sect2">
-                                  <h3 id="tcp-的运行时开销">
-                                    TCP 的运行时开销
-                                  </h3>
-                                  <div class="sect3">
-                                    <h4 id="什么是-tcp-连接">
-                                      什么是 TCP 连接
-                                    </h4>
-                                    <div class="paragraph">
-                                      <p>
-                                        我们熟知的三次握手就能建立一个 TCP 连接
-                                      </p>
-                                    </div>
-                                    <div class="olist arabic">
-                                      <ol class="arabic">
-                                        <li>
-                                          <p>SYN</p>
-                                        </li>
-                                        <li>
-                                          <p>等待对方回应 SYN/ACK</p>
-                                        </li>
-                                        <li>
-                                          <p>最后回答 ACK</p>
-                                        </li>
-                                      </ol>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        一旦双方完成这个规定的礼仪，就可以说这个连接建立了。一旦两边接上头，剩下的事情就是运行时的开销。
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div class="sect3">
-                                    <h4 id="系统-tcp-协议栈">
-                                      系统 TCP 协议栈
-                                    </h4>
-                                    <div class="paragraph">
-                                      <p>
-                                        如果服务使用系统的 TCP
-                                        协议栈，那么每个连接都需要占用一个文件描述符。回忆一下
-                                        <code>send()</code> 和
-                                        <code>recv()</code>，它们的第一个参数是
-                                        <code>socket</code>，而<code
-                                          >socket</code
-                                        >
-                                        可不就是个
-                                        <code>fd</code>
-                                        嘛。所以操作系统文件描述符的最大值，这个全局的
-                                        <a
-                                          href="https://www.kernel.org/doc/Documentation/sysctl/fs.txt"
-                                          >设置</a
-                                        >
-                                        是 <code>fs.file-max</code>。在我的
-                                        RHEL8 上，它的值是
-                                        <code>19603816</code
-                                        >，接近两千万了。如果我们希望用单进程实现这个服务，还需要改
-                                        <code>ulimit -n</code>
-                                        的限制。当然，如果内存够大，多操作系统或者用容器化的实现，以及用多进程的实现都可以越过这些限制。代价就是更多的额外开销。
-                                      </p>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        另外，还需要关注协议栈用到的缓冲区，看看
-                                        <code>net.ipv4.tcp_wmem</code> 和
-                                        <code>net.ipv4.tcp_rmem</code>，在 RHEL8
-                                        上，它们的缺省大小分别是 85K 和
-                                        16K。设置都有三组数字，分别是下限、缺省值和上限。以及
-                                        <code>net.ipv4.tcp_mem</code
-                                        >，它控制着整个系统中所有 TCP
-                                        缓冲区的总大小的上限。这个设置表示的是内存页的数量，有三组数字，分别是下限、警戒值和上限。如果
-                                        TCP 缓冲空间总使用量达到上限之前，TCP
-                                        就会开始减少每个 TCP
-                                        连接缓冲区的分配。一旦达到上限，TCP
-                                        实现就开始丢包，希望减轻对内存系统的压力。
-                                      </p>
-                                    </div>
-                                    <div class="listingblock">
-                                      <div class="content">
-                                        <pre
-                                          class="rouge highlight"
-                                        ><code data-lang="shellsession">$ grep . /proc/sys/net/ipv4/tcp*mem
+</div>
+</div>
+<div class="paragraph">
+<p>对于给定的目标地址，以及给定的本地 IP，可以发出的连接数量就是本地端口区间的大小。所以单个本地 IP 最多可以产生 65535 个 TCP 连接。为了打破这个限制，我们必须为网卡添加多个虚拟 IP。满打满算，这就是 2<sup>32+16</sup> 个链接，约为 281万亿。打个比方，我想开个公司，先从员工的工号的编码方式开始计划！嗯，就用 IPv4 的地址和 16 位的端口号来吧，所以，我的公司最多支持 281万亿个员工。这个思路扩展性很好，很强大！但是每个人都得发工资啊，我陷入了沉思&#8230;&#8203;&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tcp-的运行时开销">TCP 的运行时开销</h3>
+<div class="sect3">
+<h4 id="什么是-tcp-连接">什么是 TCP 连接</h4>
+<div class="paragraph">
+<p>我们熟知的三次握手就能建立一个 TCP 连接</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>SYN</p>
+</li>
+<li>
+<p>等待对方回应 SYN/ACK</p>
+</li>
+<li>
+<p>最后回答 ACK</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>一旦双方完成这个规定的礼仪，就可以说这个连接建立了。一旦两边接上头，剩下的事情就是运行时的开销。</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="系统-tcp-协议栈">系统 TCP 协议栈</h4>
+<div class="paragraph">
+<p>如果服务使用系统的 TCP 协议栈，那么每个连接都需要占用一个文件描述符。回忆一下 <code>send()</code> 和 <code>recv()</code>，它们的第一个参数是 <code>socket</code>，而<code>socket</code> 可不就是个 <code>fd</code> 嘛。所以操作系统文件描述符的最大值，这个全局的 <a href="https://www.kernel.org/doc/Documentation/sysctl/fs.txt">设置</a> 是 <code>fs.file-max</code>。在我的 RHEL8 上，它的值是 <code>19603816</code>，接近两千万了。如果我们希望用单进程实现这个服务，还需要改 <code>ulimit -n</code> 的限制。当然，如果内存够大，多操作系统或者用容器化的实现，以及用多进程的实现都可以越过这些限制。代价就是更多的额外开销。</p>
+</div>
+<div class="paragraph">
+<p>另外，还需要关注协议栈用到的缓冲区，看看 <code>net.ipv4.tcp_wmem</code> 和 <code>net.ipv4.tcp_rmem</code>，在 RHEL8 上，它们的缺省大小分别是 85K 和 16K。设置都有三组数字，分别是下限、缺省值和上限。以及 <code>net.ipv4.tcp_mem</code>，它控制着整个系统中所有 TCP 缓冲区的总大小的上限。这个设置表示的是内存页的数量，有三组数字，分别是下限、警戒值和上限。如果 TCP 缓冲空间总使用量达到上限之前，TCP 就会开始减少每个 TCP 连接缓冲区的分配。一旦达到上限，TCP 实现就开始丢包，希望减轻对内存系统的压力。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ grep . /proc/sys/net/ipv4/tcp*mem
 /proc/sys/net/ipv4/tcp_mem:2295903	3061204	4591806
 /proc/sys/net/ipv4/tcp_rmem:4096	87380	6291456
 /proc/sys/net/ipv4/tcp_wmem:4096	16384	4194304</code></pre>
-                                      </div>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        所以缺省设置下，最多使用 17G
-                                        内存，可以同时支持二百万以上的长连接。
-                                      </p>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        Linux 下新的防火墙是使用 netfilter
-                                        实现的，如果开启了防火墙那么还需要关注
-                                      </p>
-                                    </div>
-                                    <div class="ulist">
-                                      <ul>
-                                        <li>
-                                          <p>
-                                            <code
-                                              >net.ipv4.ip_conntrack_max</code
-                                            >
-                                          </p>
-                                        </li>
-                                        <li>
-                                          <p>
-                                            <code
-                                              >net.ipv4.netfilter.ip_conntrack_max</code
-                                            >
-                                          </p>
-                                        </li>
-                                      </ul>
-                                    </div>
-                                    <div class="paragraph">
-                                      <p>
-                                        netfilter 维护着一张哈希表用来跟踪所有的
-                                        TCP 连接，所以如果这张表放不下新的 TCP
-                                        连接，TCP 就会开始丢包。
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div class="sect3">
-                                    <h4 id="用户态-tcp-协议栈">
-                                      用户态 TCP 协议栈
-                                    </h4>
-                                  </div>
-                                  <div class="sect3">
-                                    <h4 id="带宽">带宽</h4>
-                                    <div class="paragraph">
-                                      <p>
-                                        需要估计所有连接中活跃的比例，并且需要了解活跃连接需要的带宽是多少。
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div class="sect3">
-                                    <h4 id="内存">内存</h4>
-                                    <div class="paragraph">
-                                      <p>
-                                        前面如果使用系统的 TCP/IP
-                                        栈，就需要为每个连接保证
-                                        <code>tcp_rmem.min</code> +
-                                        <code>tcp_wmem.min</code> 的空间。
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="d-print-none">
-                            <footer class="article__footer">
-                              <meta
-                                itemprop="dateModified"
-                                content="2020-08-23T00:00:00+00:00"
-                              /><!-- start custom article footer snippet -->
+</div>
+</div>
+<div class="paragraph">
+<p>所以缺省设置下，最多使用 17G 内存，可以同时支持二百万以上的长连接。</p>
+</div>
+<div class="paragraph">
+<p>Linux 下新的防火墙是使用 netfilter 实现的，如果开启了防火墙那么还需要关注</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>net.ipv4.ip_conntrack_max</code></p>
+</li>
+<li>
+<p><code>net.ipv4.netfilter.ip_conntrack_max</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>netfilter 维护着一张哈希表用来跟踪所有的 TCP 连接，所以如果这张表放不下新的 TCP 连接，TCP 就会开始丢包。</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="用户态-tcp-协议栈">用户态 TCP 协议栈</h4>
 
-                              <!-- end custom article footer snippet -->
-                              <div class="article__license"></div>
-                            </footer>
-                            <div class="article__section-navigator clearfix">
-                              <div class="previous">
-                                <span>PREVIOUS</span
-                                ><a href="/2020/08/10/memory-ordering.html"
-                                  >多核和顺序</a
-                                >
-                              </div>
-                              <div class="next">
-                                <span>NEXT</span
-                                ><a href="/2020/09/05/my-blog.html"
-                                  >博客维护指南</a
-                                >
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+</div>
+<div class="sect3">
+<h4 id="带宽">带宽</h4>
+<div class="paragraph">
+<p>需要估计所有连接中活跃的比例，并且需要了解活跃连接需要的带宽是多少。</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="内存">内存</h4>
+<div class="paragraph">
+<p>前面如果使用系统的 TCP/IP 栈，就需要为每个连接保证 <code>tcp_rmem.min</code> + <code>tcp_wmem.min</code> 的空间。</p>
+</div>
+</div>
+</div>
+</div>
+</div></div><div class="d-print-none"><footer class="article__footer"><meta itemprop="dateModified" content="2020-08-23T00:00:00+00:00"><!-- start custom article footer snippet -->
 
-                        <script>
-                          (function () {
-                            var SOURCES = window.TEXT_VARIABLES.sources;
-                            window.Lazyload.js(SOURCES.jquery, function () {
-                              $(function () {
-                                var $this, $scroll;
-                                var $articleContent = $(".js-article-content");
-                                var hasSidebar = $(".js-page-root").hasClass(
-                                  "layout--page--sidebar"
-                                );
-                                var scroll = hasSidebar
-                                  ? ".js-page-main"
-                                  : "html, body";
-                                $scroll = $(scroll);
+<!-- end custom article footer snippet -->
+<div class="article__license"></div></footer>
+<div class="article__section-navigator clearfix"><div class="previous"><span>PREVIOUS</span><a href="/2020/08/10/memory-ordering.html">多核和顺序</a></div><div class="next"><span>NEXT</span><a href="/2020/09/05/my-blog.html">博客维护指南</a></div></div></div>
 
-                                $articleContent
-                                  .find(".highlight")
-                                  .each(function () {
-                                    $this = $(this);
-                                    $this.attr(
-                                      "data-lang",
-                                      $this.find("code").attr("data-lang")
-                                    );
-                                  });
-                                $articleContent
-                                  .find(
-                                    "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
-                                  )
-                                  .each(function () {
-                                    $this = $(this);
-                                    $this.append(
-                                      $(
-                                        '<a class="anchor d-print-none" aria-hidden="true"></a>'
-                                      ).html('<i class="fas fa-anchor"></i>')
-                                    );
-                                  });
-                                $articleContent.on(
-                                  "click",
-                                  ".anchor",
-                                  function () {
-                                    $scroll.scrollToAnchor(
-                                      "#" + $(this).parent().attr("id"),
-                                      400
-                                    );
-                                  }
-                                );
-                              });
-                            });
-                          })();
-                        </script>
-                      </div>
-                      <section class="page__comments d-print-none"></section>
-                    </article>
-                    <!-- start custom main bottom snippet -->
+</div>
 
-                    <!-- end custom main bottom snippet -->
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="page__footer d-print-none">
-              <footer class="footer py-4 js-page-footer">
-                <div class="main">
-                  <div itemscope itemtype="http://schema.org/Person">
-                    <meta itemprop="name" content="Kefu Chai" /><meta
-                      itemprop="url"
-                      content="https://blog.k3fu.xyz"
-                    /><meta
-                      itemprop="description"
-                      content="yet another lamer"
-                    />
-                    <div class="footer__author-links">
-                      <div class="author-links">
-                        <ul class="menu menu--nowrap menu--inline">
-                          <link itemprop="url" href="https://blog.k3fu.xyz" />
-                          <li title="Send me an Email.">
-                            <a
-                              class="button button--circle mail-button"
-                              itemprop="email"
-                              href="mailto:tchaikov@gmail.com"
-                              target="_blank"
-                            >
-                              <i class="fas fa-envelope"></i>
-                            </a>
-                          </li>
+<script>(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    $(function() {
+      var $this ,$scroll;
+      var $articleContent = $('.js-article-content');
+      var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
+      var scroll = hasSidebar ? '.js-page-main' : 'html, body';
+      $scroll = $(scroll);
 
-                          <li title="Follow me on Github.">
-                            <a
-                              class="button button--circle github-button"
-                              itemprop="sameAs"
-                              href="https://github.com/tchaikov"
-                              target="_blank"
-                            >
-                              <div class="icon">
-                                <svg
-                                  fill="#000000"
-                                  width="24px"
-                                  height="24px"
-                                  viewBox="0 0 1024 1024"
-                                  version="1.1"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    class="svgpath"
-                                    data-index="path_0"
-                                    fill="#272636"
-                                    d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z"
-                                  />
-                                </svg>
-                              </div>
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="site-info mt-2">
-                    <div>
-                      © some random rants 2020, Powered by
-                      <a
-                        title="Jekyll is a simple, blog-aware, static site generator."
-                        href="http://jekyllrb.com/"
-                        >Jekyll</a
-                      >
-                      &
-                      <a
-                        title="TeXt is a super customizable Jekyll theme."
-                        href="https://github.com/kitian616/jekyll-TeXt-theme"
-                        >TeXt Theme</a
-                      >.
-                    </div>
-                  </div>
-                </div>
-              </footer>
-            </div>
-          </div>
-        </div>
-        <script>
-          (function () {
-            var SOURCES = window.TEXT_VARIABLES.sources;
-            window.Lazyload.js(SOURCES.jquery, function () {
-              var $body = $("body"),
-                $window = $(window);
-              var $pageRoot = $(".js-page-root"),
-                $pageMain = $(".js-page-main");
-              var activeCount = 0;
-              function modal(options) {
-                var $root = this,
-                  visible,
-                  onChange,
-                  hideWhenWindowScroll = false;
-                var scrollTop;
-                function setOptions(options) {
-                  var _options = options || {};
-                  visible =
-                    _options.initialVisible === undefined ? false : show;
-                  onChange = _options.onChange;
-                  hideWhenWindowScroll = _options.hideWhenWindowScroll;
-                }
-                function init() {
-                  setState(visible);
-                }
-                function setState(isShow) {
-                  if (isShow === visible) {
-                    return;
-                  }
-                  visible = isShow;
-                  if (visible) {
-                    activeCount++;
-                    scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
-                    $root.addClass("modal--show");
-                    $pageMain.scrollTop(scrollTop);
-                    activeCount === 1 &&
-                      ($pageRoot.addClass("show-modal"),
-                      $body.addClass("of-hidden"));
-                    hideWhenWindowScroll &&
-                      window.hasEvent("touchstart") &&
-                      $window.on("scroll", hide);
-                    $window.on("keyup", handleKeyup);
-                  } else {
-                    activeCount > 0 && activeCount--;
-                    $root.removeClass("modal--show");
-                    $window.scrollTop(scrollTop);
-                    activeCount === 0 &&
-                      ($pageRoot.removeClass("show-modal"),
-                      $body.removeClass("of-hidden"));
-                    hideWhenWindowScroll &&
-                      window.hasEvent("touchstart") &&
-                      $window.off("scroll", hide);
-                    $window.off("keyup", handleKeyup);
-                  }
-                  onChange && onChange(visible);
-                }
-                function show() {
-                  setState(true);
-                }
-                function hide() {
-                  setState(false);
-                }
-                function handleKeyup(e) {
-                  // Char Code: 27  ESC
-                  if (e.which === 27) {
-                    hide();
-                  }
-                }
-                setOptions(options);
-                init();
-                return {
-                  show: show,
-                  hide: hide,
-                  $el: $root,
-                };
-              }
-              $.fn.modal = modal;
-            });
-          })();
-        </script>
-        <div
-          class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"
-        ></div>
+      $articleContent.find('.highlight').each(function() {
+        $this = $(this);
+        $this.attr('data-lang', $this.find('code').attr('data-lang'));
+      });
+      $articleContent.find('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each(function() {
+        $this = $(this);
+        $this.append($('<a class="anchor d-print-none" aria-hidden="true"></a>').html('<i class="fas fa-anchor"></i>'));
+      });
+      $articleContent.on('click', '.anchor', function() {
+        $scroll.scrollToAnchor('#' + $(this).parent().attr('id'), 400);
+      });
+    });
+  });
+})();
+</script>
+</div><section class="page__comments d-print-none"></section></article><!-- start custom main bottom snippet -->
+
+<!-- end custom main bottom snippet -->
+</div>
+            </div></div></div><div class="page__footer d-print-none">
+<footer class="footer py-4 js-page-footer">
+  <div class="main"><div itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Kefu Chai"><meta itemprop="url" content="https://blog.k3fu.xyz"><meta itemprop="description" content="yet another lamer"><div class="footer__author-links"><div class="author-links">
+  <ul class="menu menu--nowrap menu--inline"><link itemprop="url" href="https://blog.k3fu.xyz"><li title="Send me an Email.">
+      <a class="button button--circle mail-button" itemprop="email" href="mailto:tchaikov@gmail.com" target="_blank">
+        <i class="fas fa-envelope"></i>
+      </a><li title="Follow me on Github.">
+        <a class="button button--circle github-button" itemprop="sameAs" href="https://github.com/tchaikov" target="_blank">
+          <div class="icon"><svg fill="#000000" width="24px" height="24px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <path class="svgpath" data-index="path_0" fill="#272636" d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z" />
+</svg>
+</div>
+        </a>
+      </li></ul>
+</div>
+</div>
+    </div><div class="site-info mt-2">
+      <div>© some random rants 2020,
+        Powered by <a title="Jekyll is a simple, blog-aware, static site generator." href="http://jekyllrb.com/">Jekyll</a> & <a
+        title="TeXt is a super customizable Jekyll theme." href="https://github.com/kitian616/jekyll-TeXt-theme">TeXt Theme</a>.
       </div>
+    </div>
+  </div>
+</footer>
+</div></div>
+    </div><script>(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    var $body = $('body'), $window = $(window);
+    var $pageRoot = $('.js-page-root'), $pageMain = $('.js-page-main');
+    var activeCount = 0;
+    function modal(options) {
+      var $root = this, visible, onChange, hideWhenWindowScroll = false;
+      var scrollTop;
+      function setOptions(options) {
+        var _options = options || {};
+        visible = _options.initialVisible === undefined ? false : show;
+        onChange = _options.onChange;
+        hideWhenWindowScroll = _options.hideWhenWindowScroll;
+      }
+      function init() {
+        setState(visible);
+      }
+      function setState(isShow) {
+        if (isShow === visible) {
+          return;
+        }
+        visible = isShow;
+        if (visible) {
+          activeCount++;
+          scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
+          $root.addClass('modal--show');
+          $pageMain.scrollTop(scrollTop);
+          activeCount === 1 && ($pageRoot.addClass('show-modal'), $body.addClass('of-hidden'));
+          hideWhenWindowScroll && window.hasEvent('touchstart') && $window.on('scroll', hide);
+          $window.on('keyup', handleKeyup);
+        } else {
+          activeCount > 0 && activeCount--;
+          $root.removeClass('modal--show');
+          $window.scrollTop(scrollTop);
+          activeCount === 0 && ($pageRoot.removeClass('show-modal'), $body.removeClass('of-hidden'));
+          hideWhenWindowScroll && window.hasEvent('touchstart') && $window.off('scroll', hide);
+          $window.off('keyup', handleKeyup);
+        }
+        onChange && onChange(visible);
+      }
+      function show() {
+        setState(true);
+      }
+      function hide() {
+        setState(false);
+      }
+      function handleKeyup(e) {
+        // Char Code: 27  ESC
+        if (e.which ===  27) {
+          hide();
+        }
+      }
+      setOptions(options);
+      init();
+      return {
+        show: show,
+        hide: hide,
+        $el: $root
+      };
+    }
+    $.fn.modal = modal;
+  });
+})();
+</script><div class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"></div></div>
 
-      <script>
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function scrollToAnchor(anchor, duration, callback) {
-              var $root = this;
-              $root.animate(
-                { scrollTop: $(anchor).position().top },
-                duration,
-                function () {
-                  window.history.replaceState(
-                    null,
-                    "",
-                    window.location.href.split("#")[0] + anchor
-                  );
-                  callback && callback();
-                }
-              );
-            }
-            $.fn.scrollToAnchor = scrollToAnchor;
+
+<script>(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    function scrollToAnchor(anchor, duration, callback) {
+      var $root = this;
+      $root.animate({ scrollTop: $(anchor).position().top }, duration, function() {
+        window.history.replaceState(null, '', window.location.href.split('#')[0] + anchor);
+        callback && callback();
+      });
+    }
+    $.fn.scrollToAnchor = scrollToAnchor;
+  });
+})();
+(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    function affix(options) {
+      var $root = this, $window = $(window), $scrollTarget, $scroll,
+        offsetBottom = 0, scrollTarget = window, scroll = window.document, disabled = false, isOverallScroller = true,
+        rootTop, rootLeft, rootHeight, scrollBottom, rootBottomTop,
+        hasInit = false, curState;
+
+      function setOptions(options) {
+        var _options = options || {};
+        _options.offsetBottom && (offsetBottom = _options.offsetBottom);
+        _options.scrollTarget && (scrollTarget = _options.scrollTarget);
+        _options.scroll && (scroll = _options.scroll);
+        _options.disabled !== undefined && (disabled = _options.disabled);
+        $scrollTarget = $(scrollTarget);
+        isOverallScroller = window.isOverallScroller($scrollTarget[0]);
+        $scroll = $(scroll);
+      }
+      function preCalc() {
+        top();
+        rootHeight = $root.outerHeight();
+        rootTop = $root.offset().top + (isOverallScroller ? 0 :  $scrollTarget.scrollTop());
+        rootLeft = $root.offset().left;
+      }
+      function calc(needPreCalc) {
+        needPreCalc && preCalc();
+        scrollBottom = $scroll.outerHeight() - offsetBottom - rootHeight;
+        rootBottomTop = scrollBottom - rootTop;
+      }
+      function top() {
+        if (curState !== 'top') {
+          $root.removeClass('fixed').css({
+            left: 0,
+            top: 0
           });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function affix(options) {
-              var $root = this,
-                $window = $(window),
-                $scrollTarget,
-                $scroll,
-                offsetBottom = 0,
-                scrollTarget = window,
-                scroll = window.document,
-                disabled = false,
-                isOverallScroller = true,
-                rootTop,
-                rootLeft,
-                rootHeight,
-                scrollBottom,
-                rootBottomTop,
-                hasInit = false,
-                curState;
-
-              function setOptions(options) {
-                var _options = options || {};
-                _options.offsetBottom && (offsetBottom = _options.offsetBottom);
-                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-                _options.scroll && (scroll = _options.scroll);
-                _options.disabled !== undefined &&
-                  (disabled = _options.disabled);
-                $scrollTarget = $(scrollTarget);
-                isOverallScroller = window.isOverallScroller($scrollTarget[0]);
-                $scroll = $(scroll);
-              }
-              function preCalc() {
-                top();
-                rootHeight = $root.outerHeight();
-                rootTop =
-                  $root.offset().top +
-                  (isOverallScroller ? 0 : $scrollTarget.scrollTop());
-                rootLeft = $root.offset().left;
-              }
-              function calc(needPreCalc) {
-                needPreCalc && preCalc();
-                scrollBottom =
-                  $scroll.outerHeight() - offsetBottom - rootHeight;
-                rootBottomTop = scrollBottom - rootTop;
-              }
-              function top() {
-                if (curState !== "top") {
-                  $root.removeClass("fixed").css({
-                    left: 0,
-                    top: 0,
-                  });
-                  curState = "top";
-                }
-              }
-              function fixed() {
-                if (curState !== "fixed") {
-                  $root.addClass("fixed").css({
-                    left: rootLeft + "px",
-                    top: 0,
-                  });
-                  curState = "fixed";
-                }
-              }
-              function bottom() {
-                if (curState !== "bottom") {
-                  $root.removeClass("fixed").css({
-                    left: 0,
-                    top: rootBottomTop + "px",
-                  });
-                  curState = "bottom";
-                }
-              }
-              function setState() {
-                var scrollTop = $scrollTarget.scrollTop();
-                if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
-                  fixed();
-                } else if (scrollTop < rootTop) {
-                  top();
-                } else {
-                  bottom();
-                }
-              }
-              function init() {
-                if (!hasInit) {
-                  var interval, timeout;
-                  calc(true);
-                  setState();
-                  // run calc every 100 millisecond
-                  interval = setInterval(function () {
-                    calc();
-                  }, 100);
-                  timeout = setTimeout(function () {
-                    clearInterval(interval);
-                  }, 45000);
-                  window.pageLoad.then(function () {
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      clearTimeout(timeout);
-                    }, 3000);
-                  });
-                  $scrollTarget.on("scroll", function () {
-                    disabled || setState();
-                  });
-                  $window.on("resize", function () {
-                    disabled || (calc(true), setState());
-                  });
-                  hasInit = true;
-                }
-              }
-
-              setOptions(options);
-              if (!disabled) {
-                init();
-              }
-              $window.on(
-                "resize",
-                window.throttle(function () {
-                  init();
-                }, 200)
-              );
-              return {
-                setOptions: setOptions,
-                refresh: function () {
-                  calc(true, { animation: false });
-                  setState();
-                },
-              };
-            }
-            $.fn.affix = affix;
+          curState = 'top';
+        }
+      }
+      function fixed() {
+        if (curState !== 'fixed') {
+          $root.addClass('fixed').css({
+            left: rootLeft + 'px',
+            top: 0
           });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function toc(options) {
-              var $root = this,
-                $window = $(window),
-                $scrollTarget,
-                $scroller,
-                $tocUl = $('<ul class="toc toc--ellipsis"></ul>'),
-                $tocLi,
-                $headings,
-                $activeLast,
-                $activeCur,
-                selectors = "h1,h2,h3",
-                container = "body",
-                scrollTarget = window,
-                scroller = "html, body",
-                disabled = false,
-                headingsPos,
-                scrolling = false,
-                hasRendered = false,
-                hasInit = false;
-
-              function setOptions(options) {
-                var _options = options || {};
-                _options.selectors && (selectors = _options.selectors);
-                _options.container && (container = _options.container);
-                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-                _options.scroller && (scroller = _options.scroller);
-                _options.disabled !== undefined &&
-                  (disabled = _options.disabled);
-                $headings = $(container).find(selectors).filter("[id]");
-                $scrollTarget = $(scrollTarget);
-                $scroller = $(scroller);
-              }
-              function calc() {
-                headingsPos = [];
-                $headings.each(function () {
-                  headingsPos.push(Math.floor($(this).position().top));
-                });
-              }
-              function setState(element, disabled) {
-                var scrollTop = $scrollTarget.scrollTop(),
-                  i;
-                if (disabled || !headingsPos || headingsPos.length < 1) {
-                  return;
-                }
-                if (element) {
-                  $activeCur = element;
-                } else {
-                  for (i = 0; i < headingsPos.length; i++) {
-                    if (scrollTop >= headingsPos[i]) {
-                      $activeCur = $tocLi.eq(i);
-                    } else {
-                      $activeCur || ($activeCur = $tocLi.eq(i));
-                      break;
-                    }
-                  }
-                }
-                $activeLast && $activeLast.removeClass("active");
-                ($activeLast = $activeCur).addClass("active");
-              }
-              function render() {
-                if (!hasRendered) {
-                  $root.append($tocUl);
-                  $headings.each(function () {
-                    var $this = $(this);
-                    $tocUl.append(
-                      $("<li></li>")
-                        .addClass("toc-" + $this.prop("tagName").toLowerCase())
-                        .append(
-                          $("<a></a>")
-                            .text($this.text())
-                            .attr("href", "#" + $this.prop("id"))
-                        )
-                    );
-                  });
-                  $tocLi = $tocUl.children("li");
-                  $tocUl.on("click", "a", function (e) {
-                    e.preventDefault();
-                    var $this = $(this);
-                    scrolling = true;
-                    setState($this.parent());
-                    $scroller.scrollToAnchor(
-                      $this.attr("href"),
-                      400,
-                      function () {
-                        scrolling = false;
-                      }
-                    );
-                  });
-                }
-                hasRendered = true;
-              }
-              function init() {
-                var interval, timeout;
-                if (!hasInit) {
-                  render();
-                  calc();
-                  setState(null, scrolling);
-                  // run calc every 100 millisecond
-                  interval = setInterval(function () {
-                    calc();
-                  }, 100);
-                  timeout = setTimeout(function () {
-                    clearInterval(interval);
-                  }, 45000);
-                  window.pageLoad.then(function () {
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      clearTimeout(timeout);
-                    }, 3000);
-                  });
-                  $scrollTarget.on("scroll", function () {
-                    disabled || setState(null, scrolling);
-                  });
-                  $window.on(
-                    "resize",
-                    window.throttle(function () {
-                      if (!disabled) {
-                        render();
-                        calc();
-                        setState(null, scrolling);
-                      }
-                    }, 100)
-                  );
-                }
-                hasInit = true;
-              }
-
-              setOptions(options);
-              if (!disabled) {
-                init();
-              }
-              $window.on(
-                "resize",
-                window.throttle(function () {
-                  init();
-                }, 200)
-              );
-              return {
-                setOptions: setOptions,
-              };
-            }
-            $.fn.toc = toc;
+          curState = 'fixed';
+        }
+      }
+      function bottom() {
+        if (curState !== 'bottom') {
+          $root.removeClass('fixed').css({
+            left: 0,
+            top: rootBottomTop + 'px'
           });
-        })();
-        /*(function () {
+          curState = 'bottom';
+        }
+      }
+      function setState() {
+        var scrollTop = $scrollTarget.scrollTop();
+        if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
+          fixed();
+        } else if (scrollTop < rootTop) {
+          top();
+        } else {
+          bottom();
+        }
+      }
+      function init() {
+        if(!hasInit) {
+          var interval, timeout;
+          calc(true); setState();
+          // run calc every 100 millisecond
+          interval = setInterval(function() {
+            calc();
+          }, 100);
+          timeout = setTimeout(function() {
+            clearInterval(interval);
+          }, 45000);
+          window.pageLoad.then(function() {
+            setTimeout(function() {
+              clearInterval(interval);
+              clearTimeout(timeout);
+            }, 3000);
+          });
+          $scrollTarget.on('scroll', function() {
+            disabled || setState();
+          });
+          $window.on('resize', function() {
+            disabled || (calc(true), setState());
+          });
+          hasInit = true;
+        }
+      }
+
+      setOptions(options);
+      if (!disabled) {
+        init();
+      }
+      $window.on('resize', window.throttle(function() {
+        init();
+      }, 200));
+      return {
+        setOptions: setOptions,
+        refresh: function() {
+          calc(true, { animation: false }); setState();
+        }
+      };
+    }
+    $.fn.affix = affix;
+  });
+})();
+(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    function toc(options) {
+      var $root = this, $window = $(window), $scrollTarget, $scroller, $tocUl = $('<ul class="toc toc--ellipsis"></ul>'), $tocLi, $headings, $activeLast, $activeCur,
+        selectors = 'h1,h2,h3', container = 'body', scrollTarget = window, scroller = 'html, body', disabled = false,
+        headingsPos, scrolling = false, hasRendered = false, hasInit = false;
+
+      function setOptions(options) {
+        var _options = options || {};
+        _options.selectors && (selectors = _options.selectors);
+        _options.container && (container = _options.container);
+        _options.scrollTarget && (scrollTarget = _options.scrollTarget);
+        _options.scroller && (scroller = _options.scroller);
+        _options.disabled !== undefined && (disabled = _options.disabled);
+        $headings = $(container).find(selectors).filter('[id]');
+        $scrollTarget = $(scrollTarget);
+        $scroller = $(scroller);
+      }
+      function calc() {
+        headingsPos = [];
+        $headings.each(function() {
+          headingsPos.push(Math.floor($(this).position().top));
+        });
+      }
+      function setState(element, disabled) {
+        var scrollTop = $scrollTarget.scrollTop(), i;
+        if (disabled || !headingsPos || headingsPos.length < 1) { return; }
+        if (element) {
+          $activeCur = element;
+        } else {
+          for (i = 0; i < headingsPos.length; i++) {
+            if (scrollTop >= headingsPos[i]) {
+              $activeCur = $tocLi.eq(i);
+            } else {
+              $activeCur || ($activeCur = $tocLi.eq(i));
+              break;
+            }
+          }
+        }
+        $activeLast && $activeLast.removeClass('active');
+        ($activeLast = $activeCur).addClass('active');
+      }
+      function render() {
+        if(!hasRendered) {
+          $root.append($tocUl);
+          $headings.each(function() {
+            var $this = $(this);
+            $tocUl.append($('<li></li>').addClass('toc-' + $this.prop('tagName').toLowerCase())
+              .append($('<a></a>').text($this.text()).attr('href', '#' + $this.prop('id'))));
+          });
+          $tocLi = $tocUl.children('li');
+          $tocUl.on('click', 'a', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            scrolling = true;
+            setState($this.parent());
+            $scroller.scrollToAnchor($this.attr('href'), 400, function() {
+              scrolling = false;
+            });
+          });
+        }
+        hasRendered = true;
+      }
+      function init() {
+        var interval, timeout;
+        if(!hasInit) {
+          render(); calc(); setState(null, scrolling);
+          // run calc every 100 millisecond
+          interval = setInterval(function() {
+            calc();
+          }, 100);
+          timeout = setTimeout(function() {
+            clearInterval(interval);
+          }, 45000);
+          window.pageLoad.then(function() {
+            setTimeout(function() {
+              clearInterval(interval);
+              clearTimeout(timeout);
+            }, 3000);
+          });
+          $scrollTarget.on('scroll', function() {
+            disabled || setState(null, scrolling);
+          });
+          $window.on('resize', window.throttle(function() {
+            if (!disabled) {
+              render(); calc(); setState(null, scrolling);
+            }
+          }, 100));
+        }
+        hasInit = true;
+      }
+
+      setOptions(options);
+      if (!disabled) {
+        init();
+      }
+      $window.on('resize', window.throttle(function() {
+        init();
+      }, 200));
+      return {
+        setOptions: setOptions
+      };
+    }
+    $.fn.toc = toc;
+  });
+})();
+/*(function () {
 
 })();*/
-      </script>
-      <script>
-        /* toc must before affix, since affix need to konw toc' height. */ (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            var $window = $(window);
-            var $articleContent = $(".js-article-content");
-            var $tocRoot = $(".js-toc-root"),
-              $col2 = $(".js-col-aside");
-            var toc;
-            var tocDisabled = false;
-            var hasSidebar = $(".js-page-root").hasClass(
-              "layout--page--sidebar"
-            );
-            var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
+</script><script>
+  /* toc must before affix, since affix need to konw toc' height. */(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    var $window = $(window);
+    var $articleContent = $('.js-article-content');
+    var $tocRoot = $('.js-toc-root'), $col2 = $('.js-col-aside');
+    var toc;
+    var tocDisabled = false;
+    var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
+    var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
 
-            function disabled() {
-              return $col2.css("display") === "none" || !hasToc;
-            }
+    function disabled() {
+      return $col2.css('display') === 'none' || !hasToc;
+    }
 
-            tocDisabled = disabled();
+    tocDisabled = disabled();
 
-            toc = $tocRoot.toc({
-              selectors: TOC_SELECTOR,
-              container: $articleContent,
-              scrollTarget: hasSidebar ? ".js-page-main" : null,
-              scroller: hasSidebar ? ".js-page-main" : null,
-              disabled: tocDisabled,
-            });
+    toc = $tocRoot.toc({
+      selectors: TOC_SELECTOR,
+      container: $articleContent,
+      scrollTarget: hasSidebar ? '.js-page-main' : null,
+      scroller: hasSidebar ? '.js-page-main' : null,
+      disabled: tocDisabled
+    });
 
-            $window.on(
-              "resize",
-              window.throttle(function () {
-                tocDisabled = disabled();
-                toc &&
-                  toc.setOptions({
-                    disabled: tocDisabled,
-                  });
-              }, 100)
-            );
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            var $window = $(window),
-              $pageFooter = $(".js-page-footer");
-            var $pageAside = $(".js-page-aside");
-            var affix;
-            var tocDisabled = false;
-            var hasSidebar = $(".js-page-root").hasClass(
-              "layout--page--sidebar"
-            );
+    $window.on('resize', window.throttle(function() {
+      tocDisabled = disabled();
+      toc && toc.setOptions({
+        disabled: tocDisabled
+      });
+    }, 100));
 
-            affix = $pageAside.affix({
-              offsetBottom: $pageFooter.outerHeight(),
-              scrollTarget: hasSidebar ? ".js-page-main" : null,
-              scroller: hasSidebar ? ".js-page-main" : null,
-              scroll: hasSidebar ? $(".js-page-main").children() : null,
-              disabled: tocDisabled,
-            });
+  });
+})();
+(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    var $window = $(window), $pageFooter = $('.js-page-footer');
+    var $pageAside = $('.js-page-aside');
+    var affix;
+    var tocDisabled = false;
+    var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
 
-            $window.on(
-              "resize",
-              window.throttle(function () {
-                affix &&
-                  affix.setOptions({
-                    disabled: tocDisabled,
-                  });
-              }, 100)
-            );
+    affix = $pageAside.affix({
+      offsetBottom: $pageFooter.outerHeight(),
+      scrollTarget: hasSidebar ? '.js-page-main' : null,
+      scroller: hasSidebar ? '.js-page-main' : null,
+      scroll: hasSidebar ? $('.js-page-main').children() : null,
+      disabled: tocDisabled
+    });
 
-            window.pageAsideAffix = affix;
-          });
-        })();
-      </script>
-      <script type="text/x-mathjax-config">
-        var _config = { tex2jax: {
-        	inlineMath: [['$','$'], ['\\(','\\)']]
-        }};MathJax.Hub.Config(_config);
-      </script>
-      <script
-        type="text/javascript"
-        src="https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"
-        async
-      ></script>
+    $window.on('resize', window.throttle(function() {
+      affix && affix.setOptions({
+        disabled: tocDisabled
+      });
+    }, 100));
+
+    window.pageAsideAffix = affix;
+  });
+})();
+</script><script type="text/x-mathjax-config">
+	var _config = { tex2jax: {
+		inlineMath: [['$','$'], ['\\(','\\)']]
+	}};MathJax.Hub.Config(_config);
+</script>
+<script type="text/javascript" src="https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+
     </div>
-    <script>
-      (function () {
-        var $root = document.getElementsByClassName("root")[0];
-        if (window.hasEvent("touchstart")) {
-          $root.dataset.isTouch = true;
-          document.addEventListener("touchstart", function () {}, false);
-        }
-      })();
-    </script>
+    <script>(function () {
+  var $root = document.getElementsByClassName('root')[0];
+  if (window.hasEvent('touchstart')) {
+    $root.dataset.isTouch = true;
+    document.addEventListener('touchstart', function(){}, false);
+  }
+})();
+</script>
   </body>
 </html>
+
