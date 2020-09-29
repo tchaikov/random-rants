@@ -1,6 +1,9 @@
 = RADOS 里的顺序
 :page-tags: [ceph]
 :date: 2020-09-20 19:39:40 +0800
+:description: RADOS 里面的乱序访问
+
+乱序和并发的问题无处不在，Ceph 里面也是这样。
 
 RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义
 

@@ -2,6 +2,8 @@
 :page-tags: [arch, x86]
 :date: 2020-08-09 15:11:43 +0800
 
+`longjmp()` 和 `setcontext()` 的性能孰优孰劣？
+
 这篇文章起源于 seastar-devel 上的一个 https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。
 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。
 
@@ -153,7 +155,7 @@ Seastar 为了避免使用重量级的 `swapcontext()` 进行上下文切换，�
 
 基于这套实现，Boost 实现了自己的协程库。
 
-seastar-devel 上的 https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论] 也是围绕着这一点。 Christian 觉得手工实现 `longjmp()` 会比较高效。Avi 提到当初他也考虑过 `Boost::context`。因为它比较简单明了，同时没有 glibc 中 `_longjmp_unwind()` 和 `__sigprocmask()` 的开销，所以对于广大的 glibc 用户来说，使用 `Boost::context` 性能会更好一些。 不过 `Boost::context` 在 1.55/1.56 中的实现还不成熟。为了精炼版的 `longjmp()`，只能有两条路，
+seastar-devel 上的 https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]也是围绕着这一点。 Christian 觉得手工实现 `longjmp()` 会比较高效。Avi 提到当初他也考虑过 `Boost::context`。因为它比较简单明了，同时没有 glibc 中 `_longjmp_unwind()` 和 `__sigprocmask()` 的开销，所以对于广大的 glibc 用户来说，使用 `Boost::context` 性能会更好一些。 不过 `Boost::context` 在 1.55/1.56 中的实现还不成熟。为了精炼版的 `longjmp()`，只能有两条路，
 
 . 要求用户使用新版的 Boost
 . 把 `fcontext_t` 使用的汇编代码移植到 Seastar 里面去。
