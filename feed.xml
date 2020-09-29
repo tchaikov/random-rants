@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T06:25:23+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T08:48:34+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
@@ -237,34 +237,53 @@
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 &lt;code&gt;Rakefile&lt;/code&gt; 。它比 &lt;code&gt;Makefile&lt;/code&gt; 更灵活，但是还是有点变扭。这里记一下子。&lt;/p&gt;
+&lt;p&gt;我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;dlist&quot;&gt;
+&lt;dl&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;AsciiDoc&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;标准化的 markup 语言。和各家 markdown 不一样，它有标准化的工具链。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;AsciiDoctor&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;AsciiDoc 的参考实现。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;jekyll-asciidoc&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;jekyll 的 AsciiDoc 插件。通过它就能用 AsciiDoc 写网站了。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;jekyll-text-theme&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;一开始用的 minima 主题虽然开箱即用，但是这个主题的红色主题一下子让人有些亲近感。忍不住还是套用上了。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;新建帖子&lt;/p&gt;
+&lt;p&gt;另外做了一些修改：&lt;/p&gt;
 &lt;/div&gt;
-&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;jekyll-asciidoc &lt;a href=&quot;https://github.com/asciidoctor/jekyll-asciidoc/issues/230&quot;&gt;没法支持一些插件&lt;/a&gt;。
+至少用 &lt;a href=&quot;https://github.com/asciidoctor/jekyll-asciidoc/issues/230&quot;&gt;这个补丁&lt;/a&gt; 是修好了。
+测试的时候如果用自己本地的 jekyll-asciidoc 的话，需要参考 &lt;a href=&quot;https://bundler.io/guides/git.html#local&quot;&gt;bundler 的文档&lt;/a&gt;，
+让 bundler 用本地 repo，而不是 RubyGems 上的版本。这也是为什么我用 Gemfile 管理 jekyll
+插件的原因。感觉这样更接近 Ruby 一些，方便理解 bundler 是如何找到插件的。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rouge-ruby/rouge&quot;&gt;rouge&lt;/a&gt; 的语法高亮在 &lt;a href=&quot;https://github.com/kitian616/jekyll-TeXt-theme&quot;&gt;jekyll-text-theme&lt;/a&gt; 中无法生效，因为后者没有定义一些 rouge 要的 CSS 规则。
+所以从 minima 拷贝了一份 &lt;code&gt;_syntax-highlighting.scss&lt;/code&gt; 然后按照个人喜好改了一下，放到了 &lt;code&gt;_sass/custom.scss&lt;/code&gt;。网上也能找到好些好看的 rouge 语法高亮的主题。因为 rouge 高亮的 HTML 输出和 pygments 是兼容的，所以那些 pygments 的主题也可以拿来用。&lt;/p&gt;
+&lt;div class=&quot;literalblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shell&quot;&gt;bundle &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;rake &lt;span class=&quot;s1&quot;&gt;'post:create[&quot;title of post&quot;, category_of_post]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;其实之前并不知道应该用这个名字，只是觉得 text-theme 缺了这些定义，应该补上，是后来分析了它的 `assets/css/main.scss`，看着 `custom.scss` 的名字，找到它，发现这是个空的文件。才猜测这是给用户自定义的一个 stub。&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;打开浏览器预览一下&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;listingblock&quot;&gt;
-&lt;div class=&quot;content&quot;&gt;
-&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shell&quot;&gt;bundle &lt;span class=&quot;nb&quot;&gt;exec &lt;/span&gt;rake&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;加个 ruby 包，先修改 &lt;code&gt;Gemfile&lt;/code&gt;，然后&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;listingblock&quot;&gt;
-&lt;div class=&quot;content&quot;&gt;
-&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shell&quot;&gt;bundle &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;根据 &lt;a href=&quot;https://jekyllrb.com/docs/plugins/installation/&quot;&gt;官方的文档&lt;/a&gt;，我主要用第三种办法。但是因为 &lt;code&gt;ditaa-ditaa&lt;/code&gt; 没办法直接从 rubygem.org 安装，而且它需要修改一下才能使用。所以就直接放在 &lt;code&gt;_plugins&lt;/code&gt; 目录下面了。其他的插件都是在 &lt;code&gt;Gemfile&lt;/code&gt; 里面的。这样方便用 Bundler 来管理。所以加 plugin，一般来说只需要修改 &lt;code&gt;Gemfile&lt;/code&gt;，然后运行&lt;/p&gt;
+&lt;p&gt;另外，如果以后要加个插件或者其他 ruby 包，先修改 &lt;code&gt;Gemfile&lt;/code&gt;，然后&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
@@ -273,7 +292,7 @@
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;就行了。&lt;/p&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="jekyll" /><summary type="html">我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 Rakefile 。它比 Makefile 更灵活，但是还是有点变扭。这里记一下子。</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T00:00:00+00:00</published><updated>2020-08-23T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="jekyll" /><summary type="html">我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T00:00:00+00:00</published><updated>2020-08-23T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
