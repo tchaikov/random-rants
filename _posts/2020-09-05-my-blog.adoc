@@ -2,30 +2,30 @@
 :page-tags: [jekyll]
 :date: 2020-09-05 23:49:18 +0800
 
-我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 `Rakefile` 。它比 `Makefile` 更灵活，但是还是有点变扭。这里记一下子。
+我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：
 
-新建帖子
+AsciiDoc::
+标准化的 markup 语言。和各家 markdown 不一样，它有标准化的工具链。
+AsciiDoctor::
+AsciiDoc 的参考实现。
+jekyll-asciidoc::
+jekyll 的 AsciiDoc 插件。通过它就能用 AsciiDoc 写网站了。
+jekyll-text-theme::
+一开始用的 minima 主题虽然开箱即用，但是这个主题的红色主题一下子让人有些亲近感。忍不住还是套用上了。
 
-[source,shell]
-----
-bundle exec rake 'post:create["title of post", category_of_post]
-----
+另外做了一些修改：
 
-打开浏览器预览一下
+* jekyll-asciidoc https://github.com/asciidoctor/jekyll-asciidoc/issues/230[没法支持一些插件]。
+  至少用 https://github.com/asciidoctor/jekyll-asciidoc/issues/230[这个补丁] 是修好了。
+  测试的时候如果用自己本地的 jekyll-asciidoc 的话，需要参考 https://bundler.io/guides/git.html#local[bundler 的文档]，
+  让 bundler 用本地 repo，而不是 RubyGems 上的版本。这也是为什么我用 Gemfile 管理 jekyll
+  插件的原因。感觉这样更接近 Ruby 一些，方便理解 bundler 是如何找到插件的。
+* https://github.com/rouge-ruby/rouge[rouge] 的语法高亮在 https://github.com/kitian616/jekyll-TeXt-theme[jekyll-text-theme] 中无法生效，因为后者没有定义一些 rouge 要的 CSS 规则。
+  所以从 minima 拷贝了一份 `_syntax-highlighting.scss` 然后按照个人喜好改了一下，放到了 `_sass/custom.scss`。网上也能找到好些好看的 rouge 语法高亮的主题。因为 rouge 高亮的 HTML 输出和 pygments 是兼容的，所以那些 pygments 的主题也可以拿来用。
 
-[source,shell]
-----
-bundle exec rake
-----
+  其实之前并不知道应该用这个名字，只是觉得 text-theme 缺了这些定义，应该补上，是后来分析了它的 `assets/css/main.scss`，看着 `custom.scss` 的名字，找到它，发现这是个空的文件。才猜测这是给用户自定义的一个 stub。
 
-加个 ruby 包，先修改 `Gemfile`，然后
-
-[source,shell]
-----
-bundle install
-----
-
-根据 https://jekyllrb.com/docs/plugins/installation/[官方的文档]，我主要用第三种办法。但是因为 `ditaa-ditaa` 没办法直接从 rubygem.org 安装，而且它需要修改一下才能使用。所以就直接放在 `_plugins` 目录下面了。其他的插件都是在 `Gemfile` 里面的。这样方便用 Bundler 来管理。所以加 plugin，一般来说只需要修改 `Gemfile`，然后运行
+另外，如果以后要加个插件或者其他 ruby 包，先修改 `Gemfile`，然后
 
 [source,shell]
 ----
@@ -33,3 +33,5 @@ bundle install
 ----
 
 就行了。
+
+
