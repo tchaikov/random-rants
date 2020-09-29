@@ -1,5 +1,5 @@
 = TCP 长连接的最大个数
-:categories: networking
+:page-tags: [networking]
 :date: 2020-08-23 18:00:00 +0800
 
 提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？
