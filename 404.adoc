@@ -1,8 +1,7 @@
----
-layout: page
-permalink: /404.html
----
+:page-layout: page
+:page-permalink: /404.html
 
+++++
 <style type="text/css" media="screen">
   .container {
     margin: 10px auto;
@@ -25,3 +24,4 @@ permalink: /404.html
   <p>我不在这里 :(</p>
   说不定我曾经存在过，也可能我以后会出现。
 </div>
+++++
