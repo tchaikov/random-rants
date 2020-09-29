@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" /><updated>2020-09-28T16:52:31+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T06:25:23+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
@@ -236,7 +236,7 @@
 &lt;p&gt;RMW 不能和任何操作并行&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 &lt;code&gt;Rakefile&lt;/code&gt; 。它比 &lt;code&gt;Makefile&lt;/code&gt; 更灵活，但是还是有点变扭。这里记一下子。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -273,7 +273,7 @@
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;就行了。&lt;/p&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 Rakefile 。它比 Makefile 更灵活，但是还是有点变扭。这里记一下子。</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T00:00:00+00:00</published><updated>2020-08-23T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="jekyll" /><summary type="html">我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 Rakefile 。它比 Makefile 更灵活，但是还是有点变扭。这里记一下子。</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T00:00:00+00:00</published><updated>2020-08-23T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
@@ -286,10 +286,11 @@
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;h1 id=&quot;tcp&quot; class=&quot;sect0&quot;&gt;TCP&lt;/h1&gt;
 &lt;div class=&quot;sect1&quot;&gt;
-&lt;h2 id=&quot;数据库问题&quot;&gt;数据库问题&lt;/h2&gt;
+&lt;h2 id=&quot;tcp&quot;&gt;TCP&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;数据库问题&quot;&gt;数据库问题&lt;/h3&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;有人说，这是个数据库问题。因为 TCP 实现为了区别 TCP 连接，用了个四元组标记每个 TCP 报文&lt;/p&gt;
 &lt;/div&gt;
@@ -312,8 +313,8 @@
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;所以这四个数字合起来，就是数据库的复合主键。其中，目标服务的 IP 和端口都是固定的，所以我们只能从客户端这边发掘潜力：&lt;/p&gt;
 &lt;/div&gt;
-&lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;source-ip&quot;&gt;source ip&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;source-ip&quot;&gt;source ip&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;用 &lt;code&gt;iproute2&lt;/code&gt; 可以为同一块网卡添加多个 IP 地址。理论上说，这就是 2&lt;sup&gt;32&lt;/sup&gt; 个地址。&lt;/p&gt;
 &lt;/div&gt;
@@ -326,8 +327,8 @@
 &lt;p&gt;但是要细究的话，IPv4 有很多特殊的地址段是不能使用或者使用上有限制的。如果服务器是对公网开放的，那么我们作为客户端就不能使用外部地址，只能用那些本地的地址，比如 &lt;code&gt;192.168.x.x&lt;/code&gt; 或者 &lt;code&gt;127.x.x.x&lt;/code&gt; 这些。如果使用 NAT/PAT 这类技术在内部实现 IP 复用，那么就需要把 NAT 设备的限制考虑进去了。不管怎么样，数量级差不多是这个。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;source-port&quot;&gt;source port&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;source-port&quot;&gt;source port&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;对于特定目标地址，本地端口可以选择的区间是由 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt&quot;&gt;net.ipv4.ip_local_port_range&lt;/a&gt; 决定的。&lt;/p&gt;
 &lt;/div&gt;
@@ -342,12 +343,10 @@
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;
-&lt;div class=&quot;sect1&quot;&gt;
-&lt;h2 id=&quot;tcp-的运行时开销&quot;&gt;TCP 的运行时开销&lt;/h2&gt;
-&lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;什么是-tcp-连接&quot;&gt;什么是 TCP 连接&lt;/h3&gt;
+&lt;h3 id=&quot;tcp-的运行时开销&quot;&gt;TCP 的运行时开销&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;什么是-tcp-连接&quot;&gt;什么是 TCP 连接&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我们熟知的三次握手就能建立一个 TCP 连接&lt;/p&gt;
 &lt;/div&gt;
@@ -368,8 +367,8 @@
 &lt;p&gt;一旦双方完成这个规定的礼仪，就可以说这个连接建立了。一旦两边接上头，剩下的事情就是运行时的开销。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;系统-tcp-协议栈&quot;&gt;系统 TCP 协议栈&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;系统-tcp-协议栈&quot;&gt;系统 TCP 协议栈&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;如果服务使用系统的 TCP 协议栈，那么每个连接都需要占用一个文件描述符。回忆一下 &lt;code&gt;send()&lt;/code&gt; 和 &lt;code&gt;recv()&lt;/code&gt;，它们的第一个参数是 &lt;code&gt;socket&lt;/code&gt;，而&lt;code&gt;socket&lt;/code&gt; 可不就是个 &lt;code&gt;fd&lt;/code&gt; 嘛。所以操作系统文件描述符的最大值，这个全局的 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/sysctl/fs.txt&quot;&gt;设置&lt;/a&gt; 是 &lt;code&gt;fs.file-max&lt;/code&gt;。在我的 RHEL8 上，它的值是 &lt;code&gt;19603816&lt;/code&gt;，接近两千万了。如果我们希望用单进程实现这个服务，还需要改 &lt;code&gt;ulimit -n&lt;/code&gt; 的限制。当然，如果内存够大，多操作系统或者用容器化的实现，以及用多进程的实现都可以越过这些限制。代价就是更多的额外开销。&lt;/p&gt;
 &lt;/div&gt;
@@ -404,24 +403,25 @@
 &lt;p&gt;netfilter 维护着一张哈希表用来跟踪所有的 TCP 连接，所以如果这张表放不下新的 TCP 连接，TCP 就会开始丢包。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;用户态-tcp-协议栈&quot;&gt;用户态 TCP 协议栈&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;用户态-tcp-协议栈&quot;&gt;用户态 TCP 协议栈&lt;/h4&gt;
 
 &lt;/div&gt;
-&lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;带宽&quot;&gt;带宽&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;带宽&quot;&gt;带宽&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;需要估计所有连接中活跃的比例，并且需要了解活跃连接需要的带宽是多少。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;div class=&quot;sect2&quot;&gt;
-&lt;h3 id=&quot;内存&quot;&gt;内存&lt;/h3&gt;
+&lt;div class=&quot;sect3&quot;&gt;
+&lt;h4 id=&quot;内存&quot;&gt;内存&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;前面如果使用系统的 TCP/IP 栈，就需要为每个连接保证 &lt;code&gt;tcp_rmem.min&lt;/code&gt; + &lt;code&gt;tcp_wmem.min&lt;/code&gt; 的空间。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T00:00:00+00:00</published><updated>2020-08-10T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T00:00:00+00:00</published><updated>2020-08-10T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 &lt;a href=&quot;https://www.youtube.com/watch?v=Nb2tebYAaOA&quot;&gt;比方&lt;/a&gt;，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如&lt;/p&gt;
@@ -1381,7 +1381,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;p&gt;十年前，用 &lt;code&gt;mutex&lt;/code&gt; 和 &lt;code&gt;condition_variable&lt;/code&gt; 就能解决很多多线程的问题。在今天，这些同步原语仍然很重要。但是如果我们对高并发有更高的追求，就需要更深入了解多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T00:00:00+00:00</published><updated>2020-08-09T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T00:00:00+00:00</published><updated>2020-08-09T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。
@@ -1732,6 +1732,6 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name></name></author><summary type="html">这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T00:00:00+00:00</published><updated>2020-08-08T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/misc/2020/08/08/hello-world</id><content type="html" xml:base="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><summary type="html">这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T00:00:00+00:00</published><updated>2020-08-08T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/misc/2020/08/08/hello-world</id><content type="html" xml:base="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;为了记录，也为了提高自己，写个 blog。&lt;/p&gt;
-&lt;/div&gt;</content><author><name></name></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>
