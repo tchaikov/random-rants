@@ -63,10 +63,3 @@ asciidoctor:
     - source-highlighter=rouge
 
 theme: jekyll-text-theme
-
-plugins:
-  - asciidoctor-diagram
-  - jekyll-asciidoc
-  - jekyll-paginate
-  - jekyll-sitemap
-  - jemoji
