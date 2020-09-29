@@ -7,5 +7,5 @@ gem "tzinfo-data"
 
 group :jekyll_plugins do
   gem 'asciidoctor-diagram'
-  gem 'jekyll-asciidoc', github: 'tchaikov/jekyll-asciidoc', branch: 'add-excerpt-write'
+  gem 'jekyll-asciidoc', github: 'tchaikov/jekyll-asciidoc', branch: 'master'
 end

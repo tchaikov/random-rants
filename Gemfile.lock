@@ -1,6 +1,17 @@
+GIT
+  remote: https://github.com/tchaikov/jekyll-asciidoc.git
+  revision: 5a57c059dac3946debb1fde3bc14eeed1df13342
+  branch: master
+  specs:
+    jekyll-asciidoc (3.0.1.dev)
+      asciidoctor (>= 1.5.0)
+      jekyll (>= 3.0.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
+    activesupport (3.1.12)
+      multi_json (~> 1.0)
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     asciidoctor (2.0.10)
