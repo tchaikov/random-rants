@@ -3,7 +3,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>多核和顺序 - some random rants</title>
 
-<meta name="description" content="有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打...">
+<meta name="description" content="性能和易用性之间常常会有矛盾。">
 <link rel="canonical" href="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html"><link rel="alternate" type="application/rss+xml" title="some random rants" href="/feed.xml"><!-- start favicons snippet, use https://realfavicongenerator.net/ --><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png"><link rel="manifest" href="/assets/site.webmanifest"><link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#fc4d50"><link rel="shortcut icon" href="/assets/favicon.ico">
 
 <meta name="msapplication-TileColor" content="#ffc40d"><meta name="msapplication-config" content="/assets/browserconfig.xml">
@@ -292,7 +292,10 @@
 <div class="article__content" itemprop="articleBody"><div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 <a href="https://www.youtube.com/watch?v=Nb2tebYAaOA">比方</a>，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</p>
+<p>性能和易用性之间常常会有矛盾。</p>
+</div>
+<div class="paragraph">
+<p>晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 <a href="https://www.youtube.com/watch?v=Nb2tebYAaOA">比方</a>，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</p>
 </div>
 <div class="quoteblock">
 <blockquote>

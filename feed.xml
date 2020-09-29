@@ -1,5 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T10:15:14+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-29T11:19:11+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;乱序和并发的问题无处不在，Ceph 里面也是这样。&lt;/p&gt;
+&lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义&lt;/p&gt;
 &lt;/div&gt;
@@ -250,7 +253,7 @@
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">乱序和并发的问题无处不在，Ceph 里面也是这样。</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;dlist&quot;&gt;
@@ -457,7 +460,10 @@
 &lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="networking" /><summary type="html">提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？</summary></entry><entry><title type="html">多核和顺序</title><link href="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html" rel="alternate" type="text/html" title="多核和顺序" /><published>2020-08-10T00:00:00+00:00</published><updated>2020-08-10T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/10/memory-ordering</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/10/memory-ordering.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 &lt;a href=&quot;https://www.youtube.com/watch?v=Nb2tebYAaOA&quot;&gt;比方&lt;/a&gt;，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如&lt;/p&gt;
+&lt;p&gt;性能和易用性之间常常会有矛盾。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 &lt;a href=&quot;https://www.youtube.com/watch?v=Nb2tebYAaOA&quot;&gt;比方&lt;/a&gt;，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;quoteblock&quot;&gt;
 &lt;blockquote&gt;
@@ -1414,10 +1420,13 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;p&gt;十年前，用 &lt;code&gt;mutex&lt;/code&gt; 和 &lt;code&gt;condition_variable&lt;/code&gt; 就能解决很多多线程的问题。在今天，这些同步原语仍然很重要。但是如果我们对高并发有更高的追求，就需要更深入了解多核系统中的无锁编程，在体系结构上多理解一些 CPU 和内存的交互，这样对工作会更有帮助。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="arch" /><category term="x86" /><summary type="html">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T00:00:00+00:00</published><updated>2020-08-09T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="arch" /><category term="x86" /><summary type="html">性能和易用性之间常常会有矛盾。</summary></entry><entry><title type="html">longjmp 和 setcontext</title><link href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html" rel="alternate" type="text/html" title="longjmp 和 setcontext" /><published>2020-08-09T00:00:00+00:00</published><updated>2020-08-09T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。
+&lt;p&gt;&lt;code&gt;longjmp()&lt;/code&gt; 和 &lt;code&gt;setcontext()&lt;/code&gt; 之间的性能孰优孰劣？&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;这篇文章起源于 seastar-devel 上的一个 &lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -1483,7 +1492,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;div class=&quot;sect2&quot;&gt;
 &lt;h3 id=&quot;书签和上下文&quot;&gt;书签和上下文&lt;/h3&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;书签保存的信息只有一个页码。但是对于一个线程来说，它在 CPU 上执行的状态对应着更多的信息。我们先看一个特例--------子函数的调用。假设我们在 &lt;code&gt;main()&lt;/code&gt; 里面调用之前定义的函数 &lt;code&gt;func()&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;书签保存的信息只有一个页码。但是对于一个线程来说，它在 CPU 上执行的状态对应着更多的信息。我们先看一个特例&amp;#8212;&amp;#8203;子函数的调用。假设我们在 &lt;code&gt;main()&lt;/code&gt; 里面调用之前定义的函数 &lt;code&gt;func()&lt;/code&gt;。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
@@ -1671,7 +1680,7 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;不跨平台。https://pubs.opengroup.org/onlinepubs/009695399/functions/getcontext.html[POSIX.1] 已经把这几个函数去掉了。musl-libc 干脆[12][不实现他们]。&lt;/p&gt;
+&lt;p&gt;不跨平台。 &lt;a href=&quot;https://pubs.opengroup.org/onlinepubs/009695399/functions/getcontext.html&quot;&gt;POSIX.1&lt;/a&gt; 已经把这几个函数去掉了。musl-libc 干脆[12][不实现他们]。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;把 &lt;code&gt;context&lt;/code&gt; 串起来。调用当初设置的函数，要是执行完了，看看 &lt;code&gt;uc_link&lt;/code&gt;，要是还有下一个 context。有的话，再调用 &lt;code&gt;setcontext()&lt;/code&gt;，开始执行它。&lt;/p&gt;
@@ -1742,13 +1751,13 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);&lt;/pre&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这两个寄存器状态和 &lt;a href=&quot;https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions&quot;&gt;Intel TSX&lt;/a&gt; 机制有关系。TSX (Intel Transactional Synchronisation Extensions) 是 Intel 实现的硬件内存事务机制，可以粗略地理解，它使用 L1 cache 跟踪读集合和写集合，如果出现冲突的话，就放弃当前核上的修改，不把它刷到内存里面去，导致不一致。我们可以在另外一篇文章里面继续讨论内存一致性、可见性和多核系统里面乱序执行的问题。不过这里保存它们的原因是因为，如果浮点 TSX 的事务中发现浮点状态字有变化，那么这个事务肯定会https://www.boost.org/doc/libs/master/libs/fiber/doc/html/fiber/speculation.html[终止]。所以为了支持 TSX，Boost 也保存这些浮点寄存器。顺便说一下，内核里面是不能用浮点操作的。所以那边我们不需要关心这种问题。&lt;/p&gt;
+&lt;p&gt;这两个寄存器状态和 &lt;a href=&quot;https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions&quot;&gt;Intel TSX&lt;/a&gt; 机制有关系。TSX (Intel Transactional Synchronisation Extensions) 是 Intel 实现的硬件内存事务机制，可以粗略地理解，它使用 L1 cache 跟踪读集合和写集合，如果出现冲突的话，就放弃当前核上的修改，不把它刷到内存里面去，导致不一致。我们可以在另外一篇文章里面继续讨论内存一致性、可见性和多核系统里面乱序执行的问题。不过这里保存它们的原因是因为，如果浮点 TSX 的事务中发现浮点状态字有变化，那么这个事务肯定会 &lt;a href=&quot;https://www.boost.org/doc/libs/master/libs/fiber/doc/html/fiber/speculation.html&quot;&gt;终止&lt;/a&gt;。所以为了支持 TSX，Boost 也保存这些浮点寄存器。顺便说一下，内核里面是不能用浮点操作的。所以那边我们不需要关心这种问题。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;基于这套实现，Boost 实现了自己的协程库。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;seastar-devel 上的https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论] 也是围绕着这一点。 Christian 觉得手工实现 &lt;code&gt;longjmp()&lt;/code&gt; 会比较高效。Avi 提到当初他也考虑过 &lt;code&gt;Boost::context&lt;/code&gt;。因为它比较简单明了，同时没有 glibc 中 &lt;code&gt;_longjmp_unwind()&lt;/code&gt; 和 &lt;code&gt;__sigprocmask()&lt;/code&gt; 的开销，所以对于广大的 glibc 用户来说，使用 &lt;code&gt;Boost::context&lt;/code&gt; 性能会更好一些。 不过 &lt;code&gt;Boost::context&lt;/code&gt; 在 1.55/1.56 中的实现还不成熟。为了精炼版的 &lt;code&gt;longjmp()&lt;/code&gt;，只能有两条路，&lt;/p&gt;
+&lt;p&gt;seastar-devel 上的 &lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;也是围绕着这一点。 Christian 觉得手工实现 &lt;code&gt;longjmp()&lt;/code&gt; 会比较高效。Avi 提到当初他也考虑过 &lt;code&gt;Boost::context&lt;/code&gt;。因为它比较简单明了，同时没有 glibc 中 &lt;code&gt;_longjmp_unwind()&lt;/code&gt; 和 &lt;code&gt;__sigprocmask()&lt;/code&gt; 的开销，所以对于广大的 glibc 用户来说，使用 &lt;code&gt;Boost::context&lt;/code&gt; 性能会更好一些。 不过 &lt;code&gt;Boost::context&lt;/code&gt; 在 1.55/1.56 中的实现还不成熟。为了精炼版的 &lt;code&gt;longjmp()&lt;/code&gt;，只能有两条路，&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot;&gt;
@@ -1765,6 +1774,6 @@ int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="arch" /><category term="x86" /><summary type="html">这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</summary></entry><entry><title type="html">开场白</title><link href="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T00:00:00+00:00</published><updated>2020-08-08T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/misc/2020/08/08/hello-world</id><content type="html" xml:base="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="arch" /><category term="x86" /><summary type="html">longjmp() 和 setcontext() 之间的性能孰优孰劣？</summary></entry><entry><title type="html">开场白</title><link href="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html" rel="alternate" type="text/html" title="开场白" /><published>2020-08-08T00:00:00+00:00</published><updated>2020-08-08T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/misc/2020/08/08/hello-world</id><content type="html" xml:base="https://blog.k3fu.xyz/misc/2020/08/08/hello-world.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;为了记录，也为了提高自己，写个 blog。&lt;/p&gt;
 &lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="misc" /><summary type="html">为了记录，也为了提高自己，写个 blog。</summary></entry></feed>

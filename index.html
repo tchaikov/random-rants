@@ -279,7 +279,7 @@
 <!-- end custom main top snippet -->
 <article itemscope itemtype="http://schema.org/WebPage"><header style="display:none;"><h1>Home</h1></header><meta itemprop="headline" content="Home"><meta itemprop="author" content="Kefu Chai"/><div class="js-article-content"><div class="layout--articles"><div class="article-list items items--divided"><article class="item" itemscope itemtype="http://schema.org/BlogPosting"><div class="item__content">
           <header><a href="/2020/09/20/out-of-order-in-ceph.html"><h2 itemprop="headline" class="item__header">RADOS 里的顺序</h2></a></header>
-          <div class="item__description"><div class="article__content" itemprop="description articleBody">RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</div><p><a href="/2020/09/20/out-of-order-in-ceph.html">Read more</a></p></div><div class="article__info clearfix"><ul class="left-col menu"><li>
+          <div class="item__description"><div class="article__content" itemprop="description articleBody">乱序和并发的问题无处不在，Ceph 里面也是这样。</div><p><a href="/2020/09/20/out-of-order-in-ceph.html">Read more</a></p></div><div class="article__info clearfix"><ul class="left-col menu"><li>
               <a class="button button--secondary button--pill button--sm"
                 href="/archive.html?tag=ceph">ceph</a>
             </li></ul><ul class="right-col menu"><li><i class="far fa-calendar-alt"></i> <span>Sep 20, 2020</span>
@@ -303,7 +303,7 @@
     <meta itemprop="keywords" content="networking"></div>
       </article><article class="item" itemscope itemtype="http://schema.org/BlogPosting"><div class="item__content">
           <header><a href="/2020/08/10/memory-ordering.html"><h2 itemprop="headline" class="item__header">多核和顺序</h2></a></header>
-          <div class="item__description"><div class="article__content" itemprop="description articleBody">有浴缸的话，晚上到住处，有人可能会先放水，休息一下，简单吃点东西，然后呢，看看水温，差不多了洗个澡。用文艺的说法，这是生活的智慧。用体系结构的话说，这是乱序执行，使用了简单的调度算法。对单身汉来说，打乱计划，用不一样的顺序安排生活可以获得更高的效率。但是对多核程序来说，这其实不一定是好事。Jim Keller 打了个 比方，他说计算机是在顺序的手法说一个故事，书里面有很多段落，段落是由句子构成的。读者可以画一个示意图，看看哪些段落和句子读的时候可以打乱顺序，而不改变表达的意思。比如</div><p><a href="/2020/08/10/memory-ordering.html">Read more</a></p></div><div class="article__info clearfix"><ul class="left-col menu"><li>
+          <div class="item__description"><div class="article__content" itemprop="description articleBody">性能和易用性之间常常会有矛盾。</div><p><a href="/2020/08/10/memory-ordering.html">Read more</a></p></div><div class="article__info clearfix"><ul class="left-col menu"><li>
               <a class="button button--secondary button--pill button--sm"
                 href="/archive.html?tag=arch">arch</a>
             </li><li>
@@ -314,8 +314,7 @@
     <meta itemprop="keywords" content="arch,x86"></div>
       </article><article class="item" itemscope itemtype="http://schema.org/BlogPosting"><div class="item__content">
           <header><a href="/2020/08/09/setjmp-setcontext.html"><h2 itemprop="headline" class="item__header">longjmp 和 setcontext</h2></a></header>
-          <div class="item__description"><div class="article__content" itemprop="description articleBody">这篇文章起源于 seastar-devel 上的一个https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。
-因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</div><p><a href="/2020/08/09/setjmp-setcontext.html">Read more</a></p></div><div class="article__info clearfix"><ul class="left-col menu"><li>
+          <div class="item__description"><div class="article__content" itemprop="description articleBody">longjmp() 和 setcontext() 之间的性能孰优孰劣？</div><p><a href="/2020/08/09/setjmp-setcontext.html">Read more</a></p></div><div class="article__info clearfix"><ul class="left-col menu"><li>
               <a class="button button--secondary button--pill button--sm"
                 href="/archive.html?tag=arch">arch</a>
             </li><li>
