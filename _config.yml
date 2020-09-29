@@ -5,14 +5,51 @@ baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://blog.k3fu.xyz"
 github_username:  tchaikov
 
+lang: "en"
+
+author:
+  name: Kefu Chai
+  url: "https://blog.k3fu.xyz"
+  bio: yet another lamer
+  email: tchaikov@gmail.com
+  github: tchaikov
+
+repository: tchaikov/random-rants
+repository_tree: master
+
+mathjax: true
+mathjax_autoNumber: false
+
+paginate: 8
+paginate_path: /page:num
+
+highlighter: rouge
+permalink: date
+
 exclude:
   - Gemfile.lock
   - Gemfile
-  - vendor/
   - Rakefile
   - Makefile
   - README.adoc
   - LICENSE
+  - /vendor
+  - /docs
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: article
+      sharing: false
+      license: true
+      aside:
+        toc: true
+      show_edit_on_github: false
+      show_subscribe: false
+      pageview: true
+
 keep_files:
   - images
 asciidoc: {}
@@ -24,5 +61,12 @@ asciidoctor:
     - icons=font
     - imagesdir=/images
     - source-highlighter=rouge
-# Build settings
-theme: minima
+
+theme: jekyll-text-theme
+
+plugins:
+  - asciidoctor-diagram
+  - jekyll-asciidoc
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jemoji

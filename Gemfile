@@ -2,10 +2,10 @@ source "https://rubygems.org"
 
 gem "jekyll", "~> 4.1.1"
 gem "minima", "~> 2.5"
-gem "rouge"
+gem "jekyll-text-theme"
+gem "tzinfo-data"
 
 group :jekyll_plugins do
   gem 'asciidoctor-diagram'
-  gem "jekyll-asciidoc"
-  gem "jekyll-feed", "~> 0.12"
+  gem 'jekyll-asciidoc', github: 'tchaikov/jekyll-asciidoc', branch: 'add-excerpt-write'
 end

@@ -1,7 +1,6 @@
 = 博客维护指南
-:categories: jekyll
+:page-tags: [jekyll]
 :date: 2020-09-05 23:49:18 +0800
-:page-layout: post
 
 我对 ruby 和 bundle 不熟悉，磕磕碰碰加了 `Rakefile` 。它比 `Makefile` 更灵活，但是还是有点变扭。这里记一下子。
 

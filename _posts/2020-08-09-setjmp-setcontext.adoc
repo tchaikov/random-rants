@@ -1,7 +1,6 @@
 = longjmp 和 setcontext
 :categories: x86
 :date: 2020-08-09 15:11:43 +0800
-:page-layout: post
 
 这篇文章起源于 seastar-devel 上的一个 https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ[讨论]。在开始之前，我们先说一下协程的背景。
 因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。
