@@ -1,0 +1,89 @@
+= std::error_code
+:page-tags: [c++]
+:date: 2020-09-30 14:55:08 +0800
+:pp: {plus}{plus}
+
+C++11 中的错误处理的核心是 `std::error_code`。它的引进满足了错误处理可扩展的需求。
+
+* `value()` 返回一个 `int`，这个是 error code 本身。
+* `category()` 则是“可扩展的关键”。它允许在不同上下文或者说 domain 里面，有相同 `value` 的 `error_code` 代表不同的意思。不过，value 为 0 一般来说，就是没有错误。这个是约定俗成的。
+
+`error_code` 有三个构造函数，其中， `template<class ErrCodeEnum> error_code(ErrCodeEnum e)` 是最有意思的。它调用的是 `make_error_code()` 。看上去，似乎它让我们能从自定义的类型构造出 `error_code`。是的，不过我们需要用
+[source, c++]
+----
+std::is_error_code_enum<ErrorCodeEnum>::value == true
+----
+来明确地规定这个行为。只有为这个类型定义特化的模板，才能让该类型能转换到 `error_code`。
+
+请注意，`std::error_code` 定义了多个 `operator==()`，它不仅仅可以和相同类型的 `std::error_code` 比较，而且可以和另一个 `std::error_condition` 比较。只要后者和前者 `equivalent` 或者反之，那么就把他两个视为相等。
+
+[source, c++]
+----
+bool operator==(const error_code& __x, const error_condition& __y) _NOEXCEPT
+{
+    return __x.category().equivalent(__x.value(), __y)
+        || __y.category().equivalent(__x, __y.value());
+}
+----
+
+具体分析，如果 Seastar 底下抛出来的是一个 `std::system_error(ret, std::system_category())`，我们希望看看这个 exception 是不是匹配我们的 conditon。第一个判断是
+
+* `system_category.equivalent(ret, condition)` => `default_error_condition(code) == condition`
+** system_category() 返回的是一个 `system_error_category` 的 singleton，它的 `default_error_condition(int ev)` 的定义类似
++
+[source, c++]
+----
+return error_condition(ev, generic_category())
+----
+NOTE: 但是如果 `ELAST` 这个宏定义了的话，当 `ev > ELAST`, 返回的 category 则是 `system_category()` 而非 `generic_category()`
+  所以，如果 `==` 的右边是一个 `error_condition`，而且 `val` 也是 `ret`，`category` 也是 `generic_category` 的话，那么就是匹配的。
++
+** 如果根据左边 category 判断不匹配，我们需要看看右边的意见。
+* `conditon.category.equivalent(const error_code& code, int condition)`
+** 如果是我们自定义的 `condition` 的话，就根据自定义的实现来判断。
+** 否则就看缺省的实现
++
+[source, c++]
+----
+*this == code.category() && code.value() == condition;
+----
++
+所以，首先要求 `y.category()` == `x.category()`，即，两者同属一个 `category`；而且要求 `x.value()` == `y.value()` 即两者的 value 一致。
+
+这就是为什么下面的代码是有效的原因：
+[source, c++]
+----
+try {
+  // ..
+} catch (const std::system_error& e) {
+  if (e.code() == std::errc::invalid_argument) {
+    //..
+  }
+}
+----
+
+请注意，`std::errc::invalid_argument` 本身并不是一个 `std::error_condition`。它只是标准库用来表示 `error_condition` 的一系列 errc 枚举中的一个。 标准库不希望用平台或是领域相关的 errno 来直接表示错误，而是想把不同平台和 domain 的比较方式统一到一个框架下面，通过各自定义的 `error_condition` 来进行比较。`std::errc` 就是这个框架下面的一个例子，它表示平台无关的各种系统错误，通过 error_condition 得以用来于判断和比较 `std::error_code`。和 `std::error_code` 类似，`error_condition` 本身也应该是可以扩展的，它的几个构造函数和 error_code 如出一辙，第三个构造函数是
+[source, c++]
+----
+template<class ErrorConditionEnum> error_condition(ErrorConditionEnum e)
+----
+和 error_code 也一样，它要求下面的特化来限定这个行为，只有满足它，error_condition 的这个构造函数才会去调用 `std::make_error_condition(errc)`：
+
+[source, c++]
+----
+std::is_error_condition_enum<T>::value == true
+----
+
+
+不过和 `std::error_code` 不一样，`std::error_condition` 是平台无关的。`std::error_code` 用来表示一个平台相关和领域相关的错误，而 `std::error_condition` 专门用来处理
+
+system_error 实例的 `code()` 返回的是一个 `std::error_code()` 引用，所以，它可以用多态的方式来比较。这里，`std::errc::invalid_argument` 是一个 `std::errc` 的 `enum class` 成员。按照 C{pp}11 它可以自动转换成为 `error_condition` 以方便 `error_code` 来比较。而标准库规定了 `std::is_error_condition_enum<std::errc>::value == true` 的特化。所以，当我们比较 `std::error_code` 和 `std::errc` 的时候，C{pp} 会把后者自动转换成对应的 `std::error_condition`。不过，也不全然是“自动”的。因为这里调用的 `make_error_condition(errc)` 其实也是一个特化，否则谁知道这个 `error_condition` 里面的 value 和 category 应该是什么样子呢？
+
+错误处理的三驾马车分别是 `error_code`, `error_condition` 和 `error_category`。`error_category` 是一个多态的类型。他负责
+
+* 比较 `(int code, error_condition&)`, 或者 `(error_code&, int condition)` 这两个 `equivalanet()` 正是 `error_code operator==()` 所使用的两个条件。
+* name 自报家门，我是哪个 domain 的。
+* `message(int condition)` 这个 error condition 是什么
+* `default_error_condition(int code)` 根据 error code 构造一个 condition
+
+可以说， `error_category` 是衔接 `error_code` 和 `error_condition` 的枢纽。它既知道平台相关 `error_code`，又了解平台无关的 `error_condition`。有了它，我们才能知道代码抛出的 code 是不是我们所关心的 condition。
