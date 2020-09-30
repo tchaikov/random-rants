@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-30T08:03:11+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">std::error_code</title><link href="https://blog.k3fu.xyz/2020/09/30/error-code.html" rel="alternate" type="text/html" title="std::error_code" /><published>2020-09-30T00:00:00+00:00</published><updated>2020-09-30T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/30/error-code</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/30/error-code.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-09-30T14:04:55+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">std::error_code</title><link href="https://blog.k3fu.xyz/2020/09/30/error-code.html" rel="alternate" type="text/html" title="std::error_code" /><published>2020-09-30T00:00:00+00:00</published><updated>2020-09-30T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/30/error-code</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/30/error-code.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;C++11 中的错误处理的核心是 &lt;code&gt;std::error_code&lt;/code&gt;。它的引进满足了错误处理可扩展的需求。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
@@ -130,12 +130,26 @@
 &lt;p&gt;system_error 实例的 &lt;code&gt;code()&lt;/code&gt; 返回的是一个 &lt;code&gt;std::error_code()&lt;/code&gt; 引用，所以，它可以用多态的方式来比较。这里，&lt;code&gt;std::errc::invalid_argument&lt;/code&gt; 是一个 &lt;code&gt;std::errc&lt;/code&gt; 的 &lt;code&gt;enum class&lt;/code&gt; 成员。按照 C&amp;#43;&amp;#43;11 它可以自动转换成为 &lt;code&gt;error_condition&lt;/code&gt; 以方便 &lt;code&gt;error_code&lt;/code&gt; 来比较。而标准库规定了 &lt;code&gt;std::is_error_condition_enum&amp;lt;std::errc&amp;gt;::value == true&lt;/code&gt; 的特化。所以，当我们比较 &lt;code&gt;std::error_code&lt;/code&gt; 和 &lt;code&gt;std::errc&lt;/code&gt; 的时候，C&amp;#43;&amp;#43; 会把后者自动转换成对应的 &lt;code&gt;std::error_condition&lt;/code&gt;。不过，也不全然是“自动”的。因为这里调用的 &lt;code&gt;make_error_condition(errc)&lt;/code&gt; 其实也是一个特化，否则谁知道这个 &lt;code&gt;error_condition&lt;/code&gt; 里面的 value 和 category 应该是什么样子呢？&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;错误处理的三驾马车分别是 &lt;code&gt;error_code&lt;/code&gt;, &lt;code&gt;error_condition&lt;/code&gt; 和 &lt;code&gt;error_category&lt;/code&gt;。&lt;code&gt;error_category&lt;/code&gt; 是一个多态的类型。他负责
-* 比较 &lt;code&gt;(int code, error_condition&amp;amp;)&lt;/code&gt;, 或者 &lt;code&gt;(error_code&amp;amp;, int condition)&lt;/code&gt; 这两个 &lt;code&gt;equivalanet()&lt;/code&gt; 正是 &lt;code&gt;error_code operator==()&lt;/code&gt; 所使用的两个条件。
-* name 自报家门，我是哪个 domain 的。
-* &lt;code&gt;message(int condition)&lt;/code&gt; 这个 error condition 是什么
-* &lt;code&gt;default_error_condition(int code)&lt;/code&gt; 根据 error code 构造一个 condition
-可以说， &lt;code&gt;error_category&lt;/code&gt; 是衔接 &lt;code&gt;error_code&lt;/code&gt; 和 &lt;code&gt;error_condition&lt;/code&gt; 的枢纽。它既知道平台相关 &lt;code&gt;error_code&lt;/code&gt;，又了解平台无关的 &lt;code&gt;error_condition&lt;/code&gt;。有了它，我们才能知道代码抛出的 code 是不是我们所关心的 condition。&lt;/p&gt;
+&lt;p&gt;错误处理的三驾马车分别是 &lt;code&gt;error_code&lt;/code&gt;, &lt;code&gt;error_condition&lt;/code&gt; 和 &lt;code&gt;error_category&lt;/code&gt;。&lt;code&gt;error_category&lt;/code&gt; 是一个多态的类型。他负责&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;比较 &lt;code&gt;(int code, error_condition&amp;amp;)&lt;/code&gt;, 或者 &lt;code&gt;(error_code&amp;amp;, int condition)&lt;/code&gt; 这两个 &lt;code&gt;equivalanet()&lt;/code&gt; 正是 &lt;code&gt;error_code operator==()&lt;/code&gt; 所使用的两个条件。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;name 自报家门，我是哪个 domain 的。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;message(int condition)&lt;/code&gt; 这个 error condition 是什么&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;default_error_condition(int code)&lt;/code&gt; 根据 error code 构造一个 condition&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;可以说， &lt;code&gt;error_category&lt;/code&gt; 是衔接 &lt;code&gt;error_code&lt;/code&gt; 和 &lt;code&gt;error_condition&lt;/code&gt; 的枢纽。它既知道平台相关 &lt;code&gt;error_code&lt;/code&gt;，又了解平台无关的 &lt;code&gt;error_condition&lt;/code&gt;。有了它，我们才能知道代码抛出的 code 是不是我们所关心的 condition。&lt;/p&gt;
 &lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="c++" /><summary type="html">C++11 中的错误处理的核心是 std::error_code。它的引进满足了错误处理可扩展的需求。</summary></entry><entry><title type="html">RADOS 里的顺序</title><link href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html" rel="alternate" type="text/html" title="RADOS 里的顺序" /><published>2020-09-20T00:00:00+00:00</published><updated>2020-09-20T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;

@@ -418,12 +418,26 @@
 <p>system_error 实例的 <code>code()</code> 返回的是一个 <code>std::error_code()</code> 引用，所以，它可以用多态的方式来比较。这里，<code>std::errc::invalid_argument</code> 是一个 <code>std::errc</code> 的 <code>enum class</code> 成员。按照 C&#43;&#43;11 它可以自动转换成为 <code>error_condition</code> 以方便 <code>error_code</code> 来比较。而标准库规定了 <code>std::is_error_condition_enum&lt;std::errc&gt;::value == true</code> 的特化。所以，当我们比较 <code>std::error_code</code> 和 <code>std::errc</code> 的时候，C&#43;&#43; 会把后者自动转换成对应的 <code>std::error_condition</code>。不过，也不全然是“自动”的。因为这里调用的 <code>make_error_condition(errc)</code> 其实也是一个特化，否则谁知道这个 <code>error_condition</code> 里面的 value 和 category 应该是什么样子呢？</p>
 </div>
 <div class="paragraph">
-<p>错误处理的三驾马车分别是 <code>error_code</code>, <code>error_condition</code> 和 <code>error_category</code>。<code>error_category</code> 是一个多态的类型。他负责
-* 比较 <code>(int code, error_condition&amp;)</code>, 或者 <code>(error_code&amp;, int condition)</code> 这两个 <code>equivalanet()</code> 正是 <code>error_code operator==()</code> 所使用的两个条件。
-* name 自报家门，我是哪个 domain 的。
-* <code>message(int condition)</code> 这个 error condition 是什么
-* <code>default_error_condition(int code)</code> 根据 error code 构造一个 condition
-可以说， <code>error_category</code> 是衔接 <code>error_code</code> 和 <code>error_condition</code> 的枢纽。它既知道平台相关 <code>error_code</code>，又了解平台无关的 <code>error_condition</code>。有了它，我们才能知道代码抛出的 code 是不是我们所关心的 condition。</p>
+<p>错误处理的三驾马车分别是 <code>error_code</code>, <code>error_condition</code> 和 <code>error_category</code>。<code>error_category</code> 是一个多态的类型。他负责</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>比较 <code>(int code, error_condition&amp;)</code>, 或者 <code>(error_code&amp;, int condition)</code> 这两个 <code>equivalanet()</code> 正是 <code>error_code operator==()</code> 所使用的两个条件。</p>
+</li>
+<li>
+<p>name 自报家门，我是哪个 domain 的。</p>
+</li>
+<li>
+<p><code>message(int condition)</code> 这个 error condition 是什么</p>
+</li>
+<li>
+<p><code>default_error_condition(int code)</code> 根据 error code 构造一个 condition</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>可以说， <code>error_category</code> 是衔接 <code>error_code</code> 和 <code>error_condition</code> 的枢纽。它既知道平台相关 <code>error_code</code>，又了解平台无关的 <code>error_condition</code>。有了它，我们才能知道代码抛出的 code 是不是我们所关心的 condition。</p>
 </div></div><div class="d-print-none"><footer class="article__footer"><meta itemprop="dateModified" content="2020-09-30T00:00:00+00:00"><!-- start custom article footer snippet -->
 
 <!-- end custom article footer snippet -->
