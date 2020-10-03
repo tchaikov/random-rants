@@ -23,7 +23,9 @@ jobs:
         uses: limjh16/jekyll-action-ts@v2
         with:
           enable_cache: true
-          prettier_ignore: 'about/*'
+          format_output: true
+          prettier_ignore: |
+            archive.html
           jekyll_src: '.'
           gem_src: '.'
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
