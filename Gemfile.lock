@@ -1,4 +1,13 @@
 GIT
+  remote: https://github.com/tchaikov/asciidoctor_cjk_breaks.git
+  revision: 9774c7f437dd0ea1932dda0d6b363fa06be1d736
+  branch: master
+  specs:
+    asciidoctor_cjk_breaks (0.0.2)
+      asciidoctor (~> 2)
+      east_asian_width (~> 0)
+
+GIT
   remote: https://github.com/tchaikov/jekyll-asciidoc.git
   revision: 5a57c059dac3946debb1fde3bc14eeed1df13342
   branch: master
@@ -15,10 +24,11 @@ GEM
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     asciidoctor (2.0.10)
-    asciidoctor-diagram (2.0.4)
+    asciidoctor-diagram (2.0.5)
       asciidoctor (>= 1.5.7, < 3.x)
     colorator (1.1.0)
     concurrent-ruby (1.1.7)
+    east_asian_width (0.0.2)
     em-websocket (0.5.2)
       eventmachine (>= 0.12.9)
       http_parser.rb (~> 0.6.0)
@@ -103,6 +113,7 @@ PLATFORMS
 
 DEPENDENCIES
   asciidoctor-diagram
+  asciidoctor_cjk_breaks!
   jekyll (~> 4.1.1)
   jekyll-asciidoc!
   jekyll-paginate
