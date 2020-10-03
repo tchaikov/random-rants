@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-03T12:20:49+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-03T16:07:58+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 &lt;a href=&quot;https://readthedocs.org&quot;&gt;Read the Docs&lt;/a&gt; 上。但是还有一些问题。&lt;/p&gt;
@@ -9,8 +9,7 @@
 &lt;h2 id=&quot;ceph-里的-api-文档&quot;&gt;Ceph 里的 API 文档&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;Ceph 用 &lt;a href=&quot;https://www.sphinx-doc.org/&quot;&gt;Sphinx&lt;/a&gt; 编译文档。它作为一个平台提供 librados，让大家可以用它写程序。librados 有各种语言的绑定，
-其中一些有对应的文档：&lt;/p&gt;
+&lt;p&gt;Ceph 用 &lt;a href=&quot;https://www.sphinx-doc.org/&quot;&gt;Sphinx&lt;/a&gt; 编译文档。它作为一个平台提供 librados，让大家可以用它写程序。librados 有各种语言的绑定，其中一些有对应的文档：&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
@@ -39,10 +38,10 @@
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot;&gt;
 &lt;li&gt;
-&lt;p&gt;分词。每种语言的分词都不一样。值得一提的是，中文分词用的是 &lt;a href=&quot;https://github.com/fxsjy/jieba&quot;&gt;“结巴”分词&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;分词。每种语言的分词都不一样。值得一提的是，中文分词用的是&lt;a href=&quot;https://github.com/fxsjy/jieba&quot;&gt;“结巴”分词&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;逐词预处理，用对应语言的 stemming 规则把词归一化。英语的实现可以参考 &lt;a href=&quot;https://github.com/sphinx-doc/sphinx/blob/master/sphinx/search/en.py&quot;&gt;这里&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;逐词预处理，用对应语言的 stemming 规则把词归一化。英语的实现可以参考&lt;a href=&quot;https://github.com/sphinx-doc/sphinx/blob/master/sphinx/search/en.py&quot;&gt;这里&lt;/a&gt;&lt;/p&gt;
 &lt;div class=&quot;olist loweralpha&quot;&gt;
 &lt;ol class=&quot;loweralpha&quot; type=&quot;a&quot;&gt;
 &lt;li&gt;
@@ -73,7 +72,7 @@
 &lt;/blockquote&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;通篇没有出现 &quot;fuse support&quot; 这个序列。搜索返回了 32 篇文章，后 31 篇 文章被检索到的关键字就是 unsupported。这个很可能不是我们想要的。而 RTD 的多词搜索的 &lt;a href=&quot;https://docs.ceph.com/en/latest/search/?q=fuse+support&quot;&gt;结果&lt;/a&gt;要好很多。对于不挑剔的读者基本上够用了。&lt;/p&gt;
+&lt;p&gt;通篇没有出现 &quot;fuse support&quot; 这个序列。搜索返回了 32 篇文章，后 31 篇 文章被检索到的关键字就是 unsupported。这个很可能不是我们想要的。而 RTD 的多词搜索的https://docs.ceph.com/en/latest/search/?q=fuse+support[结果]要好很多。对于不挑剔的读者基本上够用了。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;那为什么要纠结多词搜索呢？因为我们很多命令是多个单词构成的。比如说&lt;/p&gt;
@@ -92,10 +91,10 @@
 &lt;p&gt;google 的站内搜索。但是 google 是一个商业公司。有的人可能会浑身不自在，如果他用一个广告公司的搜索。虽然在这个世界上，我们和商业公司有千丝万缕的联系，但是，哎。让我们留一点理想主义的念想吧。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;直接用 Read the Docs 的一揽子方案。它和 &lt;a href=&quot;https://travis-ci.org&quot;&gt;travis&lt;/a&gt; 这些服务很像，它内置了 CI 的功能，也能帮着 host 这些静态页面。对我们很合适。但是它的 build 流程是很死的。看看它的 &lt;a href=&quot;https://docs.readthedocs.io/en/stable/config-file/v2.html&quot;&gt;配置文件&lt;/a&gt; 就知道了。这是为一个纯 Python 项目度身定制的。我们后文分析这个限制的影响。&lt;/p&gt;
+&lt;p&gt;直接用 Read the Docs 的一揽子方案。它和 &lt;a href=&quot;https://travis-ci.org&quot;&gt;travis&lt;/a&gt; 这些服务很像，它内置了 CI 的功能，也能帮着 host 这些静态页面。对我们很合适。但是它的 build 流程是很死的。看看它的https://docs.readthedocs.io/en/stable/config-file/v2.html[配置文件]就知道了。这是为一个纯 Python 项目度身定制的。我们后文分析这个限制的影响。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;其他 sphinx search plugin。找了一圈，没有不收费的。功能比较好的也需要自己搭建 &lt;a href=&quot;https://www.elastic.co/products/elasticsearch&quot;&gt;Elasticsearch&lt;/a&gt;。RTD 开源了他们的 &lt;a href=&quot;https://github.com/readthedocs/readthedocs-sphinx-search&quot;&gt;方案&lt;/a&gt;。但是一想到要挠我们实验室小哥的门，我就知趣地把爪子收起来了。&lt;/p&gt;
+&lt;p&gt;其他 sphinx search plugin。找了一圈，没有不收费的。功能比较好的也需要自己搭建 &lt;a href=&quot;https://www.elastic.co/products/elasticsearch&quot;&gt;Elasticsearch&lt;/a&gt;。RTD 开源了他们的&lt;a href=&quot;https://github.com/readthedocs/readthedocs-sphinx-search&quot;&gt;方案&lt;/a&gt;。但是一想到要挠我们实验室小哥的门，我就知趣地把爪子收起来了。&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
@@ -134,7 +133,7 @@
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是对于 Python API 来说，以 python-rados 为例，它是用 &lt;a href=&quot;https://cython.org&quot;&gt;Cython&lt;/a&gt; 编写的 Python 扩展，它的底层则是 librados C API。我们编译文档的时候其实并不需要一个功能上完备的 librados，我们只需要让 sphinx 能导入 python-rados 就行了。sphinx 并不会真正运行 python-rados 的函数，它只会读取代码里面的元数据。所以 Ceph 里面用了一个比较取巧的 &lt;a href=&quot;https://github.com/ceph/ceph/blob/master/admin/build-doc&quot;&gt;方法&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;但是对于 Python API 来说，以 python-rados 为例，它是用 &lt;a href=&quot;https://cython.org&quot;&gt;Cython&lt;/a&gt; 编写的 Python 扩展，它的底层则是 librados C API。我们编译文档的时候其实并不需要一个功能上完备的 librados，我们只需要让 sphinx 能导入 python-rados 就行了。sphinx 并不会真正运行 python-rados 的函数，它只会读取代码里面的元数据。所以 Ceph 里面用了一个比较取巧的https://github.com/ceph/ceph/blob/master/admin/build-doc[方法]。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot;&gt;
@@ -623,7 +622,10 @@
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">乱序和并发的问题无处不在，Ceph 里面也是这样。</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">乱序和并发的问题无处不在，Ceph 里面也是这样。</summary></entry><entry><title type="html">博客维护指南</title><link href="https://blog.k3fu.xyz/2020/09/05/my-blog.html" rel="alternate" type="text/html" title="博客维护指南" /><published>2020-09-05T00:00:00+00:00</published><updated>2020-09-05T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/05/my-blog</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/05/my-blog.html">&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;工具链&quot;&gt;工具链&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;dlist&quot;&gt;
@@ -646,6 +648,11 @@
 &lt;/dd&gt;
 &lt;/dl&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;一些补丁&quot;&gt;一些补丁&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;另外做了一些修改：&lt;/p&gt;
 &lt;/div&gt;
@@ -653,22 +660,69 @@
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;jekyll-asciidoc &lt;a href=&quot;https://github.com/asciidoctor/jekyll-asciidoc/issues/230&quot;&gt;没法支持一些插件&lt;/a&gt;。
-至少用 &lt;a href=&quot;https://github.com/asciidoctor/jekyll-asciidoc/issues/230&quot;&gt;这个补丁&lt;/a&gt; 是修好了。
+至少用&lt;a href=&quot;https://github.com/asciidoctor/jekyll-asciidoc/issues/230&quot;&gt;这个补丁&lt;/a&gt;是修好了。
 测试的时候如果用自己本地的 jekyll-asciidoc 的话，需要参考 &lt;a href=&quot;https://bundler.io/guides/git.html#local&quot;&gt;bundler 的文档&lt;/a&gt;，
 让 bundler 用本地 repo，而不是 RubyGems 上的版本。这也是为什么我用 Gemfile 管理 jekyll
 插件的原因。感觉这样更接近 Ruby 一些，方便理解 bundler 是如何找到插件的。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/rouge-ruby/rouge&quot;&gt;rouge&lt;/a&gt; 的语法高亮在 &lt;a href=&quot;https://github.com/kitian616/jekyll-TeXt-theme&quot;&gt;jekyll-text-theme&lt;/a&gt; 中无法生效，因为后者没有定义一些 rouge 要的 CSS 规则。
-所以从 minima 拷贝了一份 &lt;code&gt;_syntax-highlighting.scss&lt;/code&gt; 然后按照个人喜好改了一下，放到了 &lt;code&gt;_sass/custom.scss&lt;/code&gt;。网上也能找到好些好看的 rouge 语法高亮的主题。因为 rouge 高亮的 HTML 输出和 pygments 是兼容的，所以那些 pygments 的主题也可以拿来用。&lt;/p&gt;
-&lt;div class=&quot;literalblock&quot;&gt;
-&lt;div class=&quot;content&quot;&gt;
-&lt;pre&gt;其实之前并不知道应该用这个名字，只是觉得 text-theme 缺了这些定义，应该补上，是后来分析了它的 `assets/css/main.scss`，看着 `custom.scss` 的名字，找到它，发现这是个空的文件。才猜测这是给用户自定义的一个 stub。&lt;/pre&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+所以从 minima 拷贝了一份 &lt;code&gt;_syntax-highlighting.scss&lt;/code&gt; 然后按照个人喜好改了一下，放到了 &lt;code&gt;_sass/custom.scss&lt;/code&gt;。网上也能找到好些好看的 rouge 语法高亮的主题。因为 rouge 高亮的 HTML 输出和 pygments 是兼容的，所以那些 pygments 的主题也可以拿来用。
+其实之前并不知道应该用这个名字，只是觉得 text-theme 缺了这些定义，应该补上，是后来分析了它的 &lt;code&gt;assets/css/main.scss&lt;/code&gt;，看着 &lt;code&gt;custom.scss&lt;/code&gt; 的名字，找到它，发现这是个空的文件。才猜测这是给用户自定义的一个 stub。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/zhangkaizhao/asciidoctor_cjk_breaks&quot;&gt;asciidoctor_cjk_breaks&lt;/a&gt; 是 asciidoctor 的扩展。因为有时候一句话太长了，就希望分成几行写。但是和英文不一样，中文的字和字之间一般是不加空格的，asciidoctor 看到 linebreak 就当成了空格处理，输出的 HTML 中行尾和行首中间就加了个空格。读者看起来就很变扭，所以这个扩展就把空格去掉了。这个问题在 asciidoctor 也有&lt;a href=&quot;https://github.com/asciidoctor/asciidoctor/issues/1420&quot;&gt;报告&lt;/a&gt;，但是还没得到解决。这个扩展很久以前写的，可能这两年没有更新，所以&lt;a href=&quot;https://github.com/zhangkaizhao/asciidoctor_cjk_breaks/pull/1&quot;&gt;改了一下&lt;/a&gt;，让它能和比较新的 asciidoctor 2.x 一起用。&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;写作要注意的事项&quot;&gt;写作要注意的事项&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;多余的空格&quot;&gt;多余的空格&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;加链接的时候，如果里面的文本是中文。通常我们不希望在链接前面有空格。所以只能用&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;adoc&quot;&gt;这个行星上最大的link:https://github.com/[交友网站]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sidebarblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;结果就像这样&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;这个行星上最大的&lt;a href=&quot;https://github.com/&quot;&gt;交友网站&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;要是用&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;adoc&quot;&gt;这个行星上最大的 https://github.com/[交友网站]&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sidebarblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;div class=&quot;title&quot;&gt;结果就像这样&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;这个行星上最大的 &lt;a href=&quot;https://github.com/&quot;&gt;交友网站&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;“交友网站”前面多了个空格。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;常规维护&quot;&gt;常规维护&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;另外，如果以后要加个插件或者其他 ruby 包，先修改 &lt;code&gt;Gemfile&lt;/code&gt;，然后&lt;/p&gt;
 &lt;/div&gt;
@@ -679,7 +733,9 @@
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;就行了。&lt;/p&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="jekyll" /><summary type="html">我对 web 开发和 ruby 不熟悉，磕磕碰碰用下面的技术和工具把博客搭起来了：</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T00:00:00+00:00</published><updated>2020-08-23T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="jekyll" /><summary type="html">工具链</summary></entry><entry><title type="html">TCP 长连接的最大个数</title><link href="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html" rel="alternate" type="text/html" title="TCP 长连接的最大个数" /><published>2020-08-23T00:00:00+00:00</published><updated>2020-08-23T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/08/23/tcp-connections</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/08/23/tcp-connections.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;提个问题，单机单网卡最大对某个特定服务器 TCP 长连接的最大个数是多少？&lt;/p&gt;
@@ -1796,8 +1852,7 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
 &lt;p&gt;&lt;code&gt;longjmp()&lt;/code&gt; 和 &lt;code&gt;setcontext()&lt;/code&gt; 之间的性能孰优孰劣？&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这篇文章起源于 seastar-devel 上的一个 &lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。
-因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
+&lt;p&gt;这篇文章起源于 seastar-devel 上的一个 &lt;a href=&quot;https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ&quot;&gt;讨论&lt;/a&gt;。在开始之前，我们先说一下协程的背景。因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;

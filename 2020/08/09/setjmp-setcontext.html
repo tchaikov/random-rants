@@ -1,1090 +1,1856 @@
-<!DOCTYPE html><html lang="en">
-  <head><meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>longjmp 和 setcontext - some random rants</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <title>longjmp 和 setcontext - some random rants</title>
 
-<meta name="description" content="longjmp() 和 setcontext() 之间的性能孰优孰劣？">
-<link rel="canonical" href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html"><link rel="alternate" type="application/rss+xml" title="some random rants" href="/feed.xml"><!-- start favicons snippet, use https://realfavicongenerator.net/ --><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png"><link rel="manifest" href="/assets/site.webmanifest"><link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#fc4d50"><link rel="shortcut icon" href="/assets/favicon.ico">
+    <meta
+      name="description"
+      content="longjmp() 和 setcontext() 之间的性能孰优孰劣？"
+    />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2020/08/09/setjmp-setcontext.html"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="some random rants"
+      href="/feed.xml"
+    />
+    <!-- start favicons snippet, use https://realfavicongenerator.net/ -->
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/assets/apple-touch-icon.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/assets/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/assets/favicon-16x16.png"
+    />
+    <link rel="manifest" href="/assets/site.webmanifest" />
+    <link
+      rel="mask-icon"
+      href="/assets/safari-pinned-tab.svg"
+      color="#fc4d50"
+    />
+    <link rel="shortcut icon" href="/assets/favicon.ico" />
 
-<meta name="msapplication-TileColor" content="#ffc40d"><meta name="msapplication-config" content="/assets/browserconfig.xml">
+    <meta name="msapplication-TileColor" content="#ffc40d" />
+    <meta name="msapplication-config" content="/assets/browserconfig.xml" />
 
-<meta name="theme-color" content="#ffffff">
-<!-- end favicons snippet --><link rel="stylesheet" href="/assets/css/main.css"><link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css" ><!-- start custom head snippets -->
+    <meta name="theme-color" content="#ffffff" />
+    <!-- end favicons snippet -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css"
+    />
+    <!-- start custom head snippets -->
 
-<!-- end custom head snippets -->
-<script>(function() {
-  window.isArray = function(val) {
-    return Object.prototype.toString.call(val) === '[object Array]';
-  };
-  window.isString = function(val) {
-    return typeof val === 'string';
-  };
+    <!-- end custom head snippets -->
+    <script>
+      (function () {
+        window.isArray = function (val) {
+          return Object.prototype.toString.call(val) === "[object Array]";
+        };
+        window.isString = function (val) {
+          return typeof val === "string";
+        };
 
-  window.hasEvent = function(event) {
-    return 'on'.concat(event) in window.document;
-  };
+        window.hasEvent = function (event) {
+          return "on".concat(event) in window.document;
+        };
 
-  window.isOverallScroller = function(node) {
-    return node === document.documentElement || node === document.body || node === window;
-  };
+        window.isOverallScroller = function (node) {
+          return (
+            node === document.documentElement ||
+            node === document.body ||
+            node === window
+          );
+        };
 
-  window.isFormElement = function(node) {
-    var tagName = node.tagName;
-    return tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA';
-  };
+        window.isFormElement = function (node) {
+          var tagName = node.tagName;
+          return (
+            tagName === "INPUT" ||
+            tagName === "SELECT" ||
+            tagName === "TEXTAREA"
+          );
+        };
 
-  window.pageLoad = (function () {
-    var loaded = false, cbs = [];
-    window.addEventListener('load', function () {
-      var i;
-      loaded = true;
-      if (cbs.length > 0) {
-        for (i = 0; i < cbs.length; i++) {
-          cbs[i]();
-        }
-      }
-    });
-    return {
-      then: function(cb) {
-        cb && (loaded ? cb() : (cbs.push(cb)));
-      }
-    };
-  })();
-})();
-(function() {
-  window.throttle = function(func, wait) {
-    var args, result, thisArg, timeoutId, lastCalled = 0;
-
-    function trailingCall() {
-      lastCalled = new Date;
-      timeoutId = null;
-      result = func.apply(thisArg, args);
-    }
-    return function() {
-      var now = new Date,
-        remaining = wait - (now - lastCalled);
-
-      args = arguments;
-      thisArg = this;
-
-      if (remaining <= 0) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-        lastCalled = now;
-        result = func.apply(thisArg, args);
-      } else if (!timeoutId) {
-        timeoutId = setTimeout(trailingCall, remaining);
-      }
-      return result;
-    };
-  };
-})();
-(function() {
-  var Set = (function() {
-    var add = function(item) {
-      var i, data = this._data;
-      for (i = 0; i < data.length; i++) {
-        if (data[i] === item) {
-          return;
-        }
-      }
-      this.size ++;
-      data.push(item);
-      return data;
-    };
-
-    var Set = function(data) {
-      this.size = 0;
-      this._data = [];
-      var i;
-      if (data.length > 0) {
-        for (i = 0; i < data.length; i++) {
-          add.call(this, data[i]);
-        }
-      }
-    };
-    Set.prototype.add = add;
-    Set.prototype.get = function(index) { return this._data[index]; };
-    Set.prototype.has = function(item) {
-      var i, data = this._data;
-      for (i = 0; i < data.length; i++) {
-        if (this.get(i) === item) {
-          return true;
-        }
-      }
-      return false;
-    };
-    Set.prototype.is = function(map) {
-      if (map._data.length !== this._data.length) { return false; }
-      var i, j, flag, tData = this._data, mData = map._data;
-      for (i = 0; i < tData.length; i++) {
-        for (flag = false, j = 0; j < mData.length; j++) {
-          if (tData[i] === mData[j]) {
-            flag = true;
-            break;
-          }
-        }
-        if (!flag) { return false; }
-      }
-      return true;
-    };
-    Set.prototype.values = function() {
-      return this._data;
-    };
-    return Set;
-  })();
-
-  window.Lazyload = (function(doc) {
-    var queue = {js: [], css: []}, sources = {js: {}, css: {}}, context = this;
-    var createNode = function(name, attrs) {
-      var node = doc.createElement(name), attr;
-      for (attr in attrs) {
-        if (attrs.hasOwnProperty(attr)) {
-          node.setAttribute(attr, attrs[attr]);
-        }
-      }
-      return node;
-    };
-    var end = function(type, url) {
-      var s, q, qi, cbs, i, j, cur, val, flag;
-      if (type === 'js' || type ==='css') {
-        s = sources[type], q = queue[type];
-        s[url] = true;
-        for (i = 0; i < q.length; i++) {
-          cur = q[i];
-          if (cur.urls.has(url)) {
-            qi = cur, val = qi.urls.values();
-            qi && (cbs = qi.callbacks);
-            for (flag = true, j = 0; j < val.length; j++) {
-              cur = val[j];
-              if (!s[cur]) {
-                flag = false;
+        window.pageLoad = (function () {
+          var loaded = false,
+            cbs = [];
+          window.addEventListener("load", function () {
+            var i;
+            loaded = true;
+            if (cbs.length > 0) {
+              for (i = 0; i < cbs.length; i++) {
+                cbs[i]();
               }
             }
-            if (flag && cbs && cbs.length > 0) {
-              for (j = 0; j < cbs.length; j++) {
-                cbs[j].call(context);
-              }
-              qi.load = true;
-            }
-          }
-        }
-      }
-    };
-    var load = function(type, urls, callback) {
-      var s, q, qi, node, i, cur,
-        _urls = typeof urls === 'string' ? new Set([urls]) : new Set(urls), val, url;
-      if (type === 'js' || type ==='css') {
-        s = sources[type], q = queue[type];
-        for (i = 0; i < q.length; i++) {
-          cur = q[i];
-          if (_urls.is(cur.urls)) {
-            qi = cur;
-            break;
-          }
-        }
-        val = _urls.values();
-        if (qi) {
-          callback && (qi.load || qi.callbacks.push(callback));
-          callback && (qi.load && callback());
-        } else {
-          q.push({
-            urls: _urls,
-            callbacks: callback ? [callback] : [],
-            load: false
           });
-          for (i = 0; i < val.length; i++) {
-            node = null, url = val[i];
-            if (s[url] === undefined) {
-              (type === 'js' ) && (node = createNode('script', { src: url }));
-              (type === 'css') && (node = createNode('link', { rel: 'stylesheet', href: url }));
-              if (node) {
-                node.onload = (function(type, url) {
-                  return function() {
-                    end(type, url);
-                  };
-                })(type, url);
-                (doc.head || doc.body).appendChild(node);
-                s[url] = false;
+          return {
+            then: function (cb) {
+              cb && (loaded ? cb() : cbs.push(cb));
+            },
+          };
+        })();
+      })();
+      (function () {
+        window.throttle = function (func, wait) {
+          var args,
+            result,
+            thisArg,
+            timeoutId,
+            lastCalled = 0;
+
+          function trailingCall() {
+            lastCalled = new Date();
+            timeoutId = null;
+            result = func.apply(thisArg, args);
+          }
+          return function () {
+            var now = new Date(),
+              remaining = wait - (now - lastCalled);
+
+            args = arguments;
+            thisArg = this;
+
+            if (remaining <= 0) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+              lastCalled = now;
+              result = func.apply(thisArg, args);
+            } else if (!timeoutId) {
+              timeoutId = setTimeout(trailingCall, remaining);
+            }
+            return result;
+          };
+        };
+      })();
+      (function () {
+        var Set = (function () {
+          var add = function (item) {
+            var i,
+              data = this._data;
+            for (i = 0; i < data.length; i++) {
+              if (data[i] === item) {
+                return;
               }
             }
-          }
-        }
-      }
-    };
-    return {
-      js: function(url, callback) {
-        load('js', url, callback);
-      },
-      css: function(url, callback) {
-        load('css', url, callback);
-      }
-    };
-  })(this.document);
-})();
-</script><script>
-  (function() {
-    var TEXT_VARIABLES = {
-      version: '2.2.6',
-      sources: {
-        font_awesome: 'https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css',
-        jquery: 'https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js',
-        leancloud_js_sdk: '//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js',
-        chart: 'https://cdn.bootcss.com/Chart.js/2.7.2/Chart.bundle.min.js',
-        gitalk: {
-          js: 'https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.js',
-          css: 'https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.css'
-        },
-        valine: 'https://unpkg.com/valine/dist/Valine.min.js',
-        mathjax: 'https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML',
-        mermaid: 'https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js'
-      },
-      site: {
-        toc: {
-          selectors: 'h1,h2,h3'
-        }
-      },
-      paths: {
-        search_js: '/assets/search.js'
-      }
-    };
-    window.TEXT_VARIABLES = TEXT_VARIABLES;
-  })();
-</script>
-</head>
+            this.size++;
+            data.push(item);
+            return data;
+          };
+
+          var Set = function (data) {
+            this.size = 0;
+            this._data = [];
+            var i;
+            if (data.length > 0) {
+              for (i = 0; i < data.length; i++) {
+                add.call(this, data[i]);
+              }
+            }
+          };
+          Set.prototype.add = add;
+          Set.prototype.get = function (index) {
+            return this._data[index];
+          };
+          Set.prototype.has = function (item) {
+            var i,
+              data = this._data;
+            for (i = 0; i < data.length; i++) {
+              if (this.get(i) === item) {
+                return true;
+              }
+            }
+            return false;
+          };
+          Set.prototype.is = function (map) {
+            if (map._data.length !== this._data.length) {
+              return false;
+            }
+            var i,
+              j,
+              flag,
+              tData = this._data,
+              mData = map._data;
+            for (i = 0; i < tData.length; i++) {
+              for (flag = false, j = 0; j < mData.length; j++) {
+                if (tData[i] === mData[j]) {
+                  flag = true;
+                  break;
+                }
+              }
+              if (!flag) {
+                return false;
+              }
+            }
+            return true;
+          };
+          Set.prototype.values = function () {
+            return this._data;
+          };
+          return Set;
+        })();
+
+        window.Lazyload = (function (doc) {
+          var queue = { js: [], css: [] },
+            sources = { js: {}, css: {} },
+            context = this;
+          var createNode = function (name, attrs) {
+            var node = doc.createElement(name),
+              attr;
+            for (attr in attrs) {
+              if (attrs.hasOwnProperty(attr)) {
+                node.setAttribute(attr, attrs[attr]);
+              }
+            }
+            return node;
+          };
+          var end = function (type, url) {
+            var s, q, qi, cbs, i, j, cur, val, flag;
+            if (type === "js" || type === "css") {
+              (s = sources[type]), (q = queue[type]);
+              s[url] = true;
+              for (i = 0; i < q.length; i++) {
+                cur = q[i];
+                if (cur.urls.has(url)) {
+                  (qi = cur), (val = qi.urls.values());
+                  qi && (cbs = qi.callbacks);
+                  for (flag = true, j = 0; j < val.length; j++) {
+                    cur = val[j];
+                    if (!s[cur]) {
+                      flag = false;
+                    }
+                  }
+                  if (flag && cbs && cbs.length > 0) {
+                    for (j = 0; j < cbs.length; j++) {
+                      cbs[j].call(context);
+                    }
+                    qi.load = true;
+                  }
+                }
+              }
+            }
+          };
+          var load = function (type, urls, callback) {
+            var s,
+              q,
+              qi,
+              node,
+              i,
+              cur,
+              _urls =
+                typeof urls === "string" ? new Set([urls]) : new Set(urls),
+              val,
+              url;
+            if (type === "js" || type === "css") {
+              (s = sources[type]), (q = queue[type]);
+              for (i = 0; i < q.length; i++) {
+                cur = q[i];
+                if (_urls.is(cur.urls)) {
+                  qi = cur;
+                  break;
+                }
+              }
+              val = _urls.values();
+              if (qi) {
+                callback && (qi.load || qi.callbacks.push(callback));
+                callback && qi.load && callback();
+              } else {
+                q.push({
+                  urls: _urls,
+                  callbacks: callback ? [callback] : [],
+                  load: false,
+                });
+                for (i = 0; i < val.length; i++) {
+                  (node = null), (url = val[i]);
+                  if (s[url] === undefined) {
+                    type === "js" &&
+                      (node = createNode("script", { src: url }));
+                    type === "css" &&
+                      (node = createNode("link", {
+                        rel: "stylesheet",
+                        href: url,
+                      }));
+                    if (node) {
+                      node.onload = (function (type, url) {
+                        return function () {
+                          end(type, url);
+                        };
+                      })(type, url);
+                      (doc.head || doc.body).appendChild(node);
+                      s[url] = false;
+                    }
+                  }
+                }
+              }
+            }
+          };
+          return {
+            js: function (url, callback) {
+              load("js", url, callback);
+            },
+            css: function (url, callback) {
+              load("css", url, callback);
+            },
+          };
+        })(this.document);
+      })();
+    </script>
+    <script>
+      (function () {
+        var TEXT_VARIABLES = {
+          version: "2.2.6",
+          sources: {
+            font_awesome:
+              "https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css",
+            jquery: "https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js",
+            leancloud_js_sdk:
+              "//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js",
+            chart: "https://cdn.bootcss.com/Chart.js/2.7.2/Chart.bundle.min.js",
+            gitalk: {
+              js: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.js",
+              css: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.css",
+            },
+            valine: "https://unpkg.com/valine/dist/Valine.min.js",
+            mathjax:
+              "https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML",
+            mermaid:
+              "https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js",
+          },
+          site: {
+            toc: {
+              selectors: "h1,h2,h3",
+            },
+          },
+          paths: {
+            search_js: "/assets/search.js",
+          },
+        };
+        window.TEXT_VARIABLES = TEXT_VARIABLES;
+      })();
+    </script>
+  </head>
   <body>
     <div class="root" data-is-touch="false">
-      <div class="layout--page js-page-root"><div class="page__main js-page-main page__viewport has-aside cell cell--auto">
+      <div class="layout--page js-page-root">
+        <div
+          class="page__main js-page-main page__viewport has-aside cell cell--auto"
+        >
+          <div class="page__main-inner">
+            <div class="page__header d-print-none">
+              <header class="header">
+                <div class="main">
+                  <div class="header__title">
+                    <div class="header__brand">
+                      <svg
+                        version="1.1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns:xlink="http://www.w3.org/1999/xlink"
+                        x="0px"
+                        y="0px"
+                        width="24px"
+                        height="24px"
+                        viewBox="0 0 24 24"
+                      >
+                        <style type="text/css">
+                          .st0 {
+                            fill: #515151;
+                          }
+                        </style>
+                        <path
+                          class="st0"
+                          d="M1.7,22.3c5.7-5.7,11.3-5.7,17,0c3.3-3.3,3.5-5.3,0.8-6c2.7,0.7,3.5-1.1,2.3-5.6s-3.3-5.2-6.3-2.1
+	c3-3,2.3-5.2-2.1-6.3S7,1.8,7.7,4.6C7,1.8,5,2.1,1.7,5.3C7.3,11,7.3,16.7,1.7,22.3"
+                        />
+                      </svg>
+                      <a title="我的学习记录" href="/">some random rants</a>
+                    </div>
+                  </div>
+                  <nav class="navigation">
+                    <ul>
+                      <li class="navigation__item">
+                        <a href="/archive.html">Archive</a>
+                      </li>
+                      <li class="navigation__item">
+                        <a href="/about.html">About</a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </header>
+            </div>
+            <div class="page__content">
+              <div class="main">
+                <div class="grid grid--reverse">
+                  <div class="col-aside d-print-none js-col-aside">
+                    <aside class="page__aside js-page-aside">
+                      <div class="toc-aside js-toc-root"></div>
+                    </aside>
+                  </div>
 
-      <div class="page__main-inner"><div class="page__header d-print-none"><header class="header"><div class="main">
-      <div class="header__title">
-        <div class="header__brand"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="24px" height="24px" viewBox="0 0 24 24">
-<style type="text/css">
-	.st0{fill:#515151;}
-</style>
-<path class="st0" d="M1.7,22.3c5.7-5.7,11.3-5.7,17,0c3.3-3.3,3.5-5.3,0.8-6c2.7,0.7,3.5-1.1,2.3-5.6s-3.3-5.2-6.3-2.1
-	c3-3,2.3-5.2-2.1-6.3S7,1.8,7.7,4.6C7,1.8,5,2.1,1.7,5.3C7.3,11,7.3,16.7,1.7,22.3"/>
-</svg>
-<a title="我的学习记录" href="/">some random rants</a></div></div><nav class="navigation">
-        <ul><li class="navigation__item"><a href="/archive.html">Archive</a></li><li class="navigation__item"><a href="/about.html">About</a></li></ul>
-      </nav></div>
-  </header>
-</div><div class="page__content"><div class ="main"><div class="grid grid--reverse">
+                  <div class="col-main cell cell--auto">
+                    <!-- start custom main top snippet -->
 
-              <div class="col-aside d-print-none js-col-aside"><aside class="page__aside js-page-aside"><div class="toc-aside js-toc-root"></div>
-</aside></div>
+                    <!-- end custom main top snippet -->
+                    <article itemscope itemtype="http://schema.org/Article">
+                      <div class="article__header">
+                        <header><h1>longjmp 和 setcontext</h1></header>
+                      </div>
+                      <meta
+                        itemprop="headline"
+                        content="longjmp 和 setcontext"
+                      />
+                      <div class="article__info clearfix">
+                        <ul class="left-col menu">
+                          <li>
+                            <a
+                              class="button button--secondary button--pill button--sm"
+                              href="/archive.html?tag=arch"
+                              >arch</a
+                            >
+                          </li>
+                          <li>
+                            <a
+                              class="button button--secondary button--pill button--sm"
+                              href="/archive.html?tag=x86"
+                              >x86</a
+                            >
+                          </li>
+                        </ul>
+                        <ul class="right-col menu">
+                          <li>
+                            <i class="far fa-calendar-alt"></i>
+                            <span>Aug 09, 2020</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <meta itemprop="author" content="Kefu Chai" /><meta
+                        itemprop="datePublished"
+                        content="2020-08-09T00:00:00+00:00"
+                      />
+                      <meta itemprop="keywords" content="arch,x86" />
+                      <div class="js-article-content">
+                        <div class="layout--article">
+                          <!-- start custom article top snippet -->
 
-              <div class="col-main cell cell--auto"><!-- start custom main top snippet -->
-
-<!-- end custom main top snippet -->
-<article itemscope itemtype="http://schema.org/Article"><div class="article__header"><header><h1>longjmp 和 setcontext</h1></header></div><meta itemprop="headline" content="longjmp 和 setcontext"><div class="article__info clearfix"><ul class="left-col menu"><li>
-              <a class="button button--secondary button--pill button--sm"
-                href="/archive.html?tag=arch">arch</a>
-            </li><li>
-              <a class="button button--secondary button--pill button--sm"
-                href="/archive.html?tag=x86">x86</a>
-            </li></ul><ul class="right-col menu"><li><i class="far fa-calendar-alt"></i> <span>Aug 09, 2020</span>
-            </li></ul></div><meta itemprop="author" content="Kefu Chai"/><meta itemprop="datePublished" content="2020-08-09T00:00:00+00:00">
-    <meta itemprop="keywords" content="arch,x86"><div class="js-article-content"><div class="layout--article"><!-- start custom article top snippet -->
-
-<!-- end custom article top snippet -->
-<div class="article__content" itemprop="articleBody"><div id="preamble">
-<div class="sectionbody">
-<div class="paragraph">
-<p><code>longjmp()</code> 和 <code>setcontext()</code> 之间的性能孰优孰劣？</p>
-</div>
-<div class="paragraph">
-<p>这篇文章起源于 seastar-devel 上的一个 <a href="https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ">讨论</a>。在开始之前，我们先说一下协程的背景。
-因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以 sysv, amd64 和现代的 Linux 为例。</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="协程的由来">协程的由来</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>coroutine 或者 cooperative threads，中文常常叫协程。在 Linux 里面，常规的调度单位是 LWP (light weight process)。 NPTL 实现下，LWP 和用户线程在数量上是一对一的对应关系。所以，以 Linux 为例，有这么几个问题:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>缺省 8MB 的栈空间。虽然 8M 只是虚拟地址的空间，但是内核里面在分配栈空间的时候必须立即分配对应的页表，这个开销是无法避免的。</p>
-</li>
-<li>
-<p>线程调度的时候必须借助内核。换言之，上下文切换也会引起一些开销。</p>
-</li>
-<li>
-<p>因为内核调度线程的不可预期性，比如一个线程把自己的时间片用完了。内核可能会把它调度出去，把另一个就绪的任务换进来。为了保证数据和逻辑的一致性，在一些可能产生 racing 的地方，必须加锁。而锁的引入进一步影响了性能和并发的粒度。</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>所以为了避免这些问题，我们引入了协程的概念，在用户态实现 m:n 的映射。让线程自己调度自己。正是因为这种用户态线程是互相协作的，只有当一个线程主动把 CPU 让出来，另一个已经就绪的线程才能继续运行。这也是为什么协程叫做"`协程`"的原因。</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="协程的基本要素">协程的基本要素</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>协程要能自己调度自己，需要满足下面几个要求</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>协程在让出 CPU 的时候，需要保存现场。这样当它以后继续执行的时候，能记得起来之前在做什么，然后继续当时未完成的任务。</p>
-</li>
-<li>
-<p>协程在让出 CPU 的时候，能找到另外一个就绪的协程，恢复它当初保存的现场。帮助它回忆起来之前的事情。</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>这有点像晚上睡前看完书的时候，大家会在书里面夹一个书签，记住看到哪一页了。下次再翻开书的时候，找到书签的位置就能从上次停下来的地方继续看。只不过一个系统里面可能会有成百上千个线程，每个线程都有自己的"`书签`"。一般来说，协程库提供两个基本的操作：</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>yield / swap out: 把控制权让出来，保存自己的状态。也就是插书签。</p>
-</li>
-<li>
-<p>resume / swap in: 获取控制权，恢复自己的状态。也就是根据书签的位置，继续读书。</p>
-</li>
-</ol>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="协程的实现">协程的实现</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="书签和上下文">书签和上下文</h3>
-<div class="paragraph">
-<p>书签保存的信息只有一个页码。但是对于一个线程来说，它在 CPU 上执行的状态对应着更多的信息。我们先看一个特例&#8212;&#8203;子函数的调用。假设我们在 <code>main()</code> 里面调用之前定义的函数 <code>func()</code>。</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+                          <!-- end custom article top snippet -->
+                          <div class="article__content" itemprop="articleBody">
+                            <div id="preamble">
+                              <div class="sectionbody">
+                                <div class="paragraph">
+                                  <p>
+                                    <code>longjmp()</code> 和
+                                    <code>setcontext()</code>
+                                    之间的性能孰优孰劣？
+                                  </p>
+                                </div>
+                                <div class="paragraph">
+                                  <p>
+                                    这篇文章起源于 seastar-devel 上的一个
+                                    <a
+                                      href="https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ"
+                                      >讨论</a
+                                    >。在开始之前，我们先说一下协程的背景。因为讨论涉及特定的操作系统、处理器系统架构以及调用约定，如果没有特殊说明的话，下面都以
+                                    sysv, amd64 和现代的 Linux 为例。
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="sect1">
+                              <h2 id="协程的由来">协程的由来</h2>
+                              <div class="sectionbody">
+                                <div class="paragraph">
+                                  <p>
+                                    coroutine 或者 cooperative
+                                    threads，中文常常叫协程。在 Linux
+                                    里面，常规的调度单位是 LWP (light weight
+                                    process)。 NPTL 实现下，LWP
+                                    和用户线程在数量上是一对一的对应关系。所以，以
+                                    Linux 为例，有这么几个问题:
+                                  </p>
+                                </div>
+                                <div class="ulist">
+                                  <ul>
+                                    <li>
+                                      <p>
+                                        缺省 8MB 的栈空间。虽然 8M
+                                        只是虚拟地址的空间，但是内核里面在分配栈空间的时候必须立即分配对应的页表，这个开销是无法避免的。
+                                      </p>
+                                    </li>
+                                    <li>
+                                      <p>
+                                        线程调度的时候必须借助内核。换言之，上下文切换也会引起一些开销。
+                                      </p>
+                                    </li>
+                                    <li>
+                                      <p>
+                                        因为内核调度线程的不可预期性，比如一个线程把自己的时间片用完了。内核可能会把它调度出去，把另一个就绪的任务换进来。为了保证数据和逻辑的一致性，在一些可能产生
+                                        racing
+                                        的地方，必须加锁。而锁的引入进一步影响了性能和并发的粒度。
+                                      </p>
+                                    </li>
+                                  </ul>
+                                </div>
+                                <div class="paragraph">
+                                  <p>
+                                    所以为了避免这些问题，我们引入了协程的概念，在用户态实现
+                                    m:n
+                                    的映射。让线程自己调度自己。正是因为这种用户态线程是互相协作的，只有当一个线程主动把
+                                    CPU
+                                    让出来，另一个已经就绪的线程才能继续运行。这也是为什么协程叫做"`协程`"的原因。
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="sect1">
+                              <h2 id="协程的基本要素">协程的基本要素</h2>
+                              <div class="sectionbody">
+                                <div class="paragraph">
+                                  <p>
+                                    协程要能自己调度自己，需要满足下面几个要求
+                                  </p>
+                                </div>
+                                <div class="olist arabic">
+                                  <ol class="arabic">
+                                    <li>
+                                      <p>
+                                        协程在让出 CPU
+                                        的时候，需要保存现场。这样当它以后继续执行的时候，能记得起来之前在做什么，然后继续当时未完成的任务。
+                                      </p>
+                                    </li>
+                                    <li>
+                                      <p>
+                                        协程在让出 CPU
+                                        的时候，能找到另外一个就绪的协程，恢复它当初保存的现场。帮助它回忆起来之前的事情。
+                                      </p>
+                                    </li>
+                                  </ol>
+                                </div>
+                                <div class="paragraph">
+                                  <p>
+                                    这有点像晚上睡前看完书的时候，大家会在书里面夹一个书签，记住看到哪一页了。下次再翻开书的时候，找到书签的位置就能从上次停下来的地方继续看。只不过一个系统里面可能会有成百上千个线程，每个线程都有自己的"`书签`"。一般来说，协程库提供两个基本的操作：
+                                  </p>
+                                </div>
+                                <div class="olist arabic">
+                                  <ol class="arabic">
+                                    <li>
+                                      <p>
+                                        yield / swap out:
+                                        把控制权让出来，保存自己的状态。也就是插书签。
+                                      </p>
+                                    </li>
+                                    <li>
+                                      <p>
+                                        resume / swap in:
+                                        获取控制权，恢复自己的状态。也就是根据书签的位置，继续读书。
+                                      </p>
+                                    </li>
+                                  </ol>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="sect1">
+                              <h2 id="协程的实现">协程的实现</h2>
+                              <div class="sectionbody">
+                                <div class="sect2">
+                                  <h3 id="书签和上下文">书签和上下文</h3>
+                                  <div class="paragraph">
+                                    <p>
+                                      书签保存的信息只有一个页码。但是对于一个线程来说，它在
+                                      CPU
+                                      上执行的状态对应着更多的信息。我们先看一个特例&#8212;&#8203;子函数的调用。假设我们在
+                                      <code>main()</code> 里面调用之前定义的函数
+                                      <code>func()</code>。
+                                    </p>
+                                  </div>
+                                  <div class="listingblock">
+                                    <div class="content">
+                                      <pre
+                                        class="rouge highlight"
+                                      ><code data-lang="c++"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">func</span><span class="p">();</span>
 <span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>为了让 <code>func()</code> 返回时，<code>main()</code> 能继续它当时未尽的事业，很明显，它需要</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>在跳转到 <code>func()</code> 的起始地址之前，保存当下的 <code>%ip</code>。</p>
-</li>
-<li>
-<p>再把 <code>%ip</code> 改成 <code>func()</code> 的地址。</p>
-</li>
-<li>
-<p><code>func()</code> 在返回的时候，需要把 <code>%ip</code> 恢复成之前保存的 版本。</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>x86 很贴心的提供了 <code>CALL</code> 和 <code>RET</code> 两个指令。前者把 <code>%ip</code> 压栈，再根据 <code>CALL</code> 的参数更新 <code>%ip</code>。要是大家还能回忆相对寻址、绝对寻址的话，<code>CALL</code> 是支持这些寻址方式的。要是目标地址不在一个 <code>%cs</code> 段，它还能把当前 <code>%cs</code> 也一并保存了。<code>RET</code> 执行的是相反的功能。它把栈上的地址恢复回 <code>%cs</code> 和 <code>%ip</code>，如果 <code>RET</code> 还有参数的话，还顺带着把栈上的垃圾清理一下，也就是退栈。通常来说，调用方会把一些参数放到栈上，而参数的个数一般是确定的。所以被调用方在返回的时候，把那些参数从栈上清除也是理所当然的事情。</p>
-</div>
-<div class="paragraph">
-<p>可以说 <code>CALL</code> 和 <code>RET</code> 给了线程订了一张往返票，让它从一个地方走到另外一个地方出个差，然后再回来。 除了 <code>%ip</code>，根据 amd64 或者 x86-64 的 ABI 调用规范，在函数调用的时候，下面的寄存器是调用方负责的:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>​<code>%rax</code></p>
-</li>
-<li>
-<p>​<code>%rcx​</code></p>
-</li>
-<li>
-<p><code>​%rdx</code></p>
-</li>
-<li>
-<p><code>%rdi</code></p>
-</li>
-<li>
-<p><code>%rsi</code></p>
-</li>
-<li>
-<p><code>%r8</code> 到 <code>%r11</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>换句话说，如果调用方觉得它无所谓函数返回之后这些寄存器的状态是否改变了，那么它完全可以选择不保存它们。其中，函数调用的前六个参数保存在 <code>%rdi</code>, <code>%rsi</code>，<code>%rdx</code>，<code>%rcx</code>, <code>%r8d</code>, <code>%r9d</code>。</p>
-</div>
-<div class="paragraph">
-<p>而被调用方则有义务保存：</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>%rbx</code></p>
-</li>
-<li>
-<p><code>%rbp</code></p>
-</li>
-<li>
-<p><code>%rsp</code></p>
-</li>
-<li>
-<p><code>%r12</code> 到 <code>%r15</code></p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>也就是说，在函数返回之后，这些寄存器的值应该保持不变。这些要求定义了一个函数调用的行为规范，确保编译器能编译出有效率的代码，而不用花时间分析被调用的函数到底修改了哪些寄存器。所以一般来说，我们的 <code>yield</code> 实现也应该遵守这些基本的规范，保证调用方行为不受到干扰。</p>
-</div>
-<div class="paragraph">
-<p>那么从一个线程到另外一个线程呢？除了函数调用规范要求的那些寄存器，还有哪些状态需要保存呢？</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><a href="http://man7.org/linux/man-pages/man7/pthreads.7.html">pthread(7)</a> 总结了一下。它说，POSIX.1 要求一个进程里面的线程有共同的一系列属性，比如说 <code>process ID</code>、<code>uid</code>、文件描述符以及 signal handler。它们也有自己的独立的属性，比如 <code>errno</code>、<code>signalprocmask</code> 还有 <code>sigaltstack</code>。这些属性有着各自不同的实现方式。</p>
-<div class="ulist">
-<ul>
-<li>
-<p><code>errno</code> 它是 libc 实现的接口，让 libc 的函数能告诉调用方具体的错误号。 libc 一般把它保存在 <code>%fs</code> 段里面。但是如果我们不需要:</p>
-<div class="listingblock">
-<div class="content">
-<pre> int ret  = fstat(...);
+                                    </div>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      为了让 <code>func()</code> 返回时，<code
+                                        >main()</code
+                                      >
+                                      能继续它当时未尽的事业，很明显，它需要
+                                    </p>
+                                  </div>
+                                  <div class="olist arabic">
+                                    <ol class="arabic">
+                                      <li>
+                                        <p>
+                                          在跳转到
+                                          <code>func()</code>
+                                          的起始地址之前，保存当下的
+                                          <code>%ip</code>。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          再把 <code>%ip</code> 改成
+                                          <code>func()</code> 的地址。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          <code>func()</code>
+                                          在返回的时候，需要把
+                                          <code>%ip</code> 恢复成之前保存的
+                                          版本。
+                                        </p>
+                                      </li>
+                                    </ol>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      x86 很贴心的提供了 <code>CALL</code> 和
+                                      <code>RET</code> 两个指令。前者把
+                                      <code>%ip</code> 压栈，再根据
+                                      <code>CALL</code> 的参数更新
+                                      <code>%ip</code
+                                      >。要是大家还能回忆相对寻址、绝对寻址的话，<code
+                                        >CALL</code
+                                      >
+                                      是支持这些寻址方式的。要是目标地址不在一个
+                                      <code>%cs</code> 段，它还能把当前
+                                      <code>%cs</code> 也一并保存了。<code
+                                        >RET</code
+                                      >
+                                      执行的是相反的功能。它把栈上的地址恢复回
+                                      <code>%cs</code> 和 <code>%ip</code>，如果
+                                      <code>RET</code>
+                                      还有参数的话，还顺带着把栈上的垃圾清理一下，也就是退栈。通常来说，调用方会把一些参数放到栈上，而参数的个数一般是确定的。所以被调用方在返回的时候，把那些参数从栈上清除也是理所当然的事情。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      可以说 <code>CALL</code> 和
+                                      <code>RET</code>
+                                      给了线程订了一张往返票，让它从一个地方走到另外一个地方出个差，然后再回来。
+                                      除了 <code>%ip</code>，根据 amd64 或者
+                                      x86-64 的 ABI
+                                      调用规范，在函数调用的时候，下面的寄存器是调用方负责的:
+                                    </p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p>​<code>%rax</code></p>
+                                      </li>
+                                      <li>
+                                        <p>​<code>%rcx​</code></p>
+                                      </li>
+                                      <li>
+                                        <p><code>​%rdx</code></p>
+                                      </li>
+                                      <li>
+                                        <p><code>%rdi</code></p>
+                                      </li>
+                                      <li>
+                                        <p><code>%rsi</code></p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          <code>%r8</code> 到 <code>%r11</code>
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      换句话说，如果调用方觉得它无所谓函数返回之后这些寄存器的状态是否改变了，那么它完全可以选择不保存它们。其中，函数调用的前六个参数保存在
+                                      <code>%rdi</code>,
+                                      <code>%rsi</code
+                                      >，<code>%rdx</code>，<code>%rcx</code>,
+                                      <code>%r8d</code>, <code>%r9d</code>。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>而被调用方则有义务保存：</p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p><code>%rbx</code></p>
+                                      </li>
+                                      <li>
+                                        <p><code>%rbp</code></p>
+                                      </li>
+                                      <li>
+                                        <p><code>%rsp</code></p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          <code>%r12</code> 到 <code>%r15</code>
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      也就是说，在函数返回之后，这些寄存器的值应该保持不变。这些要求定义了一个函数调用的行为规范，确保编译器能编译出有效率的代码，而不用花时间分析被调用的函数到底修改了哪些寄存器。所以一般来说，我们的
+                                      <code>yield</code>
+                                      实现也应该遵守这些基本的规范，保证调用方行为不受到干扰。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      那么从一个线程到另外一个线程呢？除了函数调用规范要求的那些寄存器，还有哪些状态需要保存呢？
+                                    </p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p>
+                                          <a
+                                            href="http://man7.org/linux/man-pages/man7/pthreads.7.html"
+                                            >pthread(7)</a
+                                          >
+                                          总结了一下。它说，POSIX.1
+                                          要求一个进程里面的线程有共同的一系列属性，比如说
+                                          <code>process ID</code
+                                          >、<code>uid</code>、文件描述符以及
+                                          signal
+                                          handler。它们也有自己的独立的属性，比如
+                                          <code>errno</code>、<code
+                                            >signalprocmask</code
+                                          >
+                                          还有
+                                          <code>sigaltstack</code
+                                          >。这些属性有着各自不同的实现方式。
+                                        </p>
+                                        <div class="ulist">
+                                          <ul>
+                                            <li>
+                                              <p>
+                                                <code>errno</code> 它是 libc
+                                                实现的接口，让 libc
+                                                的函数能告诉调用方具体的错误号。
+                                                libc 一般把它保存在
+                                                <code>%fs</code>
+                                                段里面。但是如果我们不需要:
+                                              </p>
+                                              <div class="listingblock">
+                                                <div class="content">
+                                                  <pre>
+ int ret  = fstat(...);
  yield_to(another_thread);
  if (ret != 0) {
    perror("fstat failed");
- }</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>那么就没有必要保存和恢复 <code>errno</code> 了。</p>
-</div>
-</li>
-<li>
-<p><code>sigprocmask</code> 如果调度的线程 <a href="https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_sigmask.html">sigmask</a> 不一样，那么我们的确需要保存恢复它们各自的 <code>sigprocmask</code>。但是如果它们的 sigmask 都一样的话，就可以不用管这个属性了。<code>sigaltstack</code> 也是类似的。</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>函数调用使用栈来保存返回地址，传递一些参数。而每个线程都有自己的栈。在切换线程的时候，<code>%rsp</code> 和 <code>%rbp</code> 也需要指向新的线程自己的栈。</p>
-</li>
-<li>
-<p>浮点处理器的运行环境。这包括一系列寄存器。可以参考 <code>FSTENV</code> 和 <code>FLDENV</code> 这两个指令。</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="libc-的书签">libc 的书签</h3>
-<div class="paragraph">
-<p>我们管这些林林总总的状态叫做"`上下文`"。 为了保存和恢复上下文，libc 提供了</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>setjmp()</code> 保存当前的 <code>%rbx</code>, <code>%rbp</code>, <code>%r12</code>, <code>%r13</code>, <code>%r14</code>, <code>%r15</code>, <code>%rsp</code>, <code>%rip</code> 到指定的 <code>jmp_buf</code> 中。</p>
-</li>
-<li>
-<p><code>longjmp()</code> 从指定的 <code>jmp_buf</code> 恢复 <code>%rbx</code>, <code>%rbp</code>, <code>%r12</code>, <code>%r13</code>, <code>%r14</code>, <code>%r15</code>, <code>%rsp</code> 中。</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>可以参考 <a href="http://git.musl-libc.org/cgit/musl/tree/src/setjmp/x86_64/setjmp.s">musl-libc 的实现</a>。可以说 <code>setjmp()</code> 和 <code>longjmp()</code> 是相当简练的。只提供了两个功能，一个是记录当前的位置，另一个是跳转到指定的位置。</p>
-</div>
-<div class="paragraph">
-<p>但是 <a href="https://sourceware.org/git/?p=glibc.git;a=blob;f=setjmp/longjmp.c;h=686ab1964b4cf5848cd7505d6ca2c00dce5722aa;hb=HEAD">glibc 的 longjmp</a> 还更啰嗦一些，它在调用平台相关的<code>__longjmp()</code>之前，还调用了</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><code>_longjmp_unwind()</code></p>
-</li>
-<li>
-<p><code>__sigprocmask()</code></p>
-</li>
-</ol>
-</div>
-</div>
-<div class="sect2">
-<h3 id="libc-的-context">libc 的 context</h3>
-<div class="paragraph">
-<p>虽然 <code>setjmp()</code> 和 <code>longjmp()</code> 很简练。但是它们只能允许我们回到一个已知的地方。这和之前书签的例子很像，如果之前没有用 <code>setjmp()</code> 得到 <code>jmp_buf</code>，那么是无法跳转到 <code>jmp_buf</code> 指示的地方的。如果我们希望实现协程的话。假设我们一开始启动了一个 POSIX 线程，当这个线程执行的函数希望 <code>yield</code>，把执行权交给另一个任务，而这个任务还从没执行过。那么 不手动修改<code>jmp_buf</code> 是无法实现这个功能的。读者可能会说，如果开始这个新任务的函数之前执行过，那么是不是在函数开始的时候用 <code>setjmp()</code>加个书签就可以了呢？这样会导致两个协程互相重用一个栈，导致原来的线程在返回时可能会读到错误的数据，也可能干脆跑飞掉。</p>
-</div>
-<div class="paragraph">
-<p>所以 glibc 干脆提供了下面这几个函数:</p>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>int getcontext(ucontext_t *ucp);
+ }</pre
+                                                  >
+                                                </div>
+                                              </div>
+                                              <div class="paragraph">
+                                                <p>
+                                                  那么就没有必要保存和恢复
+                                                  <code>errno</code> 了。
+                                                </p>
+                                              </div>
+                                            </li>
+                                            <li>
+                                              <p>
+                                                <code>sigprocmask</code>
+                                                如果调度的线程
+                                                <a
+                                                  href="https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_sigmask.html"
+                                                  >sigmask</a
+                                                >
+                                                不一样，那么我们的确需要保存恢复它们各自的
+                                                <code>sigprocmask</code
+                                                >。但是如果它们的 sigmask
+                                                都一样的话，就可以不用管这个属性了。<code
+                                                  >sigaltstack</code
+                                                >
+                                                也是类似的。
+                                              </p>
+                                            </li>
+                                          </ul>
+                                        </div>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          函数调用使用栈来保存返回地址，传递一些参数。而每个线程都有自己的栈。在切换线程的时候，<code
+                                            >%rsp</code
+                                          >
+                                          和
+                                          <code>%rbp</code>
+                                          也需要指向新的线程自己的栈。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          浮点处理器的运行环境。这包括一系列寄存器。可以参考
+                                          <code>FSTENV</code> 和
+                                          <code>FLDENV</code> 这两个指令。
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                </div>
+                                <div class="sect2">
+                                  <h3 id="libc-的书签">libc 的书签</h3>
+                                  <div class="paragraph">
+                                    <p>
+                                      我们管这些林林总总的状态叫做"`上下文`"。
+                                      为了保存和恢复上下文，libc 提供了
+                                    </p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p>
+                                          <code>setjmp()</code> 保存当前的
+                                          <code>%rbx</code>, <code>%rbp</code>,
+                                          <code>%r12</code>, <code>%r13</code>,
+                                          <code>%r14</code>, <code>%r15</code>,
+                                          <code>%rsp</code>,
+                                          <code>%rip</code> 到指定的
+                                          <code>jmp_buf</code> 中。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          <code>longjmp()</code> 从指定的
+                                          <code>jmp_buf</code> 恢复
+                                          <code>%rbx</code>, <code>%rbp</code>,
+                                          <code>%r12</code>, <code>%r13</code>,
+                                          <code>%r14</code>, <code>%r15</code>,
+                                          <code>%rsp</code> 中。
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      可以参考
+                                      <a
+                                        href="http://git.musl-libc.org/cgit/musl/tree/src/setjmp/x86_64/setjmp.s"
+                                        >musl-libc 的实现</a
+                                      >。可以说 <code>setjmp()</code> 和
+                                      <code>longjmp()</code>
+                                      是相当简练的。只提供了两个功能，一个是记录当前的位置，另一个是跳转到指定的位置。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      但是
+                                      <a
+                                        href="https://sourceware.org/git/?p=glibc.git;a=blob;f=setjmp/longjmp.c;h=686ab1964b4cf5848cd7505d6ca2c00dce5722aa;hb=HEAD"
+                                        >glibc 的 longjmp</a
+                                      >
+                                      还更啰嗦一些，它在调用平台相关的<code>__longjmp()</code>之前，还调用了
+                                    </p>
+                                  </div>
+                                  <div class="olist arabic">
+                                    <ol class="arabic">
+                                      <li>
+                                        <p><code>_longjmp_unwind()</code></p>
+                                      </li>
+                                      <li>
+                                        <p><code>__sigprocmask()</code></p>
+                                      </li>
+                                    </ol>
+                                  </div>
+                                </div>
+                                <div class="sect2">
+                                  <h3 id="libc-的-context">libc 的 context</h3>
+                                  <div class="paragraph">
+                                    <p>
+                                      虽然 <code>setjmp()</code> 和
+                                      <code>longjmp()</code>
+                                      很简练。但是它们只能允许我们回到一个已知的地方。这和之前书签的例子很像，如果之前没有用
+                                      <code>setjmp()</code> 得到
+                                      <code>jmp_buf</code>，那么是无法跳转到
+                                      <code>jmp_buf</code>
+                                      指示的地方的。如果我们希望实现协程的话。假设我们一开始启动了一个
+                                      POSIX 线程，当这个线程执行的函数希望
+                                      <code>yield</code
+                                      >，把执行权交给另一个任务，而这个任务还从没执行过。那么
+                                      不手动修改<code>jmp_buf</code>
+                                      是无法实现这个功能的。读者可能会说，如果开始这个新任务的函数之前执行过，那么是不是在函数开始的时候用
+                                      <code>setjmp()</code
+                                      >加个书签就可以了呢？这样会导致两个协程互相重用一个栈，导致原来的线程在返回时可能会读到错误的数据，也可能干脆跑飞掉。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>所以 glibc 干脆提供了下面这几个函数:</p>
+                                  </div>
+                                  <div class="literalblock">
+                                    <div class="content">
+                                      <pre>
+int getcontext(ucontext_t *ucp);
 int setcontext(const ucontext_t *ucp);
 void makecontext(ucontext_t *ucp, void (*func)(), int argc, ...);
-int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>提供了比 <code>setjmp()</code> 和 <code>longjmp()</code> 更强大的功能。</p>
-</div>
-<div class="paragraph">
-<p><code>getcontext()</code> 记录当前的上下文。这个上下文可以作为一个模板，如果我们需要让它使用另一个栈，没问题！如果我们想让调度它的时候，运行 <code>serve_request()</code>，好的！对了，这个函数还应该有几个参数，嗯，我想在这里设置这些参数&#8230;&#8203;&#8230;&#8203;当然可以！这些函数满足了用户对协程的所有要求。但是它们也带来了一些问题</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>过于完整的线程支持。<code>setcontext()</code> 和 <code>swapcontext()</code> 除了做了 <code>longjmp()</code> 的工作，还：</p>
-<div class="ulist">
-<ul>
-<li>
-<p>用系统调用设置 <code>sigprocmask</code></p>
-</li>
-<li>
-<p>设置 <code>%fs</code>，这是段寄存器。TLS 的变量都保存在这里面。</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>不跨平台。 <a href="https://pubs.opengroup.org/onlinepubs/009695399/functions/getcontext.html">POSIX.1</a> 已经把这几个函数去掉了。musl-libc 干脆[12][不实现他们]。</p>
-</li>
-<li>
-<p>把 <code>context</code> 串起来。调用当初设置的函数，要是执行完了，看看 <code>uc_link</code>，要是还有下一个 context。有的话，再调用 <code>setcontext()</code>，开始执行它。</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="seastar-的-thread">Seastar 的 thread</h3>
-<div class="paragraph">
-<p>Seastar 为了避免使用重量级的 <code>swapcontext()</code> 进行上下文切换，只是在开始的时候用 <code>getcontext()</code> 和 <code>makecontext()</code> 来初始化 context，而在平时调度的时候继续用 <code>setjmp()</code> 和 <code>longjmp()</code> 的组合。</p>
-</div>
-<div class="paragraph">
-<p>首先，每个用户态线程都有自己的 context，这个 context 包含</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>一个 128KB 的栈</p>
-</li>
-<li>
-<p>一个 <code>jmp_buf</code></p>
-</li>
-<li>
-<p>指向原来的 <code>context</code> 的指针</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>在这里，ucontext 就像是一个通向 <code>jmp_buf</code> 的跳板。</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>在初始化用户态线程的时候，Seastar 新建一个 ucontext，让它使用自己的栈，并把它指向一个静态函数 <code>s_main()</code>，这个函数的参数其实就是 <code>thread_context</code> 的地址，所以它得以调用 <code>this-&gt;main()</code>。后者才会调用真正的任务函数。</p>
-</li>
-<li>
-<p>每个线程都用 TLS 保存着自己的 <code>thread_context</code> ，在工作线程调度到新的任务的时候，新的任务对应着新的 <code>thread_context</code> 实例。在这个新的 <code>thread_context</code> 开始运行之前，我们把当前的 context 作为成员变量保存在新的 <code>thread_context</code> 里面。然后用 <code>setjmp()</code> 把当前上下文保存在原来的 context 中。这时保存了原来 context 的上下文。</p>
-</li>
-<li>
-<p>不过我们并不保存这个新建的 ucontext，我们的目标是调度到 <code>this-&gt;main()</code>。接下来用 <code>setcontext()</code> 跳转到这个 ucontext 完成调度。</p>
-</li>
-<li>
-<p>下一次要 <code>yield</code> 就简单很多，只需要 <code>setjmp(this-&gt;jmpbuf)</code>，然后 <code>longjmp(link-&gt;jmpbuf)</code> 就行了。</p>
-</li>
-<li>
-<p>类似的，如果是 <code>resume</code>，则是相反的操作。</p>
-</li>
-<li>
-<p>如果希望销毁这个用户态线程，则直接 <code>longjmp(link-&gt;jmpbuf)</code> 。跳过保留上下文的步骤。</p>
-</li>
-</ol>
-</div>
-</div>
-<div class="sect2">
-<h3 id="boostcontext">Boost::context</h3>
-<div class="paragraph">
-<p><code>Boost::context</code> 用汇编实现了平台相关的 <code>fcontext_t</code> ，它的性能据说比 <code>ucontext_</code> <a href="https://www.boost.org/doc/libs/1_73_0/libs/context/doc/html/context/performance.html">高一到两个数量级</a> 。<code>fcontext_</code> <a href="https://github.com/boostorg/context/blob/7c481a8fb6db3a3b6c981e7b27f02064d1efb499/src/asm/jump_x86_64_sysv_elf_gas.S">保存的上下文</a> 有</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>MXCSR</code> 中的控制字。x86 上 <a href="https://xem.github.io/minix86/manual/intel-x86-and-64-manual-vol1/o_7281d5ea06a5b67a-240.html">SSE/SSE2 用于保存浮点控制和状态的寄存器</a></p>
-</li>
-<li>
-<p><code>FPCR</code> 即 X87 FPU control word。</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>这两个寄存器状态和 <a href="https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions">Intel TSX</a> 机制有关系。TSX (Intel Transactional Synchronisation Extensions) 是 Intel 实现的硬件内存事务机制，可以粗略地理解，它使用 L1 cache 跟踪读集合和写集合，如果出现冲突的话，就放弃当前核上的修改，不把它刷到内存里面去，导致不一致。我们可以在另外一篇文章里面继续讨论内存一致性、可见性和多核系统里面乱序执行的问题。不过这里保存它们的原因是因为，如果浮点 TSX 的事务中发现浮点状态字有变化，那么这个事务肯定会 <a href="https://www.boost.org/doc/libs/master/libs/fiber/doc/html/fiber/speculation.html">终止</a>。所以为了支持 TSX，Boost 也保存这些浮点寄存器。顺便说一下，内核里面是不能用浮点操作的。所以那边我们不需要关心这种问题。</p>
-</div>
-<div class="paragraph">
-<p>基于这套实现，Boost 实现了自己的协程库。</p>
-</div>
-<div class="paragraph">
-<p>seastar-devel 上的 <a href="https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ">讨论</a>也是围绕着这一点。 Christian 觉得手工实现 <code>longjmp()</code> 会比较高效。Avi 提到当初他也考虑过 <code>Boost::context</code>。因为它比较简单明了，同时没有 glibc 中 <code>_longjmp_unwind()</code> 和 <code>__sigprocmask()</code> 的开销，所以对于广大的 glibc 用户来说，使用 <code>Boost::context</code> 性能会更好一些。 不过 <code>Boost::context</code> 在 1.55/1.56 中的实现还不成熟。为了精炼版的 <code>longjmp()</code>，只能有两条路，</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>要求用户使用新版的 Boost</p>
-</li>
-<li>
-<p>把 <code>fcontext_t</code> 使用的汇编代码移植到 Seastar 里面去。</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>不过 Avi 提到，glibc 中的 <code>longjmp()</code> 在上下文切换操作中占用的时间其实并不算多。所以就没有必要手撸汇编了。</p>
-</div>
-</div>
-</div>
-</div></div><div class="d-print-none"><footer class="article__footer"><meta itemprop="dateModified" content="2020-08-09T00:00:00+00:00"><!-- start custom article footer snippet -->
+int swapcontext(ucontext_t *oucp, const ucontext_t *ucp);</pre
+                                      >
+                                    </div>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      提供了比 <code>setjmp()</code> 和
+                                      <code>longjmp()</code> 更强大的功能。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      <code>getcontext()</code>
+                                      记录当前的上下文。这个上下文可以作为一个模板，如果我们需要让它使用另一个栈，没问题！如果我们想让调度它的时候，运行
+                                      <code>serve_request()</code
+                                      >，好的！对了，这个函数还应该有几个参数，嗯，我想在这里设置这些参数&#8230;&#8203;&#8230;&#8203;当然可以！这些函数满足了用户对协程的所有要求。但是它们也带来了一些问题
+                                    </p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p>
+                                          过于完整的线程支持。<code
+                                            >setcontext()</code
+                                          >
+                                          和 <code>swapcontext()</code> 除了做了
+                                          <code>longjmp()</code> 的工作，还：
+                                        </p>
+                                        <div class="ulist">
+                                          <ul>
+                                            <li>
+                                              <p>
+                                                用系统调用设置
+                                                <code>sigprocmask</code>
+                                              </p>
+                                            </li>
+                                            <li>
+                                              <p>
+                                                设置
+                                                <code>%fs</code
+                                                >，这是段寄存器。TLS
+                                                的变量都保存在这里面。
+                                              </p>
+                                            </li>
+                                          </ul>
+                                        </div>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          不跨平台。
+                                          <a
+                                            href="https://pubs.opengroup.org/onlinepubs/009695399/functions/getcontext.html"
+                                            >POSIX.1</a
+                                          >
+                                          已经把这几个函数去掉了。musl-libc
+                                          干脆[12][不实现他们]。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          把
+                                          <code>context</code>
+                                          串起来。调用当初设置的函数，要是执行完了，看看
+                                          <code>uc_link</code>，要是还有下一个
+                                          context。有的话，再调用
+                                          <code>setcontext()</code
+                                          >，开始执行它。
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                </div>
+                                <div class="sect2">
+                                  <h3 id="seastar-的-thread">
+                                    Seastar 的 thread
+                                  </h3>
+                                  <div class="paragraph">
+                                    <p>
+                                      Seastar 为了避免使用重量级的
+                                      <code>swapcontext()</code>
+                                      进行上下文切换，只是在开始的时候用
+                                      <code>getcontext()</code> 和
+                                      <code>makecontext()</code> 来初始化
+                                      context，而在平时调度的时候继续用
+                                      <code>setjmp()</code> 和
+                                      <code>longjmp()</code> 的组合。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      首先，每个用户态线程都有自己的
+                                      context，这个 context 包含
+                                    </p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p>一个 128KB 的栈</p>
+                                      </li>
+                                      <li>
+                                        <p>一个 <code>jmp_buf</code></p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          指向原来的 <code>context</code> 的指针
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      在这里，ucontext 就像是一个通向
+                                      <code>jmp_buf</code> 的跳板。
+                                    </p>
+                                  </div>
+                                  <div class="olist arabic">
+                                    <ol class="arabic">
+                                      <li>
+                                        <p>
+                                          在初始化用户态线程的时候，Seastar
+                                          新建一个
+                                          ucontext，让它使用自己的栈，并把它指向一个静态函数
+                                          <code>s_main()</code
+                                          >，这个函数的参数其实就是
+                                          <code>thread_context</code>
+                                          的地址，所以它得以调用
+                                          <code>this-&gt;main()</code
+                                          >。后者才会调用真正的任务函数。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          每个线程都用 TLS 保存着自己的
+                                          <code>thread_context</code>
+                                          ，在工作线程调度到新的任务的时候，新的任务对应着新的
+                                          <code>thread_context</code>
+                                          实例。在这个新的
+                                          <code>thread_context</code>
+                                          开始运行之前，我们把当前的 context
+                                          作为成员变量保存在新的
+                                          <code>thread_context</code>
+                                          里面。然后用
+                                          <code>setjmp()</code>
+                                          把当前上下文保存在原来的 context
+                                          中。这时保存了原来 context 的上下文。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          不过我们并不保存这个新建的
+                                          ucontext，我们的目标是调度到
+                                          <code>this-&gt;main()</code>。接下来用
+                                          <code>setcontext()</code> 跳转到这个
+                                          ucontext 完成调度。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          下一次要
+                                          <code>yield</code> 就简单很多，只需要
+                                          <code>setjmp(this-&gt;jmpbuf)</code
+                                          >，然后
+                                          <code>longjmp(link-&gt;jmpbuf)</code>
+                                          就行了。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          类似的，如果是
+                                          <code>resume</code>，则是相反的操作。
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          如果希望销毁这个用户态线程，则直接
+                                          <code>longjmp(link-&gt;jmpbuf)</code>
+                                          。跳过保留上下文的步骤。
+                                        </p>
+                                      </li>
+                                    </ol>
+                                  </div>
+                                </div>
+                                <div class="sect2">
+                                  <h3 id="boostcontext">Boost::context</h3>
+                                  <div class="paragraph">
+                                    <p>
+                                      <code>Boost::context</code>
+                                      用汇编实现了平台相关的
+                                      <code>fcontext_t</code> ，它的性能据说比
+                                      <code>ucontext_</code>
+                                      <a
+                                        href="https://www.boost.org/doc/libs/1_73_0/libs/context/doc/html/context/performance.html"
+                                        >高一到两个数量级</a
+                                      >
+                                      。<code>fcontext_</code>
+                                      <a
+                                        href="https://github.com/boostorg/context/blob/7c481a8fb6db3a3b6c981e7b27f02064d1efb499/src/asm/jump_x86_64_sysv_elf_gas.S"
+                                        >保存的上下文</a
+                                      >
+                                      有
+                                    </p>
+                                  </div>
+                                  <div class="ulist">
+                                    <ul>
+                                      <li>
+                                        <p>
+                                          <code>MXCSR</code> 中的控制字。x86 上
+                                          <a
+                                            href="https://xem.github.io/minix86/manual/intel-x86-and-64-manual-vol1/o_7281d5ea06a5b67a-240.html"
+                                            >SSE/SSE2
+                                            用于保存浮点控制和状态的寄存器</a
+                                          >
+                                        </p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          <code>FPCR</code> 即 X87 FPU control
+                                          word。
+                                        </p>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      这两个寄存器状态和
+                                      <a
+                                        href="https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions"
+                                        >Intel TSX</a
+                                      >
+                                      机制有关系。TSX (Intel Transactional
+                                      Synchronisation Extensions) 是 Intel
+                                      实现的硬件内存事务机制，可以粗略地理解，它使用
+                                      L1 cache
+                                      跟踪读集合和写集合，如果出现冲突的话，就放弃当前核上的修改，不把它刷到内存里面去，导致不一致。我们可以在另外一篇文章里面继续讨论内存一致性、可见性和多核系统里面乱序执行的问题。不过这里保存它们的原因是因为，如果浮点
+                                      TSX
+                                      的事务中发现浮点状态字有变化，那么这个事务肯定会
+                                      <a
+                                        href="https://www.boost.org/doc/libs/master/libs/fiber/doc/html/fiber/speculation.html"
+                                        >终止</a
+                                      >。所以为了支持 TSX，Boost
+                                      也保存这些浮点寄存器。顺便说一下，内核里面是不能用浮点操作的。所以那边我们不需要关心这种问题。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      基于这套实现，Boost 实现了自己的协程库。
+                                    </p>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      seastar-devel 上的
+                                      <a
+                                        href="https://groups.google.com/g/seastar-dev/c/ncjU57iz7uk/m/7zye5ujiDAAJ"
+                                        >讨论</a
+                                      >也是围绕着这一点。 Christian 觉得手工实现
+                                      <code>longjmp()</code> 会比较高效。Avi
+                                      提到当初他也考虑过
+                                      <code>Boost::context</code
+                                      >。因为它比较简单明了，同时没有 glibc 中
+                                      <code>_longjmp_unwind()</code> 和
+                                      <code>__sigprocmask()</code>
+                                      的开销，所以对于广大的 glibc
+                                      用户来说，使用
+                                      <code>Boost::context</code>
+                                      性能会更好一些。 不过
+                                      <code>Boost::context</code> 在 1.55/1.56
+                                      中的实现还不成熟。为了精炼版的
+                                      <code>longjmp()</code>，只能有两条路，
+                                    </p>
+                                  </div>
+                                  <div class="olist arabic">
+                                    <ol class="arabic">
+                                      <li>
+                                        <p>要求用户使用新版的 Boost</p>
+                                      </li>
+                                      <li>
+                                        <p>
+                                          把
+                                          <code>fcontext_t</code>
+                                          使用的汇编代码移植到 Seastar 里面去。
+                                        </p>
+                                      </li>
+                                    </ol>
+                                  </div>
+                                  <div class="paragraph">
+                                    <p>
+                                      不过 Avi 提到，glibc 中的
+                                      <code>longjmp()</code>
+                                      在上下文切换操作中占用的时间其实并不算多。所以就没有必要手撸汇编了。
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="d-print-none">
+                            <footer class="article__footer">
+                              <meta
+                                itemprop="dateModified"
+                                content="2020-08-09T00:00:00+00:00"
+                              /><!-- start custom article footer snippet -->
 
-<!-- end custom article footer snippet -->
-<div class="article__license"></div></footer>
-<div class="article__section-navigator clearfix"><div class="previous"><span>PREVIOUS</span><a href="/misc/2020/08/08/hello-world.html">开场白</a></div><div class="next"><span>NEXT</span><a href="/2020/08/10/memory-ordering.html">多核和顺序</a></div></div></div>
+                              <!-- end custom article footer snippet -->
+                              <div class="article__license"></div>
+                            </footer>
+                            <div class="article__section-navigator clearfix">
+                              <div class="previous">
+                                <span>PREVIOUS</span
+                                ><a href="/misc/2020/08/08/hello-world.html"
+                                  >开场白</a
+                                >
+                              </div>
+                              <div class="next">
+                                <span>NEXT</span
+                                ><a href="/2020/08/10/memory-ordering.html"
+                                  >多核和顺序</a
+                                >
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-</div>
+                        <script>
+                          (function () {
+                            var SOURCES = window.TEXT_VARIABLES.sources;
+                            window.Lazyload.js(SOURCES.jquery, function () {
+                              $(function () {
+                                var $this, $scroll;
+                                var $articleContent = $(".js-article-content");
+                                var hasSidebar = $(".js-page-root").hasClass(
+                                  "layout--page--sidebar"
+                                );
+                                var scroll = hasSidebar
+                                  ? ".js-page-main"
+                                  : "html, body";
+                                $scroll = $(scroll);
 
-<script>(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    $(function() {
-      var $this ,$scroll;
-      var $articleContent = $('.js-article-content');
-      var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
-      var scroll = hasSidebar ? '.js-page-main' : 'html, body';
-      $scroll = $(scroll);
+                                $articleContent
+                                  .find(".highlight")
+                                  .each(function () {
+                                    $this = $(this);
+                                    $this.attr(
+                                      "data-lang",
+                                      $this.find("code").attr("data-lang")
+                                    );
+                                  });
+                                $articleContent
+                                  .find(
+                                    "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+                                  )
+                                  .each(function () {
+                                    $this = $(this);
+                                    $this.append(
+                                      $(
+                                        '<a class="anchor d-print-none" aria-hidden="true"></a>'
+                                      ).html('<i class="fas fa-anchor"></i>')
+                                    );
+                                  });
+                                $articleContent.on(
+                                  "click",
+                                  ".anchor",
+                                  function () {
+                                    $scroll.scrollToAnchor(
+                                      "#" + $(this).parent().attr("id"),
+                                      400
+                                    );
+                                  }
+                                );
+                              });
+                            });
+                          })();
+                        </script>
+                      </div>
+                      <section class="page__comments d-print-none"></section>
+                    </article>
+                    <!-- start custom main bottom snippet -->
 
-      $articleContent.find('.highlight').each(function() {
-        $this = $(this);
-        $this.attr('data-lang', $this.find('code').attr('data-lang'));
-      });
-      $articleContent.find('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each(function() {
-        $this = $(this);
-        $this.append($('<a class="anchor d-print-none" aria-hidden="true"></a>').html('<i class="fas fa-anchor"></i>'));
-      });
-      $articleContent.on('click', '.anchor', function() {
-        $scroll.scrollToAnchor('#' + $(this).parent().attr('id'), 400);
-      });
-    });
-  });
-})();
-</script>
-</div><section class="page__comments d-print-none"></section></article><!-- start custom main bottom snippet -->
+                    <!-- end custom main bottom snippet -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="page__footer d-print-none">
+              <footer class="footer py-4 js-page-footer">
+                <div class="main">
+                  <div itemscope itemtype="http://schema.org/Person">
+                    <meta itemprop="name" content="Kefu Chai" /><meta
+                      itemprop="url"
+                      content="https://blog.k3fu.xyz"
+                    /><meta
+                      itemprop="description"
+                      content="yet another lamer"
+                    />
+                    <div class="footer__author-links">
+                      <div class="author-links">
+                        <ul class="menu menu--nowrap menu--inline">
+                          <link itemprop="url" href="https://blog.k3fu.xyz" />
+                          <li title="Send me an Email.">
+                            <a
+                              class="button button--circle mail-button"
+                              itemprop="email"
+                              href="mailto:tchaikov@gmail.com"
+                              target="_blank"
+                            >
+                              <i class="fas fa-envelope"></i>
+                            </a>
+                          </li>
 
-<!-- end custom main bottom snippet -->
-</div>
-            </div></div></div><div class="page__footer d-print-none">
-<footer class="footer py-4 js-page-footer">
-  <div class="main"><div itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Kefu Chai"><meta itemprop="url" content="https://blog.k3fu.xyz"><meta itemprop="description" content="yet another lamer"><div class="footer__author-links"><div class="author-links">
-  <ul class="menu menu--nowrap menu--inline"><link itemprop="url" href="https://blog.k3fu.xyz"><li title="Send me an Email.">
-      <a class="button button--circle mail-button" itemprop="email" href="mailto:tchaikov@gmail.com" target="_blank">
-        <i class="fas fa-envelope"></i>
-      </a><li title="Follow me on Github.">
-        <a class="button button--circle github-button" itemprop="sameAs" href="https://github.com/tchaikov" target="_blank">
-          <div class="icon"><svg fill="#000000" width="24px" height="24px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <path class="svgpath" data-index="path_0" fill="#272636" d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z" />
-</svg>
-</div>
-        </a>
-      </li></ul>
-</div>
-</div>
-    </div><div class="site-info mt-2">
-      <div>© some random rants 2020,
-        Powered by <a title="Jekyll is a simple, blog-aware, static site generator." href="http://jekyllrb.com/">Jekyll</a> & <a
-        title="TeXt is a super customizable Jekyll theme." href="https://github.com/kitian616/jekyll-TeXt-theme">TeXt Theme</a>.
-      </div>
-    </div>
-  </div>
-</footer>
-</div></div>
-    </div><script>(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    var $body = $('body'), $window = $(window);
-    var $pageRoot = $('.js-page-root'), $pageMain = $('.js-page-main');
-    var activeCount = 0;
-    function modal(options) {
-      var $root = this, visible, onChange, hideWhenWindowScroll = false;
-      var scrollTop;
-      function setOptions(options) {
-        var _options = options || {};
-        visible = _options.initialVisible === undefined ? false : show;
-        onChange = _options.onChange;
-        hideWhenWindowScroll = _options.hideWhenWindowScroll;
-      }
-      function init() {
-        setState(visible);
-      }
-      function setState(isShow) {
-        if (isShow === visible) {
-          return;
-        }
-        visible = isShow;
-        if (visible) {
-          activeCount++;
-          scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
-          $root.addClass('modal--show');
-          $pageMain.scrollTop(scrollTop);
-          activeCount === 1 && ($pageRoot.addClass('show-modal'), $body.addClass('of-hidden'));
-          hideWhenWindowScroll && window.hasEvent('touchstart') && $window.on('scroll', hide);
-          $window.on('keyup', handleKeyup);
-        } else {
-          activeCount > 0 && activeCount--;
-          $root.removeClass('modal--show');
-          $window.scrollTop(scrollTop);
-          activeCount === 0 && ($pageRoot.removeClass('show-modal'), $body.removeClass('of-hidden'));
-          hideWhenWindowScroll && window.hasEvent('touchstart') && $window.off('scroll', hide);
-          $window.off('keyup', handleKeyup);
-        }
-        onChange && onChange(visible);
-      }
-      function show() {
-        setState(true);
-      }
-      function hide() {
-        setState(false);
-      }
-      function handleKeyup(e) {
-        // Char Code: 27  ESC
-        if (e.which ===  27) {
-          hide();
-        }
-      }
-      setOptions(options);
-      init();
-      return {
-        show: show,
-        hide: hide,
-        $el: $root
-      };
-    }
-    $.fn.modal = modal;
-  });
-})();
-</script><div class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"></div></div>
-
-
-<script>(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    function scrollToAnchor(anchor, duration, callback) {
-      var $root = this;
-      $root.animate({ scrollTop: $(anchor).position().top }, duration, function() {
-        window.history.replaceState(null, '', window.location.href.split('#')[0] + anchor);
-        callback && callback();
-      });
-    }
-    $.fn.scrollToAnchor = scrollToAnchor;
-  });
-})();
-(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    function affix(options) {
-      var $root = this, $window = $(window), $scrollTarget, $scroll,
-        offsetBottom = 0, scrollTarget = window, scroll = window.document, disabled = false, isOverallScroller = true,
-        rootTop, rootLeft, rootHeight, scrollBottom, rootBottomTop,
-        hasInit = false, curState;
-
-      function setOptions(options) {
-        var _options = options || {};
-        _options.offsetBottom && (offsetBottom = _options.offsetBottom);
-        _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-        _options.scroll && (scroll = _options.scroll);
-        _options.disabled !== undefined && (disabled = _options.disabled);
-        $scrollTarget = $(scrollTarget);
-        isOverallScroller = window.isOverallScroller($scrollTarget[0]);
-        $scroll = $(scroll);
-      }
-      function preCalc() {
-        top();
-        rootHeight = $root.outerHeight();
-        rootTop = $root.offset().top + (isOverallScroller ? 0 :  $scrollTarget.scrollTop());
-        rootLeft = $root.offset().left;
-      }
-      function calc(needPreCalc) {
-        needPreCalc && preCalc();
-        scrollBottom = $scroll.outerHeight() - offsetBottom - rootHeight;
-        rootBottomTop = scrollBottom - rootTop;
-      }
-      function top() {
-        if (curState !== 'top') {
-          $root.removeClass('fixed').css({
-            left: 0,
-            top: 0
-          });
-          curState = 'top';
-        }
-      }
-      function fixed() {
-        if (curState !== 'fixed') {
-          $root.addClass('fixed').css({
-            left: rootLeft + 'px',
-            top: 0
-          });
-          curState = 'fixed';
-        }
-      }
-      function bottom() {
-        if (curState !== 'bottom') {
-          $root.removeClass('fixed').css({
-            left: 0,
-            top: rootBottomTop + 'px'
-          });
-          curState = 'bottom';
-        }
-      }
-      function setState() {
-        var scrollTop = $scrollTarget.scrollTop();
-        if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
-          fixed();
-        } else if (scrollTop < rootTop) {
-          top();
-        } else {
-          bottom();
-        }
-      }
-      function init() {
-        if(!hasInit) {
-          var interval, timeout;
-          calc(true); setState();
-          // run calc every 100 millisecond
-          interval = setInterval(function() {
-            calc();
-          }, 100);
-          timeout = setTimeout(function() {
-            clearInterval(interval);
-          }, 45000);
-          window.pageLoad.then(function() {
-            setTimeout(function() {
-              clearInterval(interval);
-              clearTimeout(timeout);
-            }, 3000);
-          });
-          $scrollTarget.on('scroll', function() {
-            disabled || setState();
-          });
-          $window.on('resize', function() {
-            disabled || (calc(true), setState());
-          });
-          hasInit = true;
-        }
-      }
-
-      setOptions(options);
-      if (!disabled) {
-        init();
-      }
-      $window.on('resize', window.throttle(function() {
-        init();
-      }, 200));
-      return {
-        setOptions: setOptions,
-        refresh: function() {
-          calc(true, { animation: false }); setState();
-        }
-      };
-    }
-    $.fn.affix = affix;
-  });
-})();
-(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    function toc(options) {
-      var $root = this, $window = $(window), $scrollTarget, $scroller, $tocUl = $('<ul class="toc toc--ellipsis"></ul>'), $tocLi, $headings, $activeLast, $activeCur,
-        selectors = 'h1,h2,h3', container = 'body', scrollTarget = window, scroller = 'html, body', disabled = false,
-        headingsPos, scrolling = false, hasRendered = false, hasInit = false;
-
-      function setOptions(options) {
-        var _options = options || {};
-        _options.selectors && (selectors = _options.selectors);
-        _options.container && (container = _options.container);
-        _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-        _options.scroller && (scroller = _options.scroller);
-        _options.disabled !== undefined && (disabled = _options.disabled);
-        $headings = $(container).find(selectors).filter('[id]');
-        $scrollTarget = $(scrollTarget);
-        $scroller = $(scroller);
-      }
-      function calc() {
-        headingsPos = [];
-        $headings.each(function() {
-          headingsPos.push(Math.floor($(this).position().top));
-        });
-      }
-      function setState(element, disabled) {
-        var scrollTop = $scrollTarget.scrollTop(), i;
-        if (disabled || !headingsPos || headingsPos.length < 1) { return; }
-        if (element) {
-          $activeCur = element;
-        } else {
-          for (i = 0; i < headingsPos.length; i++) {
-            if (scrollTop >= headingsPos[i]) {
-              $activeCur = $tocLi.eq(i);
-            } else {
-              $activeCur || ($activeCur = $tocLi.eq(i));
-              break;
-            }
-          }
-        }
-        $activeLast && $activeLast.removeClass('active');
-        ($activeLast = $activeCur).addClass('active');
-      }
-      function render() {
-        if(!hasRendered) {
-          $root.append($tocUl);
-          $headings.each(function() {
-            var $this = $(this);
-            $tocUl.append($('<li></li>').addClass('toc-' + $this.prop('tagName').toLowerCase())
-              .append($('<a></a>').text($this.text()).attr('href', '#' + $this.prop('id'))));
-          });
-          $tocLi = $tocUl.children('li');
-          $tocUl.on('click', 'a', function(e) {
-            e.preventDefault();
-            var $this = $(this);
-            scrolling = true;
-            setState($this.parent());
-            $scroller.scrollToAnchor($this.attr('href'), 400, function() {
-              scrolling = false;
+                          <li title="Follow me on Github.">
+                            <a
+                              class="button button--circle github-button"
+                              itemprop="sameAs"
+                              href="https://github.com/tchaikov"
+                              target="_blank"
+                            >
+                              <div class="icon">
+                                <svg
+                                  fill="#000000"
+                                  width="24px"
+                                  height="24px"
+                                  viewBox="0 0 1024 1024"
+                                  version="1.1"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    class="svgpath"
+                                    data-index="path_0"
+                                    fill="#272636"
+                                    d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z"
+                                  />
+                                </svg>
+                              </div>
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="site-info mt-2">
+                    <div>
+                      © some random rants 2020, Powered by
+                      <a
+                        title="Jekyll is a simple, blog-aware, static site generator."
+                        href="http://jekyllrb.com/"
+                        >Jekyll</a
+                      >
+                      &
+                      <a
+                        title="TeXt is a super customizable Jekyll theme."
+                        href="https://github.com/kitian616/jekyll-TeXt-theme"
+                        >TeXt Theme</a
+                      >.
+                    </div>
+                  </div>
+                </div>
+              </footer>
+            </div>
+          </div>
+        </div>
+        <script>
+          (function () {
+            var SOURCES = window.TEXT_VARIABLES.sources;
+            window.Lazyload.js(SOURCES.jquery, function () {
+              var $body = $("body"),
+                $window = $(window);
+              var $pageRoot = $(".js-page-root"),
+                $pageMain = $(".js-page-main");
+              var activeCount = 0;
+              function modal(options) {
+                var $root = this,
+                  visible,
+                  onChange,
+                  hideWhenWindowScroll = false;
+                var scrollTop;
+                function setOptions(options) {
+                  var _options = options || {};
+                  visible =
+                    _options.initialVisible === undefined ? false : show;
+                  onChange = _options.onChange;
+                  hideWhenWindowScroll = _options.hideWhenWindowScroll;
+                }
+                function init() {
+                  setState(visible);
+                }
+                function setState(isShow) {
+                  if (isShow === visible) {
+                    return;
+                  }
+                  visible = isShow;
+                  if (visible) {
+                    activeCount++;
+                    scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
+                    $root.addClass("modal--show");
+                    $pageMain.scrollTop(scrollTop);
+                    activeCount === 1 &&
+                      ($pageRoot.addClass("show-modal"),
+                      $body.addClass("of-hidden"));
+                    hideWhenWindowScroll &&
+                      window.hasEvent("touchstart") &&
+                      $window.on("scroll", hide);
+                    $window.on("keyup", handleKeyup);
+                  } else {
+                    activeCount > 0 && activeCount--;
+                    $root.removeClass("modal--show");
+                    $window.scrollTop(scrollTop);
+                    activeCount === 0 &&
+                      ($pageRoot.removeClass("show-modal"),
+                      $body.removeClass("of-hidden"));
+                    hideWhenWindowScroll &&
+                      window.hasEvent("touchstart") &&
+                      $window.off("scroll", hide);
+                    $window.off("keyup", handleKeyup);
+                  }
+                  onChange && onChange(visible);
+                }
+                function show() {
+                  setState(true);
+                }
+                function hide() {
+                  setState(false);
+                }
+                function handleKeyup(e) {
+                  // Char Code: 27  ESC
+                  if (e.which === 27) {
+                    hide();
+                  }
+                }
+                setOptions(options);
+                init();
+                return {
+                  show: show,
+                  hide: hide,
+                  $el: $root,
+                };
+              }
+              $.fn.modal = modal;
             });
-          });
-        }
-        hasRendered = true;
-      }
-      function init() {
-        var interval, timeout;
-        if(!hasInit) {
-          render(); calc(); setState(null, scrolling);
-          // run calc every 100 millisecond
-          interval = setInterval(function() {
-            calc();
-          }, 100);
-          timeout = setTimeout(function() {
-            clearInterval(interval);
-          }, 45000);
-          window.pageLoad.then(function() {
-            setTimeout(function() {
-              clearInterval(interval);
-              clearTimeout(timeout);
-            }, 3000);
-          });
-          $scrollTarget.on('scroll', function() {
-            disabled || setState(null, scrolling);
-          });
-          $window.on('resize', window.throttle(function() {
-            if (!disabled) {
-              render(); calc(); setState(null, scrolling);
-            }
-          }, 100));
-        }
-        hasInit = true;
-      }
+          })();
+        </script>
+        <div
+          class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"
+        ></div>
+      </div>
 
-      setOptions(options);
-      if (!disabled) {
-        init();
-      }
-      $window.on('resize', window.throttle(function() {
-        init();
-      }, 200));
-      return {
-        setOptions: setOptions
-      };
-    }
-    $.fn.toc = toc;
-  });
-})();
-/*(function () {
+      <script>
+        (function () {
+          var SOURCES = window.TEXT_VARIABLES.sources;
+          window.Lazyload.js(SOURCES.jquery, function () {
+            function scrollToAnchor(anchor, duration, callback) {
+              var $root = this;
+              $root.animate(
+                { scrollTop: $(anchor).position().top },
+                duration,
+                function () {
+                  window.history.replaceState(
+                    null,
+                    "",
+                    window.location.href.split("#")[0] + anchor
+                  );
+                  callback && callback();
+                }
+              );
+            }
+            $.fn.scrollToAnchor = scrollToAnchor;
+          });
+        })();
+        (function () {
+          var SOURCES = window.TEXT_VARIABLES.sources;
+          window.Lazyload.js(SOURCES.jquery, function () {
+            function affix(options) {
+              var $root = this,
+                $window = $(window),
+                $scrollTarget,
+                $scroll,
+                offsetBottom = 0,
+                scrollTarget = window,
+                scroll = window.document,
+                disabled = false,
+                isOverallScroller = true,
+                rootTop,
+                rootLeft,
+                rootHeight,
+                scrollBottom,
+                rootBottomTop,
+                hasInit = false,
+                curState;
+
+              function setOptions(options) {
+                var _options = options || {};
+                _options.offsetBottom && (offsetBottom = _options.offsetBottom);
+                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
+                _options.scroll && (scroll = _options.scroll);
+                _options.disabled !== undefined &&
+                  (disabled = _options.disabled);
+                $scrollTarget = $(scrollTarget);
+                isOverallScroller = window.isOverallScroller($scrollTarget[0]);
+                $scroll = $(scroll);
+              }
+              function preCalc() {
+                top();
+                rootHeight = $root.outerHeight();
+                rootTop =
+                  $root.offset().top +
+                  (isOverallScroller ? 0 : $scrollTarget.scrollTop());
+                rootLeft = $root.offset().left;
+              }
+              function calc(needPreCalc) {
+                needPreCalc && preCalc();
+                scrollBottom =
+                  $scroll.outerHeight() - offsetBottom - rootHeight;
+                rootBottomTop = scrollBottom - rootTop;
+              }
+              function top() {
+                if (curState !== "top") {
+                  $root.removeClass("fixed").css({
+                    left: 0,
+                    top: 0,
+                  });
+                  curState = "top";
+                }
+              }
+              function fixed() {
+                if (curState !== "fixed") {
+                  $root.addClass("fixed").css({
+                    left: rootLeft + "px",
+                    top: 0,
+                  });
+                  curState = "fixed";
+                }
+              }
+              function bottom() {
+                if (curState !== "bottom") {
+                  $root.removeClass("fixed").css({
+                    left: 0,
+                    top: rootBottomTop + "px",
+                  });
+                  curState = "bottom";
+                }
+              }
+              function setState() {
+                var scrollTop = $scrollTarget.scrollTop();
+                if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
+                  fixed();
+                } else if (scrollTop < rootTop) {
+                  top();
+                } else {
+                  bottom();
+                }
+              }
+              function init() {
+                if (!hasInit) {
+                  var interval, timeout;
+                  calc(true);
+                  setState();
+                  // run calc every 100 millisecond
+                  interval = setInterval(function () {
+                    calc();
+                  }, 100);
+                  timeout = setTimeout(function () {
+                    clearInterval(interval);
+                  }, 45000);
+                  window.pageLoad.then(function () {
+                    setTimeout(function () {
+                      clearInterval(interval);
+                      clearTimeout(timeout);
+                    }, 3000);
+                  });
+                  $scrollTarget.on("scroll", function () {
+                    disabled || setState();
+                  });
+                  $window.on("resize", function () {
+                    disabled || (calc(true), setState());
+                  });
+                  hasInit = true;
+                }
+              }
+
+              setOptions(options);
+              if (!disabled) {
+                init();
+              }
+              $window.on(
+                "resize",
+                window.throttle(function () {
+                  init();
+                }, 200)
+              );
+              return {
+                setOptions: setOptions,
+                refresh: function () {
+                  calc(true, { animation: false });
+                  setState();
+                },
+              };
+            }
+            $.fn.affix = affix;
+          });
+        })();
+        (function () {
+          var SOURCES = window.TEXT_VARIABLES.sources;
+          window.Lazyload.js(SOURCES.jquery, function () {
+            function toc(options) {
+              var $root = this,
+                $window = $(window),
+                $scrollTarget,
+                $scroller,
+                $tocUl = $('<ul class="toc toc--ellipsis"></ul>'),
+                $tocLi,
+                $headings,
+                $activeLast,
+                $activeCur,
+                selectors = "h1,h2,h3",
+                container = "body",
+                scrollTarget = window,
+                scroller = "html, body",
+                disabled = false,
+                headingsPos,
+                scrolling = false,
+                hasRendered = false,
+                hasInit = false;
+
+              function setOptions(options) {
+                var _options = options || {};
+                _options.selectors && (selectors = _options.selectors);
+                _options.container && (container = _options.container);
+                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
+                _options.scroller && (scroller = _options.scroller);
+                _options.disabled !== undefined &&
+                  (disabled = _options.disabled);
+                $headings = $(container).find(selectors).filter("[id]");
+                $scrollTarget = $(scrollTarget);
+                $scroller = $(scroller);
+              }
+              function calc() {
+                headingsPos = [];
+                $headings.each(function () {
+                  headingsPos.push(Math.floor($(this).position().top));
+                });
+              }
+              function setState(element, disabled) {
+                var scrollTop = $scrollTarget.scrollTop(),
+                  i;
+                if (disabled || !headingsPos || headingsPos.length < 1) {
+                  return;
+                }
+                if (element) {
+                  $activeCur = element;
+                } else {
+                  for (i = 0; i < headingsPos.length; i++) {
+                    if (scrollTop >= headingsPos[i]) {
+                      $activeCur = $tocLi.eq(i);
+                    } else {
+                      $activeCur || ($activeCur = $tocLi.eq(i));
+                      break;
+                    }
+                  }
+                }
+                $activeLast && $activeLast.removeClass("active");
+                ($activeLast = $activeCur).addClass("active");
+              }
+              function render() {
+                if (!hasRendered) {
+                  $root.append($tocUl);
+                  $headings.each(function () {
+                    var $this = $(this);
+                    $tocUl.append(
+                      $("<li></li>")
+                        .addClass("toc-" + $this.prop("tagName").toLowerCase())
+                        .append(
+                          $("<a></a>")
+                            .text($this.text())
+                            .attr("href", "#" + $this.prop("id"))
+                        )
+                    );
+                  });
+                  $tocLi = $tocUl.children("li");
+                  $tocUl.on("click", "a", function (e) {
+                    e.preventDefault();
+                    var $this = $(this);
+                    scrolling = true;
+                    setState($this.parent());
+                    $scroller.scrollToAnchor(
+                      $this.attr("href"),
+                      400,
+                      function () {
+                        scrolling = false;
+                      }
+                    );
+                  });
+                }
+                hasRendered = true;
+              }
+              function init() {
+                var interval, timeout;
+                if (!hasInit) {
+                  render();
+                  calc();
+                  setState(null, scrolling);
+                  // run calc every 100 millisecond
+                  interval = setInterval(function () {
+                    calc();
+                  }, 100);
+                  timeout = setTimeout(function () {
+                    clearInterval(interval);
+                  }, 45000);
+                  window.pageLoad.then(function () {
+                    setTimeout(function () {
+                      clearInterval(interval);
+                      clearTimeout(timeout);
+                    }, 3000);
+                  });
+                  $scrollTarget.on("scroll", function () {
+                    disabled || setState(null, scrolling);
+                  });
+                  $window.on(
+                    "resize",
+                    window.throttle(function () {
+                      if (!disabled) {
+                        render();
+                        calc();
+                        setState(null, scrolling);
+                      }
+                    }, 100)
+                  );
+                }
+                hasInit = true;
+              }
+
+              setOptions(options);
+              if (!disabled) {
+                init();
+              }
+              $window.on(
+                "resize",
+                window.throttle(function () {
+                  init();
+                }, 200)
+              );
+              return {
+                setOptions: setOptions,
+              };
+            }
+            $.fn.toc = toc;
+          });
+        })();
+        /*(function () {
 
 })();*/
-</script><script>
-  /* toc must before affix, since affix need to konw toc' height. */(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    var $window = $(window);
-    var $articleContent = $('.js-article-content');
-    var $tocRoot = $('.js-toc-root'), $col2 = $('.js-col-aside');
-    var toc;
-    var tocDisabled = false;
-    var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
-    var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
+      </script>
+      <script>
+        /* toc must before affix, since affix need to konw toc' height. */ (function () {
+          var SOURCES = window.TEXT_VARIABLES.sources;
+          var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
+          window.Lazyload.js(SOURCES.jquery, function () {
+            var $window = $(window);
+            var $articleContent = $(".js-article-content");
+            var $tocRoot = $(".js-toc-root"),
+              $col2 = $(".js-col-aside");
+            var toc;
+            var tocDisabled = false;
+            var hasSidebar = $(".js-page-root").hasClass(
+              "layout--page--sidebar"
+            );
+            var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
 
-    function disabled() {
-      return $col2.css('display') === 'none' || !hasToc;
-    }
+            function disabled() {
+              return $col2.css("display") === "none" || !hasToc;
+            }
 
-    tocDisabled = disabled();
+            tocDisabled = disabled();
 
-    toc = $tocRoot.toc({
-      selectors: TOC_SELECTOR,
-      container: $articleContent,
-      scrollTarget: hasSidebar ? '.js-page-main' : null,
-      scroller: hasSidebar ? '.js-page-main' : null,
-      disabled: tocDisabled
-    });
+            toc = $tocRoot.toc({
+              selectors: TOC_SELECTOR,
+              container: $articleContent,
+              scrollTarget: hasSidebar ? ".js-page-main" : null,
+              scroller: hasSidebar ? ".js-page-main" : null,
+              disabled: tocDisabled,
+            });
 
-    $window.on('resize', window.throttle(function() {
-      tocDisabled = disabled();
-      toc && toc.setOptions({
-        disabled: tocDisabled
-      });
-    }, 100));
+            $window.on(
+              "resize",
+              window.throttle(function () {
+                tocDisabled = disabled();
+                toc &&
+                  toc.setOptions({
+                    disabled: tocDisabled,
+                  });
+              }, 100)
+            );
+          });
+        })();
+        (function () {
+          var SOURCES = window.TEXT_VARIABLES.sources;
+          window.Lazyload.js(SOURCES.jquery, function () {
+            var $window = $(window),
+              $pageFooter = $(".js-page-footer");
+            var $pageAside = $(".js-page-aside");
+            var affix;
+            var tocDisabled = false;
+            var hasSidebar = $(".js-page-root").hasClass(
+              "layout--page--sidebar"
+            );
 
-  });
-})();
-(function() {
-  var SOURCES = window.TEXT_VARIABLES.sources;
-  window.Lazyload.js(SOURCES.jquery, function() {
-    var $window = $(window), $pageFooter = $('.js-page-footer');
-    var $pageAside = $('.js-page-aside');
-    var affix;
-    var tocDisabled = false;
-    var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
+            affix = $pageAside.affix({
+              offsetBottom: $pageFooter.outerHeight(),
+              scrollTarget: hasSidebar ? ".js-page-main" : null,
+              scroller: hasSidebar ? ".js-page-main" : null,
+              scroll: hasSidebar ? $(".js-page-main").children() : null,
+              disabled: tocDisabled,
+            });
 
-    affix = $pageAside.affix({
-      offsetBottom: $pageFooter.outerHeight(),
-      scrollTarget: hasSidebar ? '.js-page-main' : null,
-      scroller: hasSidebar ? '.js-page-main' : null,
-      scroll: hasSidebar ? $('.js-page-main').children() : null,
-      disabled: tocDisabled
-    });
+            $window.on(
+              "resize",
+              window.throttle(function () {
+                affix &&
+                  affix.setOptions({
+                    disabled: tocDisabled,
+                  });
+              }, 100)
+            );
 
-    $window.on('resize', window.throttle(function() {
-      affix && affix.setOptions({
-        disabled: tocDisabled
-      });
-    }, 100));
-
-    window.pageAsideAffix = affix;
-  });
-})();
-</script><script type="text/x-mathjax-config">
-	var _config = { tex2jax: {
-		inlineMath: [['$','$'], ['\\(','\\)']]
-	}};MathJax.Hub.Config(_config);
-</script>
-<script type="text/javascript" src="https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
-
+            window.pageAsideAffix = affix;
+          });
+        })();
+      </script>
+      <script type="text/x-mathjax-config">
+        var _config = { tex2jax: {
+        	inlineMath: [['$','$'], ['\\(','\\)']]
+        }};MathJax.Hub.Config(_config);
+      </script>
+      <script
+        type="text/javascript"
+        src="https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML"
+        async
+      ></script>
     </div>
-    <script>(function () {
-  var $root = document.getElementsByClassName('root')[0];
-  if (window.hasEvent('touchstart')) {
-    $root.dataset.isTouch = true;
-    document.addEventListener('touchstart', function(){}, false);
-  }
-})();
-</script>
+    <script>
+      (function () {
+        var $root = document.getElementsByClassName("root")[0];
+        if (window.hasEvent("touchstart")) {
+          $root.dataset.isTouch = true;
+          document.addEventListener("touchstart", function () {}, false);
+        }
+      })();
+    </script>
   </body>
 </html>
-
