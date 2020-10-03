@@ -3,7 +3,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>Read the Docs 之路 - some random rants</title>
 
-<meta name="description" content="最近为了支持多单词的搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。">
+<meta name="description" content="最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。">
 <link rel="canonical" href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html"><link rel="alternate" type="application/rss+xml" title="some random rants" href="/feed.xml"><!-- start favicons snippet, use https://realfavicongenerator.net/ --><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png"><link rel="manifest" href="/assets/site.webmanifest"><link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#fc4d50"><link rel="shortcut icon" href="/assets/favicon.ico">
 
 <meta name="msapplication-TileColor" content="#ffc40d"><meta name="msapplication-config" content="/assets/browserconfig.xml">
@@ -292,7 +292,7 @@
 <div class="article__content" itemprop="articleBody"><div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>最近为了支持多单词的搜索，把 Ceph 的文档编译和 host 转移到了 <a href="https://readthedocs.org">Read the Docs</a> 上。但是还有一些问题。</p>
+<p>最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 <a href="https://readthedocs.org">Read the Docs</a> 上。但是还有一些问题。</p>
 </div>
 </div>
 </div>
@@ -300,9 +300,8 @@
 <h2 id="ceph-里的-api-文档">Ceph 里的 API 文档</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Ceph 里面编译文档用的是 <a href="https://www.sphinx-doc.org/">Sphinx</a>。Ceph
-作为一个平台开放了 librados，让大家可以用它写程序。这些语言的绑定我们
-都有对应的文档：</p>
+<p>Ceph 用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 编译文档。它作为一个平台提供 librados，让大家可以用它写程序。librados 有各种语言的绑定，
+其中一些有对应的文档：</p>
 </div>
 <div class="ulist">
 <ul>

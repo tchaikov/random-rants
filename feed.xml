@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-02T07:24:14+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-03T12:20:49+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;最近为了支持多单词的搜索，把 Ceph 的文档编译和 host 转移到了 &lt;a href=&quot;https://readthedocs.org&quot;&gt;Read the Docs&lt;/a&gt; 上。但是还有一些问题。&lt;/p&gt;
+&lt;p&gt;最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 &lt;a href=&quot;https://readthedocs.org&quot;&gt;Read the Docs&lt;/a&gt; 上。但是还有一些问题。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -9,9 +9,8 @@
 &lt;h2 id=&quot;ceph-里的-api-文档&quot;&gt;Ceph 里的 API 文档&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;Ceph 里面编译文档用的是 &lt;a href=&quot;https://www.sphinx-doc.org/&quot;&gt;Sphinx&lt;/a&gt;。Ceph
-作为一个平台开放了 librados，让大家可以用它写程序。这些语言的绑定我们
-都有对应的文档：&lt;/p&gt;
+&lt;p&gt;Ceph 用 &lt;a href=&quot;https://www.sphinx-doc.org/&quot;&gt;Sphinx&lt;/a&gt; 编译文档。它作为一个平台提供 librados，让大家可以用它写程序。librados 有各种语言的绑定，
+其中一些有对应的文档：&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
@@ -217,7 +216,7 @@
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><category term="ci" /><summary type="html">最近为了支持多单词的搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。</summary></entry><entry><title type="html">std::error_code</title><link href="https://blog.k3fu.xyz/2020/09/30/error-code.html" rel="alternate" type="text/html" title="std::error_code" /><published>2020-09-30T00:00:00+00:00</published><updated>2020-09-30T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/30/error-code</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/30/error-code.html">&lt;div class=&quot;paragraph&quot;&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><category term="ci" /><summary type="html">最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。</summary></entry><entry><title type="html">std::error_code</title><link href="https://blog.k3fu.xyz/2020/09/30/error-code.html" rel="alternate" type="text/html" title="std::error_code" /><published>2020-09-30T00:00:00+00:00</published><updated>2020-09-30T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/09/30/error-code</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/09/30/error-code.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;C++11 中的错误处理的核心是 &lt;code&gt;std::error_code&lt;/code&gt;。它的引进满足了错误处理可扩展的需求。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
