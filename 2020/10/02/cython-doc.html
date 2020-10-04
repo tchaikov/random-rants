@@ -676,9 +676,10 @@
                                         这些服务很像，它内置了 CI
                                         的功能，也能帮着 host
                                         这些静态页面。对我们很合适。但是它的
-                                        build
-                                        流程是很死的。看看它的https://docs.readthedocs.io/en/stable/config-file/v2.html[配置文件]就知道了。这是为一个纯
-                                        Python
+                                        build 流程是很死的。看看它的<a
+                                          href="https://docs.readthedocs.io/en/stable/config-file/v2.html"
+                                          >配置文件</a
+                                        >就知道了。这是为一个纯 Python
                                         项目度身定制的。我们后文分析这个限制的影响。
                                       </p>
                                     </li>
@@ -799,8 +800,10 @@
                                     python-rados 就行了。sphinx 并不会真正运行
                                     python-rados
                                     的函数，它只会读取代码里面的元数据。所以
-                                    Ceph
-                                    里面用了一个比较取巧的https://github.com/ceph/ceph/blob/master/admin/build-doc[方法]。
+                                    Ceph 里面用了一个比较取巧的<a
+                                      href="https://github.com/ceph/ceph/blob/master/admin/build-doc"
+                                      >方法</a
+                                    >。
                                   </p>
                                 </div>
                                 <div class="olist arabic">
@@ -916,6 +919,18 @@
                                         </p>
                                       </li>
                                     </ol>
+                                  </div>
+                                </div>
+                                <div class="sect2">
+                                  <h3 id="加入-stub-函数">加入 stub 函数</h3>
+                                  <div class="paragraph">
+                                    <p>
+                                      换句话说，就是条件编译。在编译文档的时候，在
+                                      <code>rados.pyx</code> 中实现所有使用到的
+                                      C
+                                      函数。不过需要注意，这些函数也应该暴露出来给
+                                      python-cephfs 它们用。
+                                    </p>
                                   </div>
                                 </div>
                                 <div class="sect2">

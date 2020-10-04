@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-04T04:06:42+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-04T18:09:10+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 &lt;a href=&quot;https://readthedocs.org&quot;&gt;Read the Docs&lt;/a&gt; 上。但是还有一些问题。&lt;/p&gt;
@@ -91,7 +91,7 @@
 &lt;p&gt;google 的站内搜索。但是 google 是一个商业公司。有的人可能会浑身不自在，如果他用一个广告公司的搜索。虽然在这个世界上，我们和商业公司有千丝万缕的联系，但是，哎。让我们留一点理想主义的念想吧。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;直接用 Read the Docs 的一揽子方案。它和 &lt;a href=&quot;https://travis-ci.org&quot;&gt;travis&lt;/a&gt; 这些服务很像，它内置了 CI 的功能，也能帮着 host 这些静态页面。对我们很合适。但是它的 build 流程是很死的。看看它的https://docs.readthedocs.io/en/stable/config-file/v2.html[配置文件]就知道了。这是为一个纯 Python 项目度身定制的。我们后文分析这个限制的影响。&lt;/p&gt;
+&lt;p&gt;直接用 Read the Docs 的一揽子方案。它和 &lt;a href=&quot;https://travis-ci.org&quot;&gt;travis&lt;/a&gt; 这些服务很像，它内置了 CI 的功能，也能帮着 host 这些静态页面。对我们很合适。但是它的 build 流程是很死的。看看它的&lt;a href=&quot;https://docs.readthedocs.io/en/stable/config-file/v2.html&quot;&gt;配置文件&lt;/a&gt;就知道了。这是为一个纯 Python 项目度身定制的。我们后文分析这个限制的影响。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;其他 sphinx search plugin。找了一圈，没有不收费的。功能比较好的也需要自己搭建 &lt;a href=&quot;https://www.elastic.co/products/elasticsearch&quot;&gt;Elasticsearch&lt;/a&gt;。RTD 开源了他们的&lt;a href=&quot;https://github.com/readthedocs/readthedocs-sphinx-search&quot;&gt;方案&lt;/a&gt;。但是一想到要挠我们实验室小哥的门，我就知趣地把爪子收起来了。&lt;/p&gt;
@@ -133,7 +133,7 @@
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是对于 Python API 来说，以 python-rados 为例，它是用 &lt;a href=&quot;https://cython.org&quot;&gt;Cython&lt;/a&gt; 编写的 Python 扩展，它的底层则是 librados C API。我们编译文档的时候其实并不需要一个功能上完备的 librados，我们只需要让 sphinx 能导入 python-rados 就行了。sphinx 并不会真正运行 python-rados 的函数，它只会读取代码里面的元数据。所以 Ceph 里面用了一个比较取巧的https://github.com/ceph/ceph/blob/master/admin/build-doc[方法]。&lt;/p&gt;
+&lt;p&gt;但是对于 Python API 来说，以 python-rados 为例，它是用 &lt;a href=&quot;https://cython.org&quot;&gt;Cython&lt;/a&gt; 编写的 Python 扩展，它的底层则是 librados C API。我们编译文档的时候其实并不需要一个功能上完备的 librados，我们只需要让 sphinx 能导入 python-rados 就行了。sphinx 并不会真正运行 python-rados 的函数，它只会读取代码里面的元数据。所以 Ceph 里面用了一个比较取巧的&lt;a href=&quot;https://github.com/ceph/ceph/blob/master/admin/build-doc&quot;&gt;方法&lt;/a&gt;。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot;&gt;
@@ -186,6 +186,12 @@
 &lt;p&gt;让 &lt;code&gt;ceph/admin/doc-read-the-docs.txt&lt;/code&gt; 安装 python-rados， python-cephfs 等。&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;加入-stub-函数&quot;&gt;加入 stub 函数&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;换句话说，就是条件编译。在编译文档的时候，在 &lt;code&gt;rados.pyx&lt;/code&gt; 中实现所有使用到的 C 函数。不过需要注意，这些函数也应该暴露出来给 python-cephfs 它们用。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect2&quot;&gt;
