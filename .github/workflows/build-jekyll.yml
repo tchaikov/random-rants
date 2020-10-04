@@ -24,8 +24,6 @@ jobs:
         with:
           enable_cache: true
           format_output: true
-          prettier_ignore: |
-            archive.html
           jekyll_src: '.'
           gem_src: '.'
           key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
