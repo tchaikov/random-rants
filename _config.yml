@@ -17,9 +17,6 @@ author:
 repository: tchaikov/random-rants
 repository_tree: master
 
-mathjax: true
-mathjax_autoNumber: false
-
 paginate: 8
 paginate_path: /page:num
 
