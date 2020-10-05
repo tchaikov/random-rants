@@ -637,8 +637,10 @@
                                     这个序列。搜索返回了 32 篇文章，后 31 篇
                                     文章被检索到的关键字就是
                                     unsupported。这个很可能不是我们想要的。而
-                                    RTD
-                                    的多词搜索的https://docs.ceph.com/en/latest/search/?q=fuse+support[结果]要好很多。对于不挑剔的读者基本上够用了。
+                                    RTD 的多词搜索的<a
+                                      href="https://docs.ceph.com/en/latest/search/?q=fuse+support"
+                                      >结果</a
+                                    >要好很多。对于不挑剔的读者基本上够用了。
                                   </p>
                                 </div>
                                 <div class="paragraph">
@@ -673,7 +675,7 @@
                                         <a href="https://travis-ci.org"
                                           >travis</a
                                         >
-                                        这些服务很像，它内置了 CI
+                                        这些服务很像，不仅内置了 CI
                                         的功能，也能帮着 host
                                         这些静态页面。对我们很合适。但是它的
                                         build 流程是很死的。看看它的<a
@@ -714,8 +716,8 @@
                                     <li>
                                       <p>
                                         只能通过
-                                        <code>requirements.txt</code> 安装
-                                        python 包。那么
+                                        <code>requirements.txt</code>
+                                        安装第三方依赖。那么
                                         <code>requirements.txt</code>
                                         到底是啥呢？它是 pip 用来给
                                         <code>pip install</code> 传参数的。
@@ -723,6 +725,12 @@
                                           href="https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format"
                                           >文档</a
                                         >说得明白。
+                                      </p>
+                                    </li>
+                                    <li>
+                                      <p>
+                                        也可以用 setuptools 或者 pip
+                                        安装源码里面的 Python 项目。
                                       </p>
                                     </li>
                                     <li>
@@ -867,6 +875,16 @@
                                     </li>
                                   </ol>
                                 </div>
+                                <div class="imageblock">
+                                  <div class="content">
+                                    <img
+                                      src="/images/diag-96138b8ea2c9e8138bf90db3d0aa3db0.png"
+                                      alt="Diagram"
+                                      width="1010"
+                                      height="238"
+                                    />
+                                  </div>
+                                </div>
                                 <div class="paragraph">
                                   <p>
                                     OpenAPI 文档的 yaml
@@ -925,11 +943,12 @@
                                   <h3 id="加入-stub-函数">加入 stub 函数</h3>
                                   <div class="paragraph">
                                     <p>
-                                      换句话说，就是条件编译。在编译文档的时候，在
+                                      在编译文档的时候，在
                                       <code>rados.pyx</code> 中实现所有使用到的
                                       C
                                       函数。不过需要注意，这些函数也应该暴露出来给
-                                      python-cephfs 它们用。
+                                      python-cephfs
+                                      它们用。当然，只有在编译文档的时候才这么做。
                                     </p>
                                   </div>
                                 </div>

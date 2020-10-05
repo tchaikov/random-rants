@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-04T18:09:10+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-05T02:08:38+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Read the Docs 之路</title><link href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html" rel="alternate" type="text/html" title="Read the Docs 之路" /><published>2020-10-02T00:00:00+00:00</published><updated>2020-10-02T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/02/cython-doc</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/02/cython-doc.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 &lt;a href=&quot;https://readthedocs.org&quot;&gt;Read the Docs&lt;/a&gt; 上。但是还有一些问题。&lt;/p&gt;
@@ -72,7 +72,7 @@
 &lt;/blockquote&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;通篇没有出现 &quot;fuse support&quot; 这个序列。搜索返回了 32 篇文章，后 31 篇 文章被检索到的关键字就是 unsupported。这个很可能不是我们想要的。而 RTD 的多词搜索的https://docs.ceph.com/en/latest/search/?q=fuse+support[结果]要好很多。对于不挑剔的读者基本上够用了。&lt;/p&gt;
+&lt;p&gt;通篇没有出现 &quot;fuse support&quot; 这个序列。搜索返回了 32 篇文章，后 31 篇 文章被检索到的关键字就是 unsupported。这个很可能不是我们想要的。而 RTD 的多词搜索的&lt;a href=&quot;https://docs.ceph.com/en/latest/search/?q=fuse+support&quot;&gt;结果&lt;/a&gt;要好很多。对于不挑剔的读者基本上够用了。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;那为什么要纠结多词搜索呢？因为我们很多命令是多个单词构成的。比如说&lt;/p&gt;
@@ -91,7 +91,7 @@
 &lt;p&gt;google 的站内搜索。但是 google 是一个商业公司。有的人可能会浑身不自在，如果他用一个广告公司的搜索。虽然在这个世界上，我们和商业公司有千丝万缕的联系，但是，哎。让我们留一点理想主义的念想吧。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;直接用 Read the Docs 的一揽子方案。它和 &lt;a href=&quot;https://travis-ci.org&quot;&gt;travis&lt;/a&gt; 这些服务很像，它内置了 CI 的功能，也能帮着 host 这些静态页面。对我们很合适。但是它的 build 流程是很死的。看看它的&lt;a href=&quot;https://docs.readthedocs.io/en/stable/config-file/v2.html&quot;&gt;配置文件&lt;/a&gt;就知道了。这是为一个纯 Python 项目度身定制的。我们后文分析这个限制的影响。&lt;/p&gt;
+&lt;p&gt;直接用 Read the Docs 的一揽子方案。它和 &lt;a href=&quot;https://travis-ci.org&quot;&gt;travis&lt;/a&gt; 这些服务很像，不仅内置了 CI 的功能，也能帮着 host 这些静态页面。对我们很合适。但是它的 build 流程是很死的。看看它的&lt;a href=&quot;https://docs.readthedocs.io/en/stable/config-file/v2.html&quot;&gt;配置文件&lt;/a&gt;就知道了。这是为一个纯 Python 项目度身定制的。我们后文分析这个限制的影响。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;其他 sphinx search plugin。找了一圈，没有不收费的。功能比较好的也需要自己搭建 &lt;a href=&quot;https://www.elastic.co/products/elasticsearch&quot;&gt;Elasticsearch&lt;/a&gt;。RTD 开源了他们的&lt;a href=&quot;https://github.com/readthedocs/readthedocs-sphinx-search&quot;&gt;方案&lt;/a&gt;。但是一想到要挠我们实验室小哥的门，我就知趣地把爪子收起来了。&lt;/p&gt;
@@ -109,7 +109,10 @@
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;只能通过 &lt;code&gt;requirements.txt&lt;/code&gt; 安装 python 包。那么 &lt;code&gt;requirements.txt&lt;/code&gt; 到底是啥呢？它是 pip 用来给 &lt;code&gt;pip install&lt;/code&gt; 传参数的。 &lt;a href=&quot;https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format&quot;&gt;文档&lt;/a&gt;说得明白。&lt;/p&gt;
+&lt;p&gt;只能通过 &lt;code&gt;requirements.txt&lt;/code&gt; 安装第三方依赖。那么 &lt;code&gt;requirements.txt&lt;/code&gt; 到底是啥呢？它是 pip 用来给 &lt;code&gt;pip install&lt;/code&gt; 传参数的。 &lt;a href=&quot;https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format&quot;&gt;文档&lt;/a&gt;说得明白。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;也可以用 setuptools 或者 pip 安装源码里面的 Python 项目。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;没有预处理阶段。&lt;code&gt;pip&lt;/code&gt; 装好了，直接就是 &lt;code&gt;sphinx-build&lt;/code&gt;。&lt;/p&gt;
@@ -161,6 +164,11 @@
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/images/diag-96138b8ea2c9e8138bf90db3d0aa3db0.png&quot; alt=&quot;Diagram&quot; width=&quot;1010&quot; height=&quot;238&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;OpenAPI 文档的 yaml 文件的产生过程要简单很多，但是也需要使用我们自己编写的 python 脚本。但是 RTD 的 &lt;code&gt;requirements.txt&lt;/code&gt; 没法实现这么复杂的预处理逻辑。&lt;/p&gt;
 &lt;/div&gt;
@@ -191,7 +199,7 @@
 &lt;div class=&quot;sect2&quot;&gt;
 &lt;h3 id=&quot;加入-stub-函数&quot;&gt;加入 stub 函数&lt;/h3&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;换句话说，就是条件编译。在编译文档的时候，在 &lt;code&gt;rados.pyx&lt;/code&gt; 中实现所有使用到的 C 函数。不过需要注意，这些函数也应该暴露出来给 python-cephfs 它们用。&lt;/p&gt;
+&lt;p&gt;在编译文档的时候，在 &lt;code&gt;rados.pyx&lt;/code&gt; 中实现所有使用到的 C 函数。不过需要注意，这些函数也应该暴露出来给 python-cephfs 它们用。当然，只有在编译文档的时候才这么做。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect2&quot;&gt;
