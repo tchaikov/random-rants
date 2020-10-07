@@ -1,1923 +1,714 @@
 <!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.2.6
+    Copyright 2016-2020 Sylhare
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, user-scalable=no"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
     />
-    <title>RADOS 里的顺序 - some random rants</title>
 
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- Canonical -->
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html"
+    />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+
+    <!-- KaTeX 0.12.0 -->
+    <!-- if you have any issue check https://github.com/KaTeX/KaTeX -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+    <title>RADOS 里的顺序 | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="RADOS 里的顺序" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
     <meta
       name="description"
+      content="乱序和并发的问题无处不在，Ceph 里面也是这样。"
+    />
+    <meta
+      property="og:description"
       content="乱序和并发的问题无处不在，Ceph 里面也是这样。"
     />
     <link
       rel="canonical"
       href="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html"
     />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2020-09-20T00:00:00+00:00"
+    />
+    <script type="application/ld+json">
+      {
+        "description": "乱序和并发的问题无处不在，Ceph 里面也是这样。",
+        "url": "https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html",
+        "@type": "BlogPosting",
+        "headline": "RADOS 里的顺序",
+        "dateModified": "2020-09-20T00:00:00+00:00",
+        "datePublished": "2020-09-20T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html"
+        },
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
     <link
+      type="application/atom+xml"
       rel="alternate"
-      type="application/rss+xml"
+      href="https://blog.k3fu.xyz/feed.xml"
       title="some random rants"
-      href="/feed.xml"
     />
-    <!-- start favicons snippet, use https://realfavicongenerator.net/ -->
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="/assets/apple-touch-icon.png"
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="RADOS 里的顺序" />
+    <meta
+      name="twitter:description"
+      content="乱序和并发的问题无处不在，Ceph 里面也是这样。RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义集群。比如说数据保存在 RADOS 集群里。API。比如说，大家提到 librados，可能就是说用来访问 RADOS 集群的 C API。RADOS 协议。librados 客户端要和集群通信，就..."
     />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/assets/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/assets/favicon-16x16.png"
-    />
-    <link rel="manifest" href="/assets/site.webmanifest" />
-    <link
-      rel="mask-icon"
-      href="/assets/safari-pinned-tab.svg"
-      color="#fc4d50"
-    />
-    <link rel="shortcut icon" href="/assets/favicon.ico" />
 
-    <meta name="msapplication-TileColor" content="#ffc40d" />
-    <meta name="msapplication-config" content="/assets/browserconfig.xml" />
-
-    <meta name="theme-color" content="#ffffff" />
-    <!-- end favicons snippet -->
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css"
-    />
-    <!-- start custom head snippets -->
-
-    <!-- end custom head snippets -->
-    <script>
-      (function () {
-        window.isArray = function (val) {
-          return Object.prototype.toString.call(val) === "[object Array]";
-        };
-        window.isString = function (val) {
-          return typeof val === "string";
-        };
-
-        window.hasEvent = function (event) {
-          return "on".concat(event) in window.document;
-        };
-
-        window.isOverallScroller = function (node) {
-          return (
-            node === document.documentElement ||
-            node === document.body ||
-            node === window
-          );
-        };
-
-        window.isFormElement = function (node) {
-          var tagName = node.tagName;
-          return (
-            tagName === "INPUT" ||
-            tagName === "SELECT" ||
-            tagName === "TEXTAREA"
-          );
-        };
-
-        window.pageLoad = (function () {
-          var loaded = false,
-            cbs = [];
-          window.addEventListener("load", function () {
-            var i;
-            loaded = true;
-            if (cbs.length > 0) {
-              for (i = 0; i < cbs.length; i++) {
-                cbs[i]();
-              }
-            }
-          });
-          return {
-            then: function (cb) {
-              cb && (loaded ? cb() : cbs.push(cb));
-            },
-          };
-        })();
-      })();
-      (function () {
-        window.throttle = function (func, wait) {
-          var args,
-            result,
-            thisArg,
-            timeoutId,
-            lastCalled = 0;
-
-          function trailingCall() {
-            lastCalled = new Date();
-            timeoutId = null;
-            result = func.apply(thisArg, args);
-          }
-          return function () {
-            var now = new Date(),
-              remaining = wait - (now - lastCalled);
-
-            args = arguments;
-            thisArg = this;
-
-            if (remaining <= 0) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-              lastCalled = now;
-              result = func.apply(thisArg, args);
-            } else if (!timeoutId) {
-              timeoutId = setTimeout(trailingCall, remaining);
-            }
-            return result;
-          };
-        };
-      })();
-      (function () {
-        var Set = (function () {
-          var add = function (item) {
-            var i,
-              data = this._data;
-            for (i = 0; i < data.length; i++) {
-              if (data[i] === item) {
-                return;
-              }
-            }
-            this.size++;
-            data.push(item);
-            return data;
-          };
-
-          var Set = function (data) {
-            this.size = 0;
-            this._data = [];
-            var i;
-            if (data.length > 0) {
-              for (i = 0; i < data.length; i++) {
-                add.call(this, data[i]);
-              }
-            }
-          };
-          Set.prototype.add = add;
-          Set.prototype.get = function (index) {
-            return this._data[index];
-          };
-          Set.prototype.has = function (item) {
-            var i,
-              data = this._data;
-            for (i = 0; i < data.length; i++) {
-              if (this.get(i) === item) {
-                return true;
-              }
-            }
-            return false;
-          };
-          Set.prototype.is = function (map) {
-            if (map._data.length !== this._data.length) {
-              return false;
-            }
-            var i,
-              j,
-              flag,
-              tData = this._data,
-              mData = map._data;
-            for (i = 0; i < tData.length; i++) {
-              for (flag = false, j = 0; j < mData.length; j++) {
-                if (tData[i] === mData[j]) {
-                  flag = true;
-                  break;
-                }
-              }
-              if (!flag) {
-                return false;
-              }
-            }
-            return true;
-          };
-          Set.prototype.values = function () {
-            return this._data;
-          };
-          return Set;
-        })();
-
-        window.Lazyload = (function (doc) {
-          var queue = { js: [], css: [] },
-            sources = { js: {}, css: {} },
-            context = this;
-          var createNode = function (name, attrs) {
-            var node = doc.createElement(name),
-              attr;
-            for (attr in attrs) {
-              if (attrs.hasOwnProperty(attr)) {
-                node.setAttribute(attr, attrs[attr]);
-              }
-            }
-            return node;
-          };
-          var end = function (type, url) {
-            var s, q, qi, cbs, i, j, cur, val, flag;
-            if (type === "js" || type === "css") {
-              (s = sources[type]), (q = queue[type]);
-              s[url] = true;
-              for (i = 0; i < q.length; i++) {
-                cur = q[i];
-                if (cur.urls.has(url)) {
-                  (qi = cur), (val = qi.urls.values());
-                  qi && (cbs = qi.callbacks);
-                  for (flag = true, j = 0; j < val.length; j++) {
-                    cur = val[j];
-                    if (!s[cur]) {
-                      flag = false;
-                    }
-                  }
-                  if (flag && cbs && cbs.length > 0) {
-                    for (j = 0; j < cbs.length; j++) {
-                      cbs[j].call(context);
-                    }
-                    qi.load = true;
-                  }
-                }
-              }
-            }
-          };
-          var load = function (type, urls, callback) {
-            var s,
-              q,
-              qi,
-              node,
-              i,
-              cur,
-              _urls =
-                typeof urls === "string" ? new Set([urls]) : new Set(urls),
-              val,
-              url;
-            if (type === "js" || type === "css") {
-              (s = sources[type]), (q = queue[type]);
-              for (i = 0; i < q.length; i++) {
-                cur = q[i];
-                if (_urls.is(cur.urls)) {
-                  qi = cur;
-                  break;
-                }
-              }
-              val = _urls.values();
-              if (qi) {
-                callback && (qi.load || qi.callbacks.push(callback));
-                callback && qi.load && callback();
-              } else {
-                q.push({
-                  urls: _urls,
-                  callbacks: callback ? [callback] : [],
-                  load: false,
-                });
-                for (i = 0; i < val.length; i++) {
-                  (node = null), (url = val[i]);
-                  if (s[url] === undefined) {
-                    type === "js" &&
-                      (node = createNode("script", { src: url }));
-                    type === "css" &&
-                      (node = createNode("link", {
-                        rel: "stylesheet",
-                        href: url,
-                      }));
-                    if (node) {
-                      node.onload = (function (type, url) {
-                        return function () {
-                          end(type, url);
-                        };
-                      })(type, url);
-                      (doc.head || doc.body).appendChild(node);
-                      s[url] = false;
-                    }
-                  }
-                }
-              }
-            }
-          };
-          return {
-            js: function (url, callback) {
-              load("js", url, callback);
-            },
-            css: function (url, callback) {
-              load("css", url, callback);
-            },
-          };
-        })(this.document);
-      })();
-    </script>
-    <script>
-      (function () {
-        var TEXT_VARIABLES = {
-          version: "2.2.6",
-          sources: {
-            font_awesome:
-              "https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css",
-            jquery: "https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js",
-            leancloud_js_sdk:
-              "//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js",
-            chart: "https://cdn.bootcss.com/Chart.js/2.7.2/Chart.bundle.min.js",
-            gitalk: {
-              js: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.js",
-              css: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.css",
-            },
-            valine: "https://unpkg.com/valine/dist/Valine.min.js",
-            mathjax:
-              "https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML",
-            mermaid:
-              "https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js",
-          },
-          site: {
-            toc: {
-              selectors: "h1,h2,h3",
-            },
-          },
-          paths: {
-            search_js: "/assets/search.js",
-          },
-        };
-        window.TEXT_VARIABLES = TEXT_VARIABLES;
-      })();
-    </script>
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
   </head>
+
   <body>
-    <div class="root" data-is-touch="false">
-      <div class="layout--page js-page-root">
-        <div
-          class="page__main js-page-main page__viewport has-aside cell cell--auto"
-        >
-          <div class="page__main-inner">
-            <div class="page__header d-print-none">
-              <header class="header">
-                <div class="main">
-                  <div class="header__title">
-                    <div class="header__brand">
-                      <svg
-                        version="1.1"
-                        xmlns="http://www.w3.org/2000/svg"
-                        xmlns:xlink="http://www.w3.org/1999/xlink"
-                        x="0px"
-                        y="0px"
-                        width="24px"
-                        height="24px"
-                        viewBox="0 0 24 24"
-                      >
-                        <style type="text/css">
-                          .st0 {
-                            fill: #515151;
-                          }
-                        </style>
-                        <path
-                          class="st0"
-                          d="M1.7,22.3c5.7-5.7,11.3-5.7,17,0c3.3-3.3,3.5-5.3,0.8-6c2.7,0.7,3.5-1.1,2.3-5.6s-3.3-5.2-6.3-2.1
-	c3-3,2.3-5.2-2.1-6.3S7,1.8,7.7,4.6C7,1.8,5,2.1,1.7,5.3C7.3,11,7.3,16.7,1.7,22.3"
-                        />
-                      </svg>
-                      <a title="我的学习记录" href="/">some random rants</a>
-                    </div>
-                    <button
-                      class="button button--secondary button--circle search-button js-search-toggle"
-                    >
-                      <i class="fas fa-search"></i>
-                    </button>
-                  </div>
-                  <nav class="navigation">
-                    <ul>
-                      <li class="navigation__item">
-                        <a href="/archive.html">Archive</a>
-                      </li>
-                      <li class="navigation__item">
-                        <a href="/about.html">About</a>
-                      </li>
-                      <li>
-                        <button
-                          class="button button--secondary button--circle search-button js-search-toggle"
-                        >
-                          <i class="fas fa-search"></i>
-                        </button>
-                      </li>
-                    </ul>
-                  </nav>
-                </div>
-              </header>
-            </div>
-            <div class="page__content">
-              <div class="main">
-                <div class="grid grid--reverse">
-                  <div class="col-aside d-print-none js-col-aside">
-                    <aside class="page__aside js-page-aside">
-                      <div class="toc-aside js-toc-root"></div>
-                    </aside>
-                  </div>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <h1 class="site-title">
+          <a aria-label="some random rants" href="/">
+            some random rants
+          </a>
+        </h1>
+      </div>
 
-                  <div class="col-main cell cell--auto">
-                    <!-- start custom main top snippet -->
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fa fa-bars fa-lg"></i>
+        </a>
 
-                    <!-- end custom main top snippet -->
-                    <article itemscope itemtype="http://schema.org/Article">
-                      <div class="article__header">
-                        <header><h1>RADOS 里的顺序</h1></header>
-                      </div>
-                      <meta itemprop="headline" content="RADOS 里的顺序" />
-                      <div class="article__info clearfix">
-                        <ul class="left-col menu">
-                          <li>
-                            <a
-                              class="button button--secondary button--pill button--sm"
-                              href="/archive.html?tag=ceph"
-                              >ceph</a
-                            >
-                          </li>
-                        </ul>
-                        <ul class="right-col menu">
-                          <li>
-                            <i class="far fa-calendar-alt"></i>
-                            <span>Sep 20, 2020</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <meta itemprop="author" content="Kefu Chai" /><meta
-                        itemprop="datePublished"
-                        content="2020-09-20T00:00:00+00:00"
-                      />
-                      <meta itemprop="keywords" content="ceph" />
-                      <div class="js-article-content">
-                        <div class="layout--article">
-                          <!-- start custom article top snippet -->
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
 
-                          <!-- end custom article top snippet -->
-                          <div class="article__content" itemprop="articleBody">
-                            <div id="preamble">
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    乱序和并发的问题无处不在，Ceph
-                                    里面也是这样。
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    RADOS 是 Ceph
-                                    的基础。而它在不同的上下文中有不同的含义
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>
-                                        集群。比如说数据保存在 RADOS 集群里。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        API。比如说，大家提到
-                                        librados，可能就是说用来访问 RADOS
-                                        集群的 C API。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        RADOS 协议。librados
-                                        客户端要和集群通信，就基于这个协议。它包含着身份验证，鉴权，控制面的操作，以及
-                                        I/O，等等。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        一个叫做
-                                        <code>rados</code>
-                                        命令行工具。它可以说是 Ceph 的瑞士军刀。
-                                      </p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    这次我们从协议出发，讨论一下 OSD
-                                    对读写顺序的处理。它和前面的
-                                    <a
-                                      href="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html"
-                                      >多核和顺序</a
-                                    >
-                                    提到的乱序访问内存的问题非常相似。
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="librados-的访问顺序">
-                                librados 的访问顺序
-                              </h2>
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    客户端如果要访问集群中的数据，就需要向相关的
-                                    OSD 发送 <code>MOSDOp</code> 请求，OSD
-                                    则会用
-                                    <code>MOSDOpReply</code>
-                                    进行回应。它们两个是 RADOS
-                                    协议用来传输数据的很重要的消息类型。每个
-                                    <code>MOSDOp</code> 都包含
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>
-                                        指定要访问的
-                                        <code>hobject_t</code>。它包含 pool
-                                        ，对象的名字，对象的 snapid。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        一系列 <code>OSDOp</code>，这些 op
-                                        就像是一系列指令，不过它们的操作的对象是同一个。要是有写操作，那么写入的数据也放在这个
-                                        <code>MOSDOp</code>
-                                        里面，按照先后顺序，放在同一个 payload
-                                        里面，解码的时候分给各自的 op。
-                                      </p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>librados 为客户端提供了两种调用方式</p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>同步调用。</p>
-                                    </li>
-                                    <li>
-                                      <p>异步调用。</p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    其中，同步调用很好理解。客户端在发送完请求之后，就开始等待，直到收到
-                                    OSD
-                                    的回应。但是如果客户端选择使用异步调用的话，它就可以同时发送多个
-                                    <code>MOSDOp</code
-                                    >，而不用等待之前的请求返回。从 OSD
-                                    的角度来看，它有机会在同一时刻看到同一客户端先后发来的多个请求。不管如何，OSD
-                                    都有义务顺序执行这些请求，让客户端收到
-                                    <code>MOSDOpReply</code>
-                                    的顺序和它当初发送对应
-                                    <code>MOSDOp</code> 的顺序一致。Ceph
-                                    有个专门的测试，叫做
-                                    <code>ceph_test_rados</code
-                                    >。这个测试会检查客户端收到的回应的顺序是不是对应请求发出的顺序。换言之，如果某个客户端的请求序列是
-                                  </p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p>
-                                        <code
-                                          >req(write(offset=601750, len=535546,
-                                          payload))</code
-                                        >
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        <code
-                                          >req(write(offset=1929910, len=271840,
-                                          payload))</code
-                                        >
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        <code
-                                          >req(setxattr("header", payload),
-                                          truncate(size))</code
-                                        >
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        <code>req(read(offset=0, len=1))</code>
-                                      </p>
-                                    </li>
-                                  </ol>
-                                </div>
-                                <div class="paragraph">
-                                  <p>那么，OSD 的返回序列也应该是</p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p><code>ack(write)</code></p>
-                                    </li>
-                                    <li>
-                                      <p><code>ack(write)</code></p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        <code>ack([setxattr,truncate])</code>
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p><code>ack(read)</code></p>
-                                    </li>
-                                  </ol>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    虽然 Ceph
-                                    也可以不坚持顺序。我的理解是，sequential
-                                    consistency 是便于客户端编程的一个模型，所以
-                                    Ceph
-                                    选择顺序返回是很自然的事情。后来想了一下，对于
-                                    RBD
-                                    来说，如果系统先发了一个写请求，然后再发一个读请求，那么我们一定要先完成写请求吗？答案是&#8230;&#8203;&#8230;&#8203;哪有那么巧啊！"`我们`"在这里其实是某个特定的
-                                    OSD，这两个时间上相邻的请求，如果不是访问同一个对象，那么怎么会这么巧，这两个对象都被分配到同一个
-                                    OSD，而且先后被访问到。就好像你和大学室友在市郊的加油站排队的时候遇见了。如果是同一个对象，那么问题来了。RBD
-                                    的使用者为什么会有这种需求呢？先写一块数据，然后不等写完，开始读同一块数据，而且不关心这个读到的数据是不是之前写下去的。RBD
-                                    使用者一般来说 Linux
-                                    的本地文件系统，它们对一致性还是有要求的，所以一般不会忍受这种脏数据。所以，按照
-                                    RBD 的需求分析，这种 load-store
-                                    的乱序执行是没有意义的，而且是错误的。
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="osd-里的内存屏障">OSD 里的内存屏障</h2>
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    在 OSD 的这一边，它可能会看到多个
-                                    <code>MOSDOp</code>
-                                    同时访问一个对象。这些请求可能来自同一客户端，也可能来自不同的客户端。在保证原子性的前提下，为了提高并发度，我们要区别对待这些
-                                    <code>MOSDOp</code>
-                                    对应的事务。事务可以分为三种：
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>
-                                        只读。很明显这些事务不会改变对象本身，所以它们可以同时进行。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        只写。提到并发写，有人可能会有点犹豫。不过请不用担心，
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>读然后写或者写然后读。</p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    如果好几个连续的
-                                    <code>MOSDOp</code>
-                                    都只进行读操作，那么我们是可以同时处理它们的。只需要按照顺序把它们依次发送给
-                                    object store 就可以了。 我们把这叫做
-                                    pipelined read:
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-a99224d4dd4db9222fdf1fa7b08d2433.png"
-                                      alt="Diagram"
-                                      width="270"
-                                      height="196"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    我们甚至可以把这些读请求一起发给下面的
-                                    object store，让它酌情同步处理。
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>和 pipelined write:</p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-9f3a67ce734c30d7fc8ce845c11c280f.png"
-                                      alt="Diagram"
-                                      width="270"
-                                      height="196"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    object store
-                                    自然会把它们序列化，依次处理。因为在 object
-                                    store
-                                    里面也需要多个步骤才能完成一个写操作，所以把它当成一个流水线，提交多个操作更有利于提高并发。
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    但是如果某个请求里面既有写，又有读呢？感受一下：
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-0f01e1970eed4de70052781f9416b6bb.png"
-                                      alt="Diagram"
-                                      width="270"
-                                      height="196"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    第二个事务中所有的请求都是读操作。在客户端发送消息的顺序上，这个只读事务排在第一个只写的事务之后。
-                                    TCP 保证了 OSD
-                                    也是按照发送的顺序收到这两个消息的，但是在
-                                    OSD
-                                    这边，如果不加以限制的话，或者允许乱序执行的话，就会出现
-                                    store-load 重排的情况。因为在 Ceph
-                                    里面，读操作一般来说比写操作要快，因为读操作运气好的话，直接在缓存里面就能找到想要的数据，直接返回了。最不济，通过本机读几次磁盘，也能找到想要的数据。但是写操作不仅仅需要读本机磁盘，获得对象的元数据，还需要写本地磁盘，提交分布式事务，让其他副本也持久化，所以它的延迟比读请求是相对高一些的。如果我们放任自流，让两者的延迟决定谁先返回，不仅仅返回的顺序不对，返回的数据也可能是不正确的。如果我们希望实现一个严格的
-                                    sequential consistency 的系统，那么
-                                    <code>read.2</code> 就有义务体现
-                                    <code>write.1</code>
-                                    的结果。最简单的办法就是加上一个
-                                    sfence，保证
-                                    <code>read.2</code>
-                                    之前的写操作的事务提交完成。
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-5a3da3419ca32928b421e58a0b48950c.png"
-                                      alt="Diagram"
-                                      width="350"
-                                      height="154"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    解决了 store-load 重排，那么 load-store
-                                    呢？我们允许在
-                                    <code>read.2</code> 仍然进行的时候，开始执行
-                                    <code>write.3</code> 吗？这取决于下面 object
-                                    store 的处理顺序。我们假设这里使用的是
-                                    seastore。根据现在 seastore
-                                    的设计，要读取某个对象的指定 extent，需要
-                                  </p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p>
-                                        先根据索引 onode block 的 b+
-                                        树，找到这个对象 onode 所在的 block
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        每个对象自己又有一个 b+ 树管理各自的
-                                        extent，如果运气好的话，b+
-                                        树所有的叶子节点就内置在 onode 的 block
-                                        里面，但是如果这个对象比较大，或者
-                                        extent 的 b+
-                                        树还没有来得及压缩，那么它就会有一些
-                                        extent
-                                        是需要再查询几个中间节点才能知道具体的逻辑地址的
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        其实上层根据逻辑地址访问下面的物理介质，都需要先把逻辑地址翻译成物理地址，这个过程也需要查索引，也就是要用
-                                        LBA 树来查找。而 LBA
-                                        树的节点也是不一定都在内存里面。
-                                      </p>
-                                    </li>
-                                  </ol>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    而 <code>write.3</code> 所对应的 extent
-                                    相关的索引信息说不定就在内存里面，可以很快的找到，从而开始写日志。同时呢，<code
-                                      >read.2</code
-                                    >
-                                    虽然身为读操作，有可能就没那么好运，需要读多次磁盘，才能找到对应的物理地址。所以我们无法保证读操作肯定是比写操作先完成的，即使读操作比写操作先开始。而且，这里的
-                                    <code>read.2</code> 和
-                                    <code>write.3</code>
-                                    都各自包含了多个操作，任何一个操作都会成为瓶颈。所以在某种极端情况下可能会是这样
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-2046fc170102da8f2c2fadf620658ede.png"
-                                      alt="Diagram"
-                                      width="570"
-                                      height="266"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    在这个捏造的例子里面，<code>read.2.1</code>
-                                    拖慢了整个事务的后腿，<code>read.2</code>
-                                    是在 <code>write.3</code> 之前开始的，但却在
-                                    <code>write.3</code> 之后完成。这对于期望
-                                    sequential consistency
-                                    客户端显然无法接受。同时，我们还能想象一个更复杂的场景，因为每个读请求都会指定一个区间，告诉
-                                    OSD
-                                    自己希望读的偏移量和长度。但是这个区间可能会映射到对象的多个
-                                    extent，而每个 extent
-                                    的读延迟可能会不一样。倘若
-                                    <code>read.2.1</code>
-                                    指定的区间正好映射到某个 extent，而这个
-                                    extent 又正好和
-                                    <code>write.3.1</code> 所写的 extent
-                                    有重合呢？而且，请注意，例子里面
-                                    <code>write.3</code>
-                                    先结束，它的事务提交的时候，刷新了 OSD
-                                    内存里面所有相关的 extent 对应 block 的
-                                    cache。所以
-                                    <code>read.2.1</code> 有可能读到的是
-                                    <code>write.3</code>
-                                    所写的内容。更可怕的是，因为
-                                    <code>read.2</code> 读的是多个
-                                    extent，返回的 extent
-                                    中有的可能是新的，有的则是则是老的。所以这里还有一致性的问题。
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-c1e464af72f04d738cd8212925568050.png"
-                                      alt="Diagram"
-                                      width="290"
-                                      height="280"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    简单粗暴的办法就是在
-                                    <code>read.2</code> 之后直接加一个
-                                    lfence，确保所有的读请求都完成，防止乱序的发送，也避免读到不一致的数据。
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-c0e129fb86a39d2812f1a7d014909b72.png"
-                                      alt="Diagram"
-                                      width="440"
-                                      height="154"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    对于 erasure coded pool
-                                    这个问题更复杂一些。如果对象保存在 erasure
-                                    coded pool 里面，Ceph
-                                    在往里面写数据的时候，会
-                                  </p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p>把数据拆开成 <code>k</code> 等份</p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        再根据选择的算法计算出
-                                        <code>m</code> 个校验块
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>再把这些数据发往 m + k 个 OSD</p>
-                                    </li>
-                                  </ol>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    倘若写操作的偏移量不是 m x chunk size
-                                    对齐的，那么这个写操作就会升级成 rmw (read
-                                    modifiy write)
-                                    操作，因为它需要把自己少的那部分先读出来，解码，然后再和自己的没对齐的部分拼起来再重新拆分编码。
-                                  </p>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-4e96006f417439ae3035af811f4d00f9.png"
-                                      alt="Diagram"
-                                      width="610"
-                                      height="196"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    在上图中，在编码的时候产生了 6 块数据，其中
-                                    4 块是原始数据，2
-                                    块是校验数据。为了修改这个对象，而修改的位置正好落在了
-                                    3
-                                    里面，我们必须把整个数据都读进来，然后再把写请求的数据嫁接到
-                                    3 的对应位置，重新编码。得到被修改过的 3
-                                    和全新 4，以及融合了老数据和新数据的 5 和
-                                    6。正因为 erasure coded 的写操作事实上包含了
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>相邻区域的读操作</p>
-                                    </li>
-                                    <li>
-                                      <p>指定区域的写操作</p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    所以它无法和其他的写操作在对象层面上同时进行。除非我们实现了更细粒度的访问隔离控制，确保事务的独立性。当然我们目前没有这么做并不意味着不可能，而是因为这样会比较复杂。因为每个写的事务都会涉及多个
-                                    extent。extent 可能会含有多个
-                                    stripe。两个写事务之间没有读写依赖的话，那么完全可以一起执行。也就是说，如果事务
-                                    A 不会写到事务 B
-                                    读取的数据，反之亦然，那么我们就可以认为两者是独立的。然是这需要在往下发送写请求之前，先把这些关系先分析清楚才能决定。这个可能太复杂了。而且得不偿失，以
-                                    RBD 为例，允许并发写一个 block
-                                    的请求的可能并不大。所以我们还是选择直接加
-                                    lfence。
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    在 crimson 里面使用了一个
-                                    <code>shared_mutex</code> 的变形
-                                    <code>tri_mutex</code>
-                                    来解决这个问题。常规的
-                                    <code>shared_mutex</code>
-                                    是一个读写锁，允许多个读者，或者单个写者。<code
-                                      >tri_mutex</code
-                                    >
-                                    借用了 mutex 的名字，其实它实现的是自动添加
-                                    sfence 和 lfence
-                                    的功能。它维护着一个等待者的队列，如果有新的请求进来，<code
-                                      >tri_mutex</code
-                                    >
-                                    就看看这个请求和当前的请求是不是能一起执行，如果不能的话，就进入队列，等到现在所有正在执行的请求结束之后才能开始；如果可以的话，就直接放行。从前面的讨论，可以知道我们有下面这个规则：
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>读操作可以和读操作并行</p>
-                                    </li>
-                                    <li>
-                                      <p>写操作可以和写操作并行</p>
-                                    </li>
-                                    <li>
-                                      <p>RMW 不能和任何操作并行</p>
-                                    </li>
-                                  </ul>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="d-print-none">
-                            <footer class="article__footer">
-                              <meta
-                                itemprop="dateModified"
-                                content="2020-09-20T00:00:00+00:00"
-                              /><!-- start custom article footer snippet -->
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fa fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
 
-                              <!-- end custom article footer snippet -->
-                              <div class="article__license"></div>
-                            </footer>
-                            <div class="article__section-navigator clearfix">
-                              <div class="previous">
-                                <span>PREVIOUS</span
-                                ><a href="/2020/09/05/my-blog.html"
-                                  >博客维护指南</a
-                                >
-                              </div>
-                              <div class="next">
-                                <span>NEXT</span
-                                ><a href="/2020/09/30/error-code.html"
-                                  >std::error_code</a
-                                >
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fa fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
 
-                        <script>
-                          (function () {
-                            var SOURCES = window.TEXT_VARIABLES.sources;
-                            window.Lazyload.js(SOURCES.jquery, function () {
-                              $(function () {
-                                var $this, $scroll;
-                                var $articleContent = $(".js-article-content");
-                                var hasSidebar = $(".js-page-root").hasClass(
-                                  "layout--page--sidebar"
-                                );
-                                var scroll = hasSidebar
-                                  ? ".js-page-main"
-                                  : "html, body";
-                                $scroll = $(scroll);
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1 id="RADOS+%E9%87%8C%E7%9A%84%E9%A1%BA%E5%BA%8F" class="title">
+              RADOS 里的顺序
+            </h1>
 
-                                $articleContent
-                                  .find(".highlight")
-                                  .each(function () {
-                                    $this = $(this);
-                                    $this.attr(
-                                      "data-lang",
-                                      $this.find("code").attr("data-lang")
-                                    );
-                                  });
-                                $articleContent
-                                  .find(
-                                    "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
-                                  )
-                                  .each(function () {
-                                    $this = $(this);
-                                    $this.append(
-                                      $(
-                                        '<a class="anchor d-print-none" aria-hidden="true"></a>'
-                                      ).html('<i class="fas fa-anchor"></i>')
-                                    );
-                                  });
-                                $articleContent.on(
-                                  "click",
-                                  ".anchor",
-                                  function () {
-                                    $scroll.scrollToAnchor(
-                                      "#" + $(this).parent().attr("id"),
-                                      400
-                                    );
-                                  }
-                                );
-                              });
-                            });
-                          })();
-                        </script>
-                      </div>
-                      <section class="page__comments d-print-none"></section>
-                    </article>
-                    <!-- start custom main bottom snippet -->
-
-                    <!-- end custom main bottom snippet -->
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="page__footer d-print-none">
-              <footer class="footer py-4 js-page-footer">
-                <div class="main">
-                  <div itemscope itemtype="http://schema.org/Person">
-                    <meta itemprop="name" content="Kefu Chai" /><meta
-                      itemprop="url"
-                      content="https://blog.k3fu.xyz"
-                    /><meta
-                      itemprop="description"
-                      content="yet another lamer"
-                    />
-                    <div class="footer__author-links">
-                      <div class="author-links">
-                        <ul class="menu menu--nowrap menu--inline">
-                          <link itemprop="url" href="https://blog.k3fu.xyz" />
-                          <li title="Send me an Email.">
-                            <a
-                              class="button button--circle mail-button"
-                              itemprop="email"
-                              href="mailto:tchaikov@gmail.com"
-                              target="_blank"
-                            >
-                              <i class="fas fa-envelope"></i>
-                            </a>
-                          </li>
-
-                          <li title="Follow me on Github.">
-                            <a
-                              class="button button--circle github-button"
-                              itemprop="sameAs"
-                              href="https://github.com/tchaikov"
-                              target="_blank"
-                            >
-                              <div class="icon">
-                                <svg
-                                  fill="#000000"
-                                  width="24px"
-                                  height="24px"
-                                  viewBox="0 0 1024 1024"
-                                  version="1.1"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    class="svgpath"
-                                    data-index="path_0"
-                                    fill="#272636"
-                                    d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z"
-                                  />
-                                </svg>
-                              </div>
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="site-info mt-2">
-                    <div>
-                      © some random rants 2020, Powered by
-                      <a
-                        title="Jekyll is a simple, blog-aware, static site generator."
-                        href="http://jekyllrb.com/"
-                        >Jekyll</a
-                      >
-                      &
-                      <a
-                        title="TeXt is a super customizable Jekyll theme."
-                        href="https://github.com/kitian616/jekyll-TeXt-theme"
-                        >TeXt Theme</a
-                      >.
-                    </div>
-                  </div>
-                </div>
-              </footer>
+            <div class="post-info">
+              <p class="meta">
+                September 20, 2020
+              </p>
             </div>
           </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>乱序和并发的问题无处不在，Ceph 里面也是这样。</p>
+              </div>
+              <div class="paragraph">
+                <p>RADOS 是 Ceph 的基础。而它在不同的上下文中有不同的含义</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>集群。比如说数据保存在 RADOS 集群里。</p>
+                  </li>
+                  <li>
+                    <p>
+                      API。比如说，大家提到 librados，可能就是说用来访问 RADOS
+                      集群的 C API。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      RADOS 协议。librados
+                      客户端要和集群通信，就基于这个协议。它包含着身份验证，鉴权，控制面的操作，以及
+                      I/O，等等。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      一个叫做 <code>rados</code> 命令行工具。它可以说是 Ceph
+                      的瑞士军刀。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  这次我们从协议出发，讨论一下 OSD 对读写顺序的处理。它和前面的
+                  <a
+                    href="https://blog.k3fu.xyz/arch/2020/08/10/memory-ordering.html"
+                    >多核和顺序</a
+                  >
+                  提到的乱序访问内存的问题非常相似。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="librados-的访问顺序">librados 的访问顺序</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  客户端如果要访问集群中的数据，就需要向相关的 OSD 发送
+                  <code>MOSDOp</code> 请求，OSD 则会用
+                  <code>MOSDOpReply</code> 进行回应。它们两个是 RADOS
+                  协议用来传输数据的很重要的消息类型。每个
+                  <code>MOSDOp</code> 都包含
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      指定要访问的 <code>hobject_t</code>。它包含 pool
+                      ，对象的名字，对象的 snapid。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      一系列 <code>OSDOp</code>，这些 op
+                      就像是一系列指令，不过它们的操作的对象是同一个。要是有写操作，那么写入的数据也放在这个
+                      <code>MOSDOp</code> 里面，按照先后顺序，放在同一个 payload
+                      里面，解码的时候分给各自的 op。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>librados 为客户端提供了两种调用方式</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>同步调用。</p>
+                  </li>
+                  <li>
+                    <p>异步调用。</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  其中，同步调用很好理解。客户端在发送完请求之后，就开始等待，直到收到
+                  OSD
+                  的回应。但是如果客户端选择使用异步调用的话，它就可以同时发送多个
+                  <code>MOSDOp</code>，而不用等待之前的请求返回。从 OSD
+                  的角度来看，它有机会在同一时刻看到同一客户端先后发来的多个请求。不管如何，OSD
+                  都有义务顺序执行这些请求，让客户端收到
+                  <code>MOSDOpReply</code> 的顺序和它当初发送对应
+                  <code>MOSDOp</code> 的顺序一致。Ceph 有个专门的测试，叫做
+                  <code>ceph_test_rados</code
+                  >。这个测试会检查客户端收到的回应的顺序是不是对应请求发出的顺序。换言之，如果某个客户端的请求序列是
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      <code
+                        >req(write(offset=601750, len=535546, payload))</code
+                      >
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code
+                        >req(write(offset=1929910, len=271840, payload))</code
+                      >
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code
+                        >req(setxattr("header", payload), truncate(size))</code
+                      >
+                    </p>
+                  </li>
+                  <li>
+                    <p><code>req(read(offset=0, len=1))</code></p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>那么，OSD 的返回序列也应该是</p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p><code>ack(write)</code></p>
+                  </li>
+                  <li>
+                    <p><code>ack(write)</code></p>
+                  </li>
+                  <li>
+                    <p><code>ack([setxattr,truncate])</code></p>
+                  </li>
+                  <li>
+                    <p><code>ack(read)</code></p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  虽然 Ceph 也可以不坚持顺序。我的理解是，sequential consistency
+                  是便于客户端编程的一个模型，所以 Ceph
+                  选择顺序返回是很自然的事情。后来想了一下，对于 RBD
+                  来说，如果系统先发了一个写请求，然后再发一个读请求，那么我们一定要先完成写请求吗？答案是&#8230;&#8203;&#8230;&#8203;哪有那么巧啊！"`我们`"在这里其实是某个特定的
+                  OSD，这两个时间上相邻的请求，如果不是访问同一个对象，那么怎么会这么巧，这两个对象都被分配到同一个
+                  OSD，而且先后被访问到。就好像你和大学室友在市郊的加油站排队的时候遇见了。如果是同一个对象，那么问题来了。RBD
+                  的使用者为什么会有这种需求呢？先写一块数据，然后不等写完，开始读同一块数据，而且不关心这个读到的数据是不是之前写下去的。RBD
+                  使用者一般来说 Linux
+                  的本地文件系统，它们对一致性还是有要求的，所以一般不会忍受这种脏数据。所以，按照
+                  RBD 的需求分析，这种 load-store
+                  的乱序执行是没有意义的，而且是错误的。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="osd-里的内存屏障">OSD 里的内存屏障</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  在 OSD 的这一边，它可能会看到多个
+                  <code>MOSDOp</code>
+                  同时访问一个对象。这些请求可能来自同一客户端，也可能来自不同的客户端。在保证原子性的前提下，为了提高并发度，我们要区别对待这些
+                  <code>MOSDOp</code> 对应的事务。事务可以分为三种：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      只读。很明显这些事务不会改变对象本身，所以它们可以同时进行。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      只写。提到并发写，有人可能会有点犹豫。不过请不用担心，
+                    </p>
+                  </li>
+                  <li>
+                    <p>读然后写或者写然后读。</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果好几个连续的
+                  <code>MOSDOp</code>
+                  都只进行读操作，那么我们是可以同时处理它们的。只需要按照顺序把它们依次发送给
+                  object store 就可以了。 我们把这叫做 pipelined read:
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-a99224d4dd4db9222fdf1fa7b08d2433.png"
+                    alt="Diagram"
+                    width="270"
+                    height="196"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  我们甚至可以把这些读请求一起发给下面的 object
+                  store，让它酌情同步处理。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>和 pipelined write:</p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-9f3a67ce734c30d7fc8ce845c11c280f.png"
+                    alt="Diagram"
+                    width="270"
+                    height="196"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  object store 自然会把它们序列化，依次处理。因为在 object store
+                  里面也需要多个步骤才能完成一个写操作，所以把它当成一个流水线，提交多个操作更有利于提高并发。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>但是如果某个请求里面既有写，又有读呢？感受一下：</p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-0f01e1970eed4de70052781f9416b6bb.png"
+                    alt="Diagram"
+                    width="270"
+                    height="196"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  第二个事务中所有的请求都是读操作。在客户端发送消息的顺序上，这个只读事务排在第一个只写的事务之后。
+                  TCP 保证了 OSD 也是按照发送的顺序收到这两个消息的，但是在 OSD
+                  这边，如果不加以限制的话，或者允许乱序执行的话，就会出现
+                  store-load 重排的情况。因为在 Ceph
+                  里面，读操作一般来说比写操作要快，因为读操作运气好的话，直接在缓存里面就能找到想要的数据，直接返回了。最不济，通过本机读几次磁盘，也能找到想要的数据。但是写操作不仅仅需要读本机磁盘，获得对象的元数据，还需要写本地磁盘，提交分布式事务，让其他副本也持久化，所以它的延迟比读请求是相对高一些的。如果我们放任自流，让两者的延迟决定谁先返回，不仅仅返回的顺序不对，返回的数据也可能是不正确的。如果我们希望实现一个严格的
+                  sequential consistency 的系统，那么
+                  <code>read.2</code> 就有义务体现
+                  <code>write.1</code> 的结果。最简单的办法就是加上一个
+                  sfence，保证 <code>read.2</code> 之前的写操作的事务提交完成。
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-5a3da3419ca32928b421e58a0b48950c.png"
+                    alt="Diagram"
+                    width="350"
+                    height="154"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  解决了 store-load 重排，那么 load-store 呢？我们允许在
+                  <code>read.2</code> 仍然进行的时候，开始执行
+                  <code>write.3</code> 吗？这取决于下面 object store
+                  的处理顺序。我们假设这里使用的是 seastore。根据现在 seastore
+                  的设计，要读取某个对象的指定 extent，需要
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      先根据索引 onode block 的 b+ 树，找到这个对象 onode 所在的
+                      block
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      每个对象自己又有一个 b+ 树管理各自的
+                      extent，如果运气好的话，b+ 树所有的叶子节点就内置在 onode
+                      的 block 里面，但是如果这个对象比较大，或者 extent 的 b+
+                      树还没有来得及压缩，那么它就会有一些 extent
+                      是需要再查询几个中间节点才能知道具体的逻辑地址的
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      其实上层根据逻辑地址访问下面的物理介质，都需要先把逻辑地址翻译成物理地址，这个过程也需要查索引，也就是要用
+                      LBA 树来查找。而 LBA 树的节点也是不一定都在内存里面。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  而 <code>write.3</code> 所对应的 extent
+                  相关的索引信息说不定就在内存里面，可以很快的找到，从而开始写日志。同时呢，<code
+                    >read.2</code
+                  >
+                  虽然身为读操作，有可能就没那么好运，需要读多次磁盘，才能找到对应的物理地址。所以我们无法保证读操作肯定是比写操作先完成的，即使读操作比写操作先开始。而且，这里的
+                  <code>read.2</code> 和
+                  <code>write.3</code>
+                  都各自包含了多个操作，任何一个操作都会成为瓶颈。所以在某种极端情况下可能会是这样
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-2046fc170102da8f2c2fadf620658ede.png"
+                    alt="Diagram"
+                    width="570"
+                    height="266"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在这个捏造的例子里面，<code>read.2.1</code>
+                  拖慢了整个事务的后腿，<code>read.2</code> 是在
+                  <code>write.3</code> 之前开始的，但却在
+                  <code>write.3</code> 之后完成。这对于期望 sequential
+                  consistency
+                  客户端显然无法接受。同时，我们还能想象一个更复杂的场景，因为每个读请求都会指定一个区间，告诉
+                  OSD
+                  自己希望读的偏移量和长度。但是这个区间可能会映射到对象的多个
+                  extent，而每个 extent 的读延迟可能会不一样。倘若
+                  <code>read.2.1</code> 指定的区间正好映射到某个 extent，而这个
+                  extent 又正好和 <code>write.3.1</code> 所写的 extent
+                  有重合呢？而且，请注意，例子里面
+                  <code>write.3</code> 先结束，它的事务提交的时候，刷新了 OSD
+                  内存里面所有相关的 extent 对应 block 的 cache。所以
+                  <code>read.2.1</code> 有可能读到的是
+                  <code>write.3</code> 所写的内容。更可怕的是，因为
+                  <code>read.2</code> 读的是多个 extent，返回的 extent
+                  中有的可能是新的，有的则是则是老的。所以这里还有一致性的问题。
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-c1e464af72f04d738cd8212925568050.png"
+                    alt="Diagram"
+                    width="290"
+                    height="280"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  简单粗暴的办法就是在 <code>read.2</code> 之后直接加一个
+                  lfence，确保所有的读请求都完成，防止乱序的发送，也避免读到不一致的数据。
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-c0e129fb86a39d2812f1a7d014909b72.png"
+                    alt="Diagram"
+                    width="440"
+                    height="154"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  对于 erasure coded pool 这个问题更复杂一些。如果对象保存在
+                  erasure coded pool 里面，Ceph 在往里面写数据的时候，会
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>把数据拆开成 <code>k</code> 等份</p>
+                  </li>
+                  <li>
+                    <p>再根据选择的算法计算出 <code>m</code> 个校验块</p>
+                  </li>
+                  <li>
+                    <p>再把这些数据发往 m + k 个 OSD</p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  倘若写操作的偏移量不是 m x chunk size
+                  对齐的，那么这个写操作就会升级成 rmw (read modifiy write)
+                  操作，因为它需要把自己少的那部分先读出来，解码，然后再和自己的没对齐的部分拼起来再重新拆分编码。
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-4e96006f417439ae3035af811f4d00f9.png"
+                    alt="Diagram"
+                    width="610"
+                    height="196"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在上图中，在编码的时候产生了 6 块数据，其中 4 块是原始数据，2
+                  块是校验数据。为了修改这个对象，而修改的位置正好落在了 3
+                  里面，我们必须把整个数据都读进来，然后再把写请求的数据嫁接到 3
+                  的对应位置，重新编码。得到被修改过的 3 和全新
+                  4，以及融合了老数据和新数据的 5 和 6。正因为 erasure coded
+                  的写操作事实上包含了
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>相邻区域的读操作</p>
+                  </li>
+                  <li>
+                    <p>指定区域的写操作</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  所以它无法和其他的写操作在对象层面上同时进行。除非我们实现了更细粒度的访问隔离控制，确保事务的独立性。当然我们目前没有这么做并不意味着不可能，而是因为这样会比较复杂。因为每个写的事务都会涉及多个
+                  extent。extent 可能会含有多个
+                  stripe。两个写事务之间没有读写依赖的话，那么完全可以一起执行。也就是说，如果事务
+                  A 不会写到事务 B
+                  读取的数据，反之亦然，那么我们就可以认为两者是独立的。然是这需要在往下发送写请求之前，先把这些关系先分析清楚才能决定。这个可能太复杂了。而且得不偿失，以
+                  RBD 为例，允许并发写一个 block
+                  的请求的可能并不大。所以我们还是选择直接加 lfence。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在 crimson 里面使用了一个 <code>shared_mutex</code> 的变形
+                  <code>tri_mutex</code> 来解决这个问题。常规的
+                  <code>shared_mutex</code>
+                  是一个读写锁，允许多个读者，或者单个写者。<code
+                    >tri_mutex</code
+                  >
+                  借用了 mutex 的名字，其实它实现的是自动添加 sfence 和 lfence
+                  的功能。它维护着一个等待者的队列，如果有新的请求进来，<code
+                    >tri_mutex</code
+                  >
+                  就看看这个请求和当前的请求是不是能一起执行，如果不能的话，就进入队列，等到现在所有正在执行的请求结束之后才能开始；如果可以的话，就直接放行。从前面的讨论，可以知道我们有下面这个规则：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>读操作可以和读操作并行</p>
+                  </li>
+                  <li>
+                    <p>写操作可以和写操作并行</p>
+                  </li>
+                  <li>
+                    <p>RMW 不能和任何操作并行</p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <footer>
+          <div class="tag-list">
+            <div class="meta">Tag</div>
+
+            <a class="button" href="/tags#ceph">
+              <p><i class="fa fa-tag fa-fw"></i> ceph</p>
+            </a>
+          </div>
+        </footer>
+      </article>
+
+      <!-- Disqus -->
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="previous-post">
+          <a alt="std::error_code" href="/2020/09/30/error-code.html">
+            <p>Previous post</p>
+            std::error_code
+          </a>
         </div>
-        <script>
-          (function () {
-            var SOURCES = window.TEXT_VARIABLES.sources;
-            window.Lazyload.js(SOURCES.jquery, function () {
-              var $body = $("body"),
-                $window = $(window);
-              var $pageRoot = $(".js-page-root"),
-                $pageMain = $(".js-page-main");
-              var activeCount = 0;
-              function modal(options) {
-                var $root = this,
-                  visible,
-                  onChange,
-                  hideWhenWindowScroll = false;
-                var scrollTop;
-                function setOptions(options) {
-                  var _options = options || {};
-                  visible =
-                    _options.initialVisible === undefined ? false : show;
-                  onChange = _options.onChange;
-                  hideWhenWindowScroll = _options.hideWhenWindowScroll;
-                }
-                function init() {
-                  setState(visible);
-                }
-                function setState(isShow) {
-                  if (isShow === visible) {
-                    return;
-                  }
-                  visible = isShow;
-                  if (visible) {
-                    activeCount++;
-                    scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
-                    $root.addClass("modal--show");
-                    $pageMain.scrollTop(scrollTop);
-                    activeCount === 1 &&
-                      ($pageRoot.addClass("show-modal"),
-                      $body.addClass("of-hidden"));
-                    hideWhenWindowScroll &&
-                      window.hasEvent("touchstart") &&
-                      $window.on("scroll", hide);
-                    $window.on("keyup", handleKeyup);
-                  } else {
-                    activeCount > 0 && activeCount--;
-                    $root.removeClass("modal--show");
-                    $window.scrollTop(scrollTop);
-                    activeCount === 0 &&
-                      ($pageRoot.removeClass("show-modal"),
-                      $body.removeClass("of-hidden"));
-                    hideWhenWindowScroll &&
-                      window.hasEvent("touchstart") &&
-                      $window.off("scroll", hide);
-                    $window.off("keyup", handleKeyup);
-                  }
-                  onChange && onChange(visible);
-                }
-                function show() {
-                  setState(true);
-                }
-                function hide() {
-                  setState(false);
-                }
-                function handleKeyup(e) {
-                  // Char Code: 27  ESC
-                  if (e.which === 27) {
-                    hide();
-                  }
-                }
-                setOptions(options);
-                init();
-                return {
-                  show: show,
-                  hide: hide,
-                  $el: $root,
-                };
-              }
-              $.fn.modal = modal;
-            });
-          })();
-        </script>
-        <div
-          class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"
-        >
-          <script>
-            (function () {
-              var SOURCES = window.TEXT_VARIABLES.sources;
-              window.Lazyload.js(SOURCES.jquery, function () {
-                // search panel
-                var search = window.search || (window.search = {});
-                var useDefaultSearchBox =
-                  window.useDefaultSearchBox === undefined
-                    ? true
-                    : window.useDefaultSearchBox;
 
-                var $searchModal = $(".js-page-search-modal");
-                var $searchToggle = $(".js-search-toggle");
-                var searchModal = $searchModal.modal({
-                  onChange: handleModalChange,
-                  hideWhenWindowScroll: true,
-                });
-                var modalVisible = false;
-                search.searchModal = searchModal;
-
-                var $searchBox = null;
-                var $searchInput = null;
-                var $searchClear = null;
-
-                function getModalVisible() {
-                  return modalVisible;
-                }
-                search.getModalVisible = getModalVisible;
-
-                function handleModalChange(visible) {
-                  modalVisible = visible;
-                  if (visible) {
-                    search.onShow && search.onShow();
-                    useDefaultSearchBox &&
-                      $searchInput[0] &&
-                      $searchInput[0].focus();
-                  } else {
-                    search.onShow && search.onHide();
-                    useDefaultSearchBox &&
-                      $searchInput[0] &&
-                      $searchInput[0].blur();
-                    setTimeout(function () {
-                      useDefaultSearchBox &&
-                        ($searchInput.val(""),
-                        $searchBox.removeClass("not-empty"));
-                      search.clear && search.clear();
-                      window.pageAsideAffix && window.pageAsideAffix.refresh();
-                    }, 400);
-                  }
-                }
-
-                $searchToggle.on("click", function () {
-                  modalVisible ? searchModal.hide() : searchModal.show();
-                });
-                // Char Code: 83  S, 191 /
-                $(window).on("keyup", function (e) {
-                  if (
-                    !modalVisible &&
-                    !window.isFormElement(e.target || e.srcElement) &&
-                    (e.which === 83 || e.which === 191)
-                  ) {
-                    modalVisible || searchModal.show();
-                  }
-                });
-
-                if (useDefaultSearchBox) {
-                  $searchBox = $(".js-search-box");
-                  $searchInput = $searchBox.children("input");
-                  $searchClear = $searchBox.children(".js-icon-clear");
-                  search.getSearchInput = function () {
-                    return $searchInput.get(0);
-                  };
-                  search.getVal = function () {
-                    return $searchInput.val();
-                  };
-                  search.setVal = function (val) {
-                    $searchInput.val(val);
-                  };
-
-                  $searchInput.on("focus", function () {
-                    $(this).addClass("focus");
-                  });
-                  $searchInput.on("blur", function () {
-                    $(this).removeClass("focus");
-                  });
-                  $searchInput.on(
-                    "input",
-                    window.throttle(function () {
-                      var val = $(this).val();
-                      if (val === "" || typeof val !== "string") {
-                        search.clear && search.clear();
-                      } else {
-                        $searchBox.addClass("not-empty");
-                        search.onInputNotEmpty && search.onInputNotEmpty(val);
-                      }
-                    }, 400)
-                  );
-                  $searchClear.on("click", function () {
-                    $searchInput.val("");
-                    $searchBox.removeClass("not-empty");
-                    search.clear && search.clear();
-                  });
-                }
-              });
-            })();
-          </script>
-          <div class="search search--dark">
-            <div class="main">
-              <div class="search__header">Search</div>
-              <div class="search-bar">
-                <div class="search-box js-search-box">
-                  <div class="search-box__icon-search">
-                    <i class="fas fa-search"></i>
-                  </div>
-                  <input type="text" />
-                  <div class="search-box__icon-clear js-icon-clear">
-                    <a><i class="fas fa-times"></i></a>
-                  </div>
-                </div>
-                <button
-                  class="button button--theme-dark button--pill search__cancel js-search-toggle"
-                >
-                  Cancel
-                </button>
-              </div>
-              <div class="search-result js-search-result"></div>
-            </div>
-          </div>
-          <script>
-            var SOURCES = window.TEXT_VARIABLES.sources;
-            var PAHTS = window.TEXT_VARIABLES.paths;
-            window.Lazyload.js([SOURCES.jquery, PAHTS.search_js], function () {
-              var search = window.search || (window.search = {});
-              var searchData = window.TEXT_SEARCH_DATA || {};
-
-              function memorize(f) {
-                var cache = {};
-                return function () {
-                  var key = Array.prototype.join.call(arguments, ",");
-                  if (key in cache) return cache[key];
-                  else return (cache[key] = f.apply(this, arguments));
-                };
-              }
-
-              /// search
-              function searchByQuery(query) {
-                var i,
-                  j,
-                  key,
-                  keys,
-                  cur,
-                  _title,
-                  result = {};
-                keys = Object.keys(searchData);
-                for (i = 0; i < keys.length; i++) {
-                  key = keys[i];
-                  for (j = 0; j < searchData[key].length; j++) {
-                    (cur = searchData[key][j]), (_title = cur.title);
-                    if (
-                      (result[key] === undefined ||
-                        (result[key] && result[key].length < 4)) &&
-                      _title.toLowerCase().indexOf(query.toLowerCase()) >= 0
-                    ) {
-                      if (result[key] === undefined) {
-                        result[key] = [];
-                      }
-                      result[key].push(cur);
-                    }
-                  }
-                }
-                return result;
-              }
-
-              var renderHeader = memorize(function (header) {
-                return $('<p class="search-result__header">' + header + "</p>");
-              });
-
-              var renderItem = function (index, title, url) {
-                return $(
-                  '<li class="search-result__item" data-index="' +
-                    index +
-                    '"><a class="button" href="' +
-                    url +
-                    '">' +
-                    title +
-                    "</a></li>"
-                );
-              };
-
-              function render(data) {
-                if (!data) {
-                  return null;
-                }
-                var $root = $("<ul></ul>"),
-                  i,
-                  j,
-                  key,
-                  keys,
-                  cur,
-                  itemIndex = 0;
-                keys = Object.keys(data);
-                for (i = 0; i < keys.length; i++) {
-                  key = keys[i];
-                  $root.append(renderHeader(key));
-                  for (j = 0; j < data[key].length; j++) {
-                    cur = data[key][j];
-                    $root.append(renderItem(itemIndex++, cur.title, cur.url));
-                  }
-                }
-                return $root;
-              }
-
-              // search box
-              var $result = $(".js-search-result"),
-                $resultItems;
-              var lastActiveIndex, activeIndex;
-
-              function clear() {
-                $result.html(null);
-                $resultItems = $(".search-result__item");
-                activeIndex = 0;
-              }
-              function onInputNotEmpty(val) {
-                $result.html(render(searchByQuery(val)));
-                $resultItems = $(".search-result__item");
-                activeIndex = 0;
-                $resultItems.eq(0).addClass("active");
-              }
-
-              search.clear = clear;
-              search.onInputNotEmpty = onInputNotEmpty;
-
-              function updateResultItems() {
-                lastActiveIndex >= 0 &&
-                  $resultItems.eq(lastActiveIndex).removeClass("active");
-                activeIndex >= 0 &&
-                  $resultItems.eq(activeIndex).addClass("active");
-              }
-
-              function moveActiveIndex(direction) {
-                var itemsCount = $resultItems ? $resultItems.length : 0;
-                if (itemsCount > 1) {
-                  lastActiveIndex = activeIndex;
-                  if (direction === "up") {
-                    activeIndex = (activeIndex - 1 + itemsCount) % itemsCount;
-                  } else if (direction === "down") {
-                    activeIndex = (activeIndex + 1 + itemsCount) % itemsCount;
-                  }
-                  updateResultItems();
-                }
-              }
-
-              // Char Code: 13  Enter, 37  ⬅, 38  ⬆, 39  ➡, 40  ⬇
-              $(window).on("keyup", function (e) {
-                var modalVisible =
-                  search.getModalVisible && search.getModalVisible();
-                if (modalVisible) {
-                  if (e.which === 38) {
-                    modalVisible && moveActiveIndex("up");
-                  } else if (e.which === 40) {
-                    modalVisible && moveActiveIndex("down");
-                  } else if (e.which === 13) {
-                    modalVisible &&
-                      $resultItems &&
-                      activeIndex >= 0 &&
-                      $resultItems.eq(activeIndex).children("a")[0].click();
-                  }
-                }
-              });
-
-              $result.on("mouseover", ".search-result__item > a", function () {
-                var itemIndex = $(this).parent().data("index");
-                itemIndex >= 0 &&
-                  ((lastActiveIndex = activeIndex),
-                  (activeIndex = itemIndex),
-                  updateResultItems());
-              });
-            });
-          </script>
+        <div id="next-post">
+          <a alt="博客维护指南" href="/2020/09/05/my-blog.html">
+            <p>Next post</p>
+            博客维护指南
+          </a>
         </div>
       </div>
 
-      <script>
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function scrollToAnchor(anchor, duration, callback) {
-              var $root = this;
-              $root.animate(
-                { scrollTop: $(anchor).position().top },
-                duration,
-                function () {
-                  window.history.replaceState(
-                    null,
-                    "",
-                    window.location.href.split("#")[0] + anchor
-                  );
-                  callback && callback();
-                }
-              );
-            }
-            $.fn.scrollToAnchor = scrollToAnchor;
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function affix(options) {
-              var $root = this,
-                $window = $(window),
-                $scrollTarget,
-                $scroll,
-                offsetBottom = 0,
-                scrollTarget = window,
-                scroll = window.document,
-                disabled = false,
-                isOverallScroller = true,
-                rootTop,
-                rootLeft,
-                rootHeight,
-                scrollBottom,
-                rootBottomTop,
-                hasInit = false,
-                curState;
-
-              function setOptions(options) {
-                var _options = options || {};
-                _options.offsetBottom && (offsetBottom = _options.offsetBottom);
-                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-                _options.scroll && (scroll = _options.scroll);
-                _options.disabled !== undefined &&
-                  (disabled = _options.disabled);
-                $scrollTarget = $(scrollTarget);
-                isOverallScroller = window.isOverallScroller($scrollTarget[0]);
-                $scroll = $(scroll);
-              }
-              function preCalc() {
-                top();
-                rootHeight = $root.outerHeight();
-                rootTop =
-                  $root.offset().top +
-                  (isOverallScroller ? 0 : $scrollTarget.scrollTop());
-                rootLeft = $root.offset().left;
-              }
-              function calc(needPreCalc) {
-                needPreCalc && preCalc();
-                scrollBottom =
-                  $scroll.outerHeight() - offsetBottom - rootHeight;
-                rootBottomTop = scrollBottom - rootTop;
-              }
-              function top() {
-                if (curState !== "top") {
-                  $root.removeClass("fixed").css({
-                    left: 0,
-                    top: 0,
-                  });
-                  curState = "top";
-                }
-              }
-              function fixed() {
-                if (curState !== "fixed") {
-                  $root.addClass("fixed").css({
-                    left: rootLeft + "px",
-                    top: 0,
-                  });
-                  curState = "fixed";
-                }
-              }
-              function bottom() {
-                if (curState !== "bottom") {
-                  $root.removeClass("fixed").css({
-                    left: 0,
-                    top: rootBottomTop + "px",
-                  });
-                  curState = "bottom";
-                }
-              }
-              function setState() {
-                var scrollTop = $scrollTarget.scrollTop();
-                if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
-                  fixed();
-                } else if (scrollTop < rootTop) {
-                  top();
-                } else {
-                  bottom();
-                }
-              }
-              function init() {
-                if (!hasInit) {
-                  var interval, timeout;
-                  calc(true);
-                  setState();
-                  // run calc every 100 millisecond
-                  interval = setInterval(function () {
-                    calc();
-                  }, 100);
-                  timeout = setTimeout(function () {
-                    clearInterval(interval);
-                  }, 45000);
-                  window.pageLoad.then(function () {
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      clearTimeout(timeout);
-                    }, 3000);
-                  });
-                  $scrollTarget.on("scroll", function () {
-                    disabled || setState();
-                  });
-                  $window.on("resize", function () {
-                    disabled || (calc(true), setState());
-                  });
-                  hasInit = true;
-                }
-              }
-
-              setOptions(options);
-              if (!disabled) {
-                init();
-              }
-              $window.on(
-                "resize",
-                window.throttle(function () {
-                  init();
-                }, 200)
-              );
-              return {
-                setOptions: setOptions,
-                refresh: function () {
-                  calc(true, { animation: false });
-                  setState();
-                },
-              };
-            }
-            $.fn.affix = affix;
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function toc(options) {
-              var $root = this,
-                $window = $(window),
-                $scrollTarget,
-                $scroller,
-                $tocUl = $('<ul class="toc toc--ellipsis"></ul>'),
-                $tocLi,
-                $headings,
-                $activeLast,
-                $activeCur,
-                selectors = "h1,h2,h3",
-                container = "body",
-                scrollTarget = window,
-                scroller = "html, body",
-                disabled = false,
-                headingsPos,
-                scrolling = false,
-                hasRendered = false,
-                hasInit = false;
-
-              function setOptions(options) {
-                var _options = options || {};
-                _options.selectors && (selectors = _options.selectors);
-                _options.container && (container = _options.container);
-                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-                _options.scroller && (scroller = _options.scroller);
-                _options.disabled !== undefined &&
-                  (disabled = _options.disabled);
-                $headings = $(container).find(selectors).filter("[id]");
-                $scrollTarget = $(scrollTarget);
-                $scroller = $(scroller);
-              }
-              function calc() {
-                headingsPos = [];
-                $headings.each(function () {
-                  headingsPos.push(Math.floor($(this).position().top));
-                });
-              }
-              function setState(element, disabled) {
-                var scrollTop = $scrollTarget.scrollTop(),
-                  i;
-                if (disabled || !headingsPos || headingsPos.length < 1) {
-                  return;
-                }
-                if (element) {
-                  $activeCur = element;
-                } else {
-                  for (i = 0; i < headingsPos.length; i++) {
-                    if (scrollTop >= headingsPos[i]) {
-                      $activeCur = $tocLi.eq(i);
-                    } else {
-                      $activeCur || ($activeCur = $tocLi.eq(i));
-                      break;
-                    }
-                  }
-                }
-                $activeLast && $activeLast.removeClass("active");
-                ($activeLast = $activeCur).addClass("active");
-              }
-              function render() {
-                if (!hasRendered) {
-                  $root.append($tocUl);
-                  $headings.each(function () {
-                    var $this = $(this);
-                    $tocUl.append(
-                      $("<li></li>")
-                        .addClass("toc-" + $this.prop("tagName").toLowerCase())
-                        .append(
-                          $("<a></a>")
-                            .text($this.text())
-                            .attr("href", "#" + $this.prop("id"))
-                        )
-                    );
-                  });
-                  $tocLi = $tocUl.children("li");
-                  $tocUl.on("click", "a", function (e) {
-                    e.preventDefault();
-                    var $this = $(this);
-                    scrolling = true;
-                    setState($this.parent());
-                    $scroller.scrollToAnchor(
-                      $this.attr("href"),
-                      400,
-                      function () {
-                        scrolling = false;
-                      }
-                    );
-                  });
-                }
-                hasRendered = true;
-              }
-              function init() {
-                var interval, timeout;
-                if (!hasInit) {
-                  render();
-                  calc();
-                  setState(null, scrolling);
-                  // run calc every 100 millisecond
-                  interval = setInterval(function () {
-                    calc();
-                  }, 100);
-                  timeout = setTimeout(function () {
-                    clearInterval(interval);
-                  }, 45000);
-                  window.pageLoad.then(function () {
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      clearTimeout(timeout);
-                    }, 3000);
-                  });
-                  $scrollTarget.on("scroll", function () {
-                    disabled || setState(null, scrolling);
-                  });
-                  $window.on(
-                    "resize",
-                    window.throttle(function () {
-                      if (!disabled) {
-                        render();
-                        calc();
-                        setState(null, scrolling);
-                      }
-                    }, 100)
-                  );
-                }
-                hasInit = true;
-              }
-
-              setOptions(options);
-              if (!disabled) {
-                init();
-              }
-              $window.on(
-                "resize",
-                window.throttle(function () {
-                  init();
-                }, 200)
-              );
-              return {
-                setOptions: setOptions,
-              };
-            }
-            $.fn.toc = toc;
-          });
-        })();
-        /*(function () {
-
-})();*/
-      </script>
-      <script>
-        /* toc must before affix, since affix need to konw toc' height. */ (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            var $window = $(window);
-            var $articleContent = $(".js-article-content");
-            var $tocRoot = $(".js-toc-root"),
-              $col2 = $(".js-col-aside");
-            var toc;
-            var tocDisabled = false;
-            var hasSidebar = $(".js-page-root").hasClass(
-              "layout--page--sidebar"
-            );
-            var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
-
-            function disabled() {
-              return $col2.css("display") === "none" || !hasToc;
-            }
-
-            tocDisabled = disabled();
-
-            toc = $tocRoot.toc({
-              selectors: TOC_SELECTOR,
-              container: $articleContent,
-              scrollTarget: hasSidebar ? ".js-page-main" : null,
-              scroller: hasSidebar ? ".js-page-main" : null,
-              disabled: tocDisabled,
-            });
-
-            $window.on(
-              "resize",
-              window.throttle(function () {
-                tocDisabled = disabled();
-                toc &&
-                  toc.setOptions({
-                    disabled: tocDisabled,
-                  });
-              }, 100)
-            );
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            var $window = $(window),
-              $pageFooter = $(".js-page-footer");
-            var $pageAside = $(".js-page-aside");
-            var affix;
-            var tocDisabled = false;
-            var hasSidebar = $(".js-page-root").hasClass(
-              "layout--page--sidebar"
-            );
-
-            affix = $pageAside.affix({
-              offsetBottom: $pageFooter.outerHeight(),
-              scrollTarget: hasSidebar ? ".js-page-main" : null,
-              scroller: hasSidebar ? ".js-page-main" : null,
-              scroll: hasSidebar ? $(".js-page-main").children() : null,
-              disabled: tocDisabled,
-            });
-
-            $window.on(
-              "resize",
-              window.throttle(function () {
-                affix &&
-                  affix.setOptions({
-                    disabled: tocDisabled,
-                  });
-              }, 100)
-            );
-
-            window.pageAsideAffix = affix;
-          });
-        })();
-      </script>
-    </div>
-    <script>
-      (function () {
-        var $root = document.getElementsByClassName("root")[0];
-        if (window.hasEvent("touchstart")) {
-          $root.dataset.isTouch = true;
-          document.addEventListener("touchstart", function () {}, false);
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-repeat: no-repeat;
         }
-      })();
-    </script>
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
   </body>
 </html>

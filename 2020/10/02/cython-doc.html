@@ -1,1913 +1,710 @@
 <!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.2.6
+    Copyright 2016-2020 Sylhare
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, user-scalable=no"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
     />
-    <title>Read the Docs 之路 - some random rants</title>
 
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- Canonical -->
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html"
+    />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+
+    <!-- KaTeX 0.12.0 -->
+    <!-- if you have any issue check https://github.com/KaTeX/KaTeX -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+    <title>Read the Docs 之路 | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="Read the Docs 之路" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
     <meta
       name="description"
+      content="最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。"
+    />
+    <meta
+      property="og:description"
       content="最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。"
     />
     <link
       rel="canonical"
       href="https://blog.k3fu.xyz/2020/10/02/cython-doc.html"
     />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2020/10/02/cython-doc.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2020-10-02T00:00:00+00:00"
+    />
+    <script type="application/ld+json">
+      {
+        "description": "最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。",
+        "url": "https://blog.k3fu.xyz/2020/10/02/cython-doc.html",
+        "@type": "BlogPosting",
+        "headline": "Read the Docs 之路",
+        "dateModified": "2020-10-02T00:00:00+00:00",
+        "datePublished": "2020-10-02T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2020/10/02/cython-doc.html"
+        },
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
     <link
+      type="application/atom+xml"
       rel="alternate"
-      type="application/rss+xml"
+      href="https://blog.k3fu.xyz/feed.xml"
       title="some random rants"
-      href="/feed.xml"
     />
-    <!-- start favicons snippet, use https://realfavicongenerator.net/ -->
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="/assets/apple-touch-icon.png"
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="Read the Docs 之路" />
+    <meta
+      name="twitter:description"
+      content="最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。Ceph 里的 API 文档Sphinx 的搜索假的 librados方案Sphinx 能看见的预处理结果加入 stub 函数浏览器能看到的Ceph 里的 API 文档Ceph 用 Sp..."
     />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/assets/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="16x16"
-      href="/assets/favicon-16x16.png"
-    />
-    <link rel="manifest" href="/assets/site.webmanifest" />
-    <link
-      rel="mask-icon"
-      href="/assets/safari-pinned-tab.svg"
-      color="#fc4d50"
-    />
-    <link rel="shortcut icon" href="/assets/favicon.ico" />
 
-    <meta name="msapplication-TileColor" content="#ffc40d" />
-    <meta name="msapplication-config" content="/assets/browserconfig.xml" />
-
-    <meta name="theme-color" content="#ffffff" />
-    <!-- end favicons snippet -->
-    <link rel="stylesheet" href="/assets/css/main.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css"
-    />
-    <!-- start custom head snippets -->
-
-    <!-- end custom head snippets -->
-    <script>
-      (function () {
-        window.isArray = function (val) {
-          return Object.prototype.toString.call(val) === "[object Array]";
-        };
-        window.isString = function (val) {
-          return typeof val === "string";
-        };
-
-        window.hasEvent = function (event) {
-          return "on".concat(event) in window.document;
-        };
-
-        window.isOverallScroller = function (node) {
-          return (
-            node === document.documentElement ||
-            node === document.body ||
-            node === window
-          );
-        };
-
-        window.isFormElement = function (node) {
-          var tagName = node.tagName;
-          return (
-            tagName === "INPUT" ||
-            tagName === "SELECT" ||
-            tagName === "TEXTAREA"
-          );
-        };
-
-        window.pageLoad = (function () {
-          var loaded = false,
-            cbs = [];
-          window.addEventListener("load", function () {
-            var i;
-            loaded = true;
-            if (cbs.length > 0) {
-              for (i = 0; i < cbs.length; i++) {
-                cbs[i]();
-              }
-            }
-          });
-          return {
-            then: function (cb) {
-              cb && (loaded ? cb() : cbs.push(cb));
-            },
-          };
-        })();
-      })();
-      (function () {
-        window.throttle = function (func, wait) {
-          var args,
-            result,
-            thisArg,
-            timeoutId,
-            lastCalled = 0;
-
-          function trailingCall() {
-            lastCalled = new Date();
-            timeoutId = null;
-            result = func.apply(thisArg, args);
-          }
-          return function () {
-            var now = new Date(),
-              remaining = wait - (now - lastCalled);
-
-            args = arguments;
-            thisArg = this;
-
-            if (remaining <= 0) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-              lastCalled = now;
-              result = func.apply(thisArg, args);
-            } else if (!timeoutId) {
-              timeoutId = setTimeout(trailingCall, remaining);
-            }
-            return result;
-          };
-        };
-      })();
-      (function () {
-        var Set = (function () {
-          var add = function (item) {
-            var i,
-              data = this._data;
-            for (i = 0; i < data.length; i++) {
-              if (data[i] === item) {
-                return;
-              }
-            }
-            this.size++;
-            data.push(item);
-            return data;
-          };
-
-          var Set = function (data) {
-            this.size = 0;
-            this._data = [];
-            var i;
-            if (data.length > 0) {
-              for (i = 0; i < data.length; i++) {
-                add.call(this, data[i]);
-              }
-            }
-          };
-          Set.prototype.add = add;
-          Set.prototype.get = function (index) {
-            return this._data[index];
-          };
-          Set.prototype.has = function (item) {
-            var i,
-              data = this._data;
-            for (i = 0; i < data.length; i++) {
-              if (this.get(i) === item) {
-                return true;
-              }
-            }
-            return false;
-          };
-          Set.prototype.is = function (map) {
-            if (map._data.length !== this._data.length) {
-              return false;
-            }
-            var i,
-              j,
-              flag,
-              tData = this._data,
-              mData = map._data;
-            for (i = 0; i < tData.length; i++) {
-              for (flag = false, j = 0; j < mData.length; j++) {
-                if (tData[i] === mData[j]) {
-                  flag = true;
-                  break;
-                }
-              }
-              if (!flag) {
-                return false;
-              }
-            }
-            return true;
-          };
-          Set.prototype.values = function () {
-            return this._data;
-          };
-          return Set;
-        })();
-
-        window.Lazyload = (function (doc) {
-          var queue = { js: [], css: [] },
-            sources = { js: {}, css: {} },
-            context = this;
-          var createNode = function (name, attrs) {
-            var node = doc.createElement(name),
-              attr;
-            for (attr in attrs) {
-              if (attrs.hasOwnProperty(attr)) {
-                node.setAttribute(attr, attrs[attr]);
-              }
-            }
-            return node;
-          };
-          var end = function (type, url) {
-            var s, q, qi, cbs, i, j, cur, val, flag;
-            if (type === "js" || type === "css") {
-              (s = sources[type]), (q = queue[type]);
-              s[url] = true;
-              for (i = 0; i < q.length; i++) {
-                cur = q[i];
-                if (cur.urls.has(url)) {
-                  (qi = cur), (val = qi.urls.values());
-                  qi && (cbs = qi.callbacks);
-                  for (flag = true, j = 0; j < val.length; j++) {
-                    cur = val[j];
-                    if (!s[cur]) {
-                      flag = false;
-                    }
-                  }
-                  if (flag && cbs && cbs.length > 0) {
-                    for (j = 0; j < cbs.length; j++) {
-                      cbs[j].call(context);
-                    }
-                    qi.load = true;
-                  }
-                }
-              }
-            }
-          };
-          var load = function (type, urls, callback) {
-            var s,
-              q,
-              qi,
-              node,
-              i,
-              cur,
-              _urls =
-                typeof urls === "string" ? new Set([urls]) : new Set(urls),
-              val,
-              url;
-            if (type === "js" || type === "css") {
-              (s = sources[type]), (q = queue[type]);
-              for (i = 0; i < q.length; i++) {
-                cur = q[i];
-                if (_urls.is(cur.urls)) {
-                  qi = cur;
-                  break;
-                }
-              }
-              val = _urls.values();
-              if (qi) {
-                callback && (qi.load || qi.callbacks.push(callback));
-                callback && qi.load && callback();
-              } else {
-                q.push({
-                  urls: _urls,
-                  callbacks: callback ? [callback] : [],
-                  load: false,
-                });
-                for (i = 0; i < val.length; i++) {
-                  (node = null), (url = val[i]);
-                  if (s[url] === undefined) {
-                    type === "js" &&
-                      (node = createNode("script", { src: url }));
-                    type === "css" &&
-                      (node = createNode("link", {
-                        rel: "stylesheet",
-                        href: url,
-                      }));
-                    if (node) {
-                      node.onload = (function (type, url) {
-                        return function () {
-                          end(type, url);
-                        };
-                      })(type, url);
-                      (doc.head || doc.body).appendChild(node);
-                      s[url] = false;
-                    }
-                  }
-                }
-              }
-            }
-          };
-          return {
-            js: function (url, callback) {
-              load("js", url, callback);
-            },
-            css: function (url, callback) {
-              load("css", url, callback);
-            },
-          };
-        })(this.document);
-      })();
-    </script>
-    <script>
-      (function () {
-        var TEXT_VARIABLES = {
-          version: "2.2.6",
-          sources: {
-            font_awesome:
-              "https://cdn.bootcdn.net/ajax/libs/font-awesome/5.14.0/css/all.css",
-            jquery: "https://cdn.bootcss.com/jquery/3.1.1/jquery.min.js",
-            leancloud_js_sdk:
-              "//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js",
-            chart: "https://cdn.bootcss.com/Chart.js/2.7.2/Chart.bundle.min.js",
-            gitalk: {
-              js: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.js",
-              css: "https://cdn.bootcss.com/gitalk/1.2.2/gitalk.min.css",
-            },
-            valine: "https://unpkg.com/valine/dist/Valine.min.js",
-            mathjax:
-              "https://cdn.bootcss.com/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML",
-            mermaid:
-              "https://cdn.bootcss.com/mermaid/8.0.0-rc.8/mermaid.min.js",
-          },
-          site: {
-            toc: {
-              selectors: "h1,h2,h3",
-            },
-          },
-          paths: {
-            search_js: "/assets/search.js",
-          },
-        };
-        window.TEXT_VARIABLES = TEXT_VARIABLES;
-      })();
-    </script>
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
   </head>
+
   <body>
-    <div class="root" data-is-touch="false">
-      <div class="layout--page js-page-root">
-        <div
-          class="page__main js-page-main page__viewport has-aside cell cell--auto"
-        >
-          <div class="page__main-inner">
-            <div class="page__header d-print-none">
-              <header class="header">
-                <div class="main">
-                  <div class="header__title">
-                    <div class="header__brand">
-                      <svg
-                        version="1.1"
-                        xmlns="http://www.w3.org/2000/svg"
-                        xmlns:xlink="http://www.w3.org/1999/xlink"
-                        x="0px"
-                        y="0px"
-                        width="24px"
-                        height="24px"
-                        viewBox="0 0 24 24"
-                      >
-                        <style type="text/css">
-                          .st0 {
-                            fill: #515151;
-                          }
-                        </style>
-                        <path
-                          class="st0"
-                          d="M1.7,22.3c5.7-5.7,11.3-5.7,17,0c3.3-3.3,3.5-5.3,0.8-6c2.7,0.7,3.5-1.1,2.3-5.6s-3.3-5.2-6.3-2.1
-	c3-3,2.3-5.2-2.1-6.3S7,1.8,7.7,4.6C7,1.8,5,2.1,1.7,5.3C7.3,11,7.3,16.7,1.7,22.3"
-                        />
-                      </svg>
-                      <a title="我的学习记录" href="/">some random rants</a>
-                    </div>
-                    <button
-                      class="button button--secondary button--circle search-button js-search-toggle"
-                    >
-                      <i class="fas fa-search"></i>
-                    </button>
-                  </div>
-                  <nav class="navigation">
-                    <ul>
-                      <li class="navigation__item">
-                        <a href="/archive.html">Archive</a>
-                      </li>
-                      <li class="navigation__item">
-                        <a href="/about.html">About</a>
-                      </li>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <h1 class="site-title">
+          <a aria-label="some random rants" href="/">
+            some random rants
+          </a>
+        </h1>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fa fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fa fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fa fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1 id="Read+the+Docs+%E4%B9%8B%E8%B7%AF" class="title">
+              Read the Docs 之路
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">
+                October 2, 2020
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host
+                  转移到了
+                  <a href="https://readthedocs.org">Read the Docs</a>
+                  上。但是还有一些问题。
+                </p>
+              </div>
+              <div id="toc" class="toc">
+                <div id="toctitle" class="title"></div>
+                <ul class="sectlevel1">
+                  <li><a href="#ceph-里的-api-文档">Ceph 里的 API 文档</a></li>
+                  <li><a href="#sphinx-的搜索">Sphinx 的搜索</a></li>
+                  <li><a href="#假的-librados">假的 librados</a></li>
+                  <li>
+                    <a href="#方案">方案</a>
+                    <ul class="sectlevel2">
                       <li>
-                        <button
-                          class="button button--secondary button--circle search-button js-search-toggle"
+                        <a href="#sphinx-能看见的预处理结果"
+                          >Sphinx 能看见的预处理结果</a
                         >
-                          <i class="fas fa-search"></i>
-                        </button>
                       </li>
+                      <li><a href="#加入-stub-函数">加入 stub 函数</a></li>
+                      <li><a href="#浏览器能看到的">浏览器能看到的</a></li>
                     </ul>
-                  </nav>
-                </div>
-              </header>
-            </div>
-            <div class="page__content">
-              <div class="main">
-                <div class="grid grid--reverse">
-                  <div class="col-aside d-print-none js-col-aside">
-                    <aside class="page__aside js-page-aside">
-                      <div class="toc-aside js-toc-root"></div>
-                    </aside>
-                  </div>
-
-                  <div class="col-main cell cell--auto">
-                    <!-- start custom main top snippet -->
-
-                    <!-- end custom main top snippet -->
-                    <article itemscope itemtype="http://schema.org/Article">
-                      <div class="article__header">
-                        <header><h1>Read the Docs 之路</h1></header>
-                      </div>
-                      <meta itemprop="headline" content="Read the Docs 之路" />
-                      <div class="article__info clearfix">
-                        <ul class="left-col menu">
-                          <li>
-                            <a
-                              class="button button--secondary button--pill button--sm"
-                              href="/archive.html?tag=ceph"
-                              >ceph</a
-                            >
-                          </li>
-                          <li>
-                            <a
-                              class="button button--secondary button--pill button--sm"
-                              href="/archive.html?tag=ci"
-                              >ci</a
-                            >
-                          </li>
-                        </ul>
-                        <ul class="right-col menu">
-                          <li>
-                            <i class="far fa-calendar-alt"></i>
-                            <span>Oct 02, 2020</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <meta itemprop="author" content="Kefu Chai" /><meta
-                        itemprop="datePublished"
-                        content="2020-10-02T00:00:00+00:00"
-                      />
-                      <meta itemprop="keywords" content="ceph,ci" />
-                      <div class="js-article-content">
-                        <div class="layout--article">
-                          <!-- start custom article top snippet -->
-
-                          <!-- end custom article top snippet -->
-                          <div class="article__content" itemprop="articleBody">
-                            <div id="preamble">
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    最近为了支持多单词的准确搜索，把 Ceph
-                                    的文档编译和 host 转移到了
-                                    <a href="https://readthedocs.org"
-                                      >Read the Docs</a
-                                    >
-                                    上。但是还有一些问题。
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="ceph-里的-api-文档">
-                                Ceph 里的 API 文档
-                              </h2>
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    Ceph 用
-                                    <a href="https://www.sphinx-doc.org/"
-                                      >Sphinx</a
-                                    >
-                                    编译文档。它作为一个平台提供
-                                    librados，让大家可以用它写程序。librados
-                                    有各种语言的绑定，其中一些有对应的文档：
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>
-                                        C: 用
-                                        <a
-                                          href="https://breathe.readthedocs.io/"
-                                          >Breathe</a
-                                        >
-                                        的
-                                        <a
-                                          href="https://breathe.readthedocs.io/en/latest/directives.html#autodoxygenfile"
-                                          >autodoxygenfile</a
-                                        >
-                                        directive
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        C&#43;&#43;: 还没有加上去。不过我觉得用
-                                        Breathe 和 Doxygen 的组合应该就够了
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        Python: Sphinx 有内置的支持，即
-                                        <a
-                                          href="https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html"
-                                          >sphinx.ext.autodoc</a
-                                        >
-                                        扩展。我们主要用它的
-                                        <code>automethod</code> directive
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        OpenAPI: 用
-                                        <a
-                                          href="https://github.com/sphinx-contrib/openapi"
-                                          >sphinxcontrib.openapi</a
-                                        >
-                                        提供的 <code>openapi</code> directive
-                                      </p>
-                                    </li>
-                                  </ul>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="sphinx-的搜索">Sphinx 的搜索</h2>
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    Sphinx
-                                    内置有搜索功能，它也支持多词搜索，但是通常我们希望搜索
-                                    source code 的话，Sphinx 会返回所有包含
-                                    source code 的文档，即使文档里面出现的是
-                                    "code source" 或者 "source of
-                                    code"。换言之，它不是我们习惯上的多词搜索。这个问题其他开发者也碰到了，在
-                                    Sphinx 上有相关的
-                                    <a
-                                      href="https://github.com/sphinx-doc/sphinx/issues/3301"
-                                      >issue</a
-                                    >。我研究了一下，这个问题在于 Sphinx
-                                    搜索的实现比较直接。它分这么几步
-                                  </p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p>
-                                        分词。每种语言的分词都不一样。值得一提的是，中文分词用的是<a
-                                          href="https://github.com/fxsjy/jieba"
-                                          >“结巴”分词</a
-                                        >
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        逐词预处理，用对应语言的 stemming
-                                        规则把词归一化。英语的实现可以参考<a
-                                          href="https://github.com/sphinx-doc/sphinx/blob/master/sphinx/search/en.py"
-                                          >这里</a
-                                        >
-                                      </p>
-                                      <div class="olist loweralpha">
-                                        <ol class="loweralpha" type="a">
-                                          <li>
-                                            <p>
-                                              去掉后缀。比如说 apples
-                                              这个词就会变成 apple。civilize
-                                              则会变成 civil。
-                                            </p>
-                                          </li>
-                                          <li>
-                                            <p>
-                                              去掉常见的介词、连词和代词。比如说
-                                              at、and 和 they 就会被去掉。
-                                            </p>
-                                          </li>
-                                        </ol>
-                                      </div>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        把索引关系加入倒排表。组织成一个大数据结构，保存在磁盘上。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        在搜索的时候，javascript
-                                        会直接从这个表里面找。
-                                      </p>
-                                    </li>
-                                  </ol>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    所以可以想见，如果我们搜索 "fuse support"
-                                    想看看 Ceph 对 FUSE 的支持，它会返回
-                                    mount.fuse.ceph 的
-                                    <a
-                                      href="https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/"
-                                      >manpage</a
-                                    >。这虽然也不算离谱，但是里面出现的 support
-                                    是这么一句话
-                                  </p>
-                                </div>
-                                <div class="quoteblock">
-                                  <blockquote>
-                                    <div class="paragraph">
-                                      <p>
-                                        The old format /etc/fstab entries are
-                                        also supported:
-                                      </p>
-                                    </div>
-                                  </blockquote>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    通篇没有出现 "fuse support"
-                                    这个序列。搜索返回了 32 篇文章，后 31 篇
-                                    文章被检索到的关键字就是
-                                    unsupported。这个很可能不是我们想要的。而
-                                    RTD 的多词搜索的<a
-                                      href="https://docs.ceph.com/en/latest/search/?q=fuse+support"
-                                      >结果</a
-                                    >要好很多。对于不挑剔的读者基本上够用了。
-                                  </p>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    那为什么要纠结多词搜索呢？因为我们很多命令是多个单词构成的。比如说
-                                  </p>
-                                </div>
-                                <div class="listingblock">
-                                  <div class="content">
-                                    <pre
-                                      class="rouge highlight"
-                                    ><code data-lang="shell">ceph <span class="nb">df</span></code></pre>
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    要是用户想搜索 "ceph
-                                    df"，多词搜索要是能精确匹配，问题不就能解决了吗？那有没有其他办法呢？
-                                  </p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p>
-                                        google 的站内搜索。但是 google
-                                        是一个商业公司。有的人可能会浑身不自在，如果他用一个广告公司的搜索。虽然在这个世界上，我们和商业公司有千丝万缕的联系，但是，哎。让我们留一点理想主义的念想吧。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        直接用 Read the Docs 的一揽子方案。它和
-                                        <a href="https://travis-ci.org"
-                                          >travis</a
-                                        >
-                                        这些服务很像，不仅内置了 CI
-                                        的功能，也能帮着 host
-                                        这些静态页面。对我们很合适。但是它的
-                                        build 流程是很死的。看看它的<a
-                                          href="https://docs.readthedocs.io/en/stable/config-file/v2.html"
-                                          >配置文件</a
-                                        >就知道了。这是为一个纯 Python
-                                        项目度身定制的。我们后文分析这个限制的影响。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        其他 sphinx search
-                                        plugin。找了一圈，没有不收费的。功能比较好的也需要自己搭建
-                                        <a
-                                          href="https://www.elastic.co/products/elasticsearch"
-                                          >Elasticsearch</a
-                                        >。RTD 开源了他们的<a
-                                          href="https://github.com/readthedocs/readthedocs-sphinx-search"
-                                          >方案</a
-                                        >。但是一想到要挠我们实验室小哥的门，我就知趣地把爪子收起来了。
-                                      </p>
-                                    </li>
-                                  </ol>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="假的-librados">假的 librados</h2>
-                              <div class="sectionbody">
-                                <div class="paragraph">
-                                  <p>
-                                    Read the Docs
-                                    的搜索不错，但是它的限制也很明显。
-                                  </p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>
-                                        只能通过
-                                        <code>requirements.txt</code>
-                                        安装第三方依赖。那么
-                                        <code>requirements.txt</code>
-                                        到底是啥呢？它是 pip 用来给
-                                        <code>pip install</code> 传参数的。
-                                        <a
-                                          href="https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format"
-                                          >文档</a
-                                        >说得明白。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        也可以用 setuptools 或者 pip
-                                        安装源码里面的 Python 项目。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        没有预处理阶段。<code>pip</code>
-                                        装好了，直接就是
-                                        <code>sphinx-build</code>。
-                                      </p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>我们回到各种语言的绑定：</p>
-                                </div>
-                                <div class="ulist">
-                                  <ul>
-                                    <li>
-                                      <p>
-                                        C:
-                                        <a
-                                          href="https://breathe.readthedocs.io/"
-                                          >Breathe</a
-                                        >
-                                        其实本身并不能解析 C
-                                        代码里面的注释，也不能理解头文件。它事实上担当的角色是
-                                        Doxygen 产生的 XML 文件到 Sphinx
-                                        中间的桥梁。但是如果这些 XML
-                                        不存在，巧妇难为无米之炊。所以它会调用用
-                                        Doxygen
-                                        预处理一下指定的文件。但是问题来了，doxygen
-                                        怎么安装呢？它是一个 C++ 的项目。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        Python:
-                                        <code>automethod</code> 读取制定方法的
-                                        docstring，产生 Sphinx
-                                        的文档。最近一部分代码用上了
-                                        <a
-                                          href="https://www.python.org/dev/peps/pep-0484/"
-                                          >PEP484</a
-                                        >
-                                        风格的标注，所以我们也用
-                                        <a
-                                          href="https://github.com/agronholm/sphinx-autodoc-typehints"
-                                          >sphinx_autodoc_typehints</a
-                                        >
-                                        来把这些标注变成 Sphinx
-                                        文档。这两种办法都要求 Sphinx 的 Python
-                                        环境能访问被处理的 Python 扩展 (模块)。
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        OpenAPI:
-                                        <code>openapi</code> 读取的是一个 yaml
-                                        文件。我们目前解决这个问题的办法是直接把这个文件放到了
-                                        repo 里面。但是大家都知道这个 yaml
-                                        文件其实是从代码产生的。把预处理的结果放到
-                                        repo
-                                        里面显然不是一个最好的方案，在现阶段这是一个折中。
-                                      </p>
-                                    </li>
-                                  </ul>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    但是对于 Python API 来说，以 python-rados
-                                    为例，它是用
-                                    <a href="https://cython.org">Cython</a>
-                                    编写的 Python 扩展，它的底层则是 librados C
-                                    API。我们编译文档的时候其实并不需要一个功能上完备的
-                                    librados，我们只需要让 sphinx 能导入
-                                    python-rados 就行了。sphinx 并不会真正运行
-                                    python-rados
-                                    的函数，它只会读取代码里面的元数据。所以
-                                    Ceph 里面用了一个比较取巧的<a
-                                      href="https://github.com/ceph/ceph/blob/master/admin/build-doc"
-                                      >方法</a
-                                    >。
-                                  </p>
-                                </div>
-                                <div class="olist arabic">
-                                  <ol class="arabic">
-                                    <li>
-                                      <p>
-                                        为
-                                        <code>lib/librados.so</code>
-                                        建立一个空链接，指向
-                                        <code>lib/librados.so.1</code>
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        用 GCC 编译一个空的
-                                        <code>lib/librados.so.1</code>
-                                      </p>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        用 <code>pip</code> 安装
-                                        python-rados，pip 会自动执行
-                                        <code>setup.py</code> 脚本，后者会
-                                      </p>
-                                      <div class="olist loweralpha">
-                                        <ol class="loweralpha" type="a">
-                                          <li>
-                                            <p>
-                                              调用 Cython 编译对应的
-                                              rados.pyx，生成 C 代码，然后
-                                            </p>
-                                          </li>
-                                          <li>
-                                            <p>
-                                              GCC
-                                              继续用指定源代码里的头文件目录，刚才生成的空动态链接库，生成
-                                              rados 的 Python 扩展。
-                                            </p>
-                                          </li>
-                                        </ol>
-                                      </div>
-                                    </li>
-                                    <li>
-                                      <p>
-                                        至此，rados 的 python
-                                        扩展编译好了。但是它链接的
-                                        <code>librados.so</code>
-                                        只是个空壳子。如果有人希望
-                                        <code>import rados</code>
-                                        ，一定会出错。因为那些符号都不存在呢。所以我们用
-                                        <code>nm</code> 分析这个 Python
-                                        extension，找出它引用的所有符号，看看它有没有
-                                        librados API
-                                        的前缀。把这些符号，其实也是函数，统一写成
-                                        <code>void func(void) {}</code>
-                                        的样子，用管道交给 GCC 生成新的
-                                        <code>lib/librados.so.1</code>
-                                        。虽然它是假的，但是至少
-                                        <code>import</code> 的时候就不会出错了。
-                                      </p>
-                                    </li>
-                                  </ol>
-                                </div>
-                                <div class="imageblock">
-                                  <div class="content">
-                                    <img
-                                      src="/images/diag-575fae6deb6a6d2a191da4c460feaf0f.png"
-                                      alt="Diagram"
-                                      width="1010"
-                                      height="336"
-                                    />
-                                  </div>
-                                </div>
-                                <div class="paragraph">
-                                  <p>
-                                    OpenAPI 文档的 yaml
-                                    文件的产生过程要简单很多，但是也需要使用我们自己编写的
-                                    python 脚本。但是 RTD 的
-                                    <code>requirements.txt</code>
-                                    没法实现这么复杂的预处理逻辑。
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div class="sect1">
-                              <h2 id="方案">方案</h2>
-                              <div class="sectionbody">
-                                <div class="sect2">
-                                  <h3 id="sphinx-能看见的预处理结果">
-                                    Sphinx 能看见的预处理结果
-                                  </h3>
-                                  <div class="paragraph">
-                                    <p>
-                                      为了能有一个 librados，我们可以在
-                                      <a href="https://pypi.org">PyPI</a>
-                                      注册一个项目，让 Ceph
-                                      发布新版本的时候也更新它。同时，我们的文档编译流程也能直接从
-                                      PyPI 安装 python-rados。openapi.yaml
-                                      其实也可以放在这里面。具体说就是
-                                    </p>
-                                  </div>
-                                  <div class="olist arabic">
-                                    <ol class="arabic">
-                                      <li>
-                                        <p>
-                                          注册 python-rados 项目。其他 Python
-                                          绑定也同理，比如 cephfs、rgw、rbd。
-                                        </p>
-                                      </li>
-                                      <li>
-                                        <p>
-                                          一旦修改任何 Python 绑定的
-                                          pyx，就需要发布一个新版。
-                                        </p>
-                                      </li>
-                                      <li>
-                                        <p>
-                                          让
-                                          <code
-                                            >ceph/admin/doc-read-the-docs.txt</code
-                                          >
-                                          安装 python-rados， python-cephfs 等。
-                                        </p>
-                                      </li>
-                                    </ol>
-                                  </div>
-                                </div>
-                                <div class="sect2">
-                                  <h3 id="加入-stub-函数">加入 stub 函数</h3>
-                                  <div class="paragraph">
-                                    <p>
-                                      在编译文档的时候，在
-                                      <code>rados.pyx</code> 中实现所有使用到的
-                                      C
-                                      函数。不过需要注意，这些函数也应该暴露出来给
-                                      python-cephfs
-                                      它们用。当然，只有在编译文档的时候才这么做。
-                                    </p>
-                                  </div>
-                                </div>
-                                <div class="sect2">
-                                  <h3 id="浏览器能看到的">浏览器能看到的</h3>
-                                  <div class="paragraph">
-                                    <p>
-                                      另外一个办法就是保留我们的 CI
-                                      流程，让它编译 API 相关的文档，然后让 RTD
-                                      的文档引用我们自己编译的文档。这需要
-                                    </p>
-                                  </div>
-                                  <div class="olist arabic">
-                                    <ol class="arabic">
-                                      <li>
-                                        <p>
-                                          新建一个域名，专门用来保存 API
-                                          文档。题外话，它也可以用来保存 CI
-                                          产生的文档。
-                                        </p>
-                                      </li>
-                                      <li>
-                                        <p>
-                                          修改文档里面所有引用 API
-                                          文档的超链接，加入条件：
-                                        </p>
-                                        <div class="ulist">
-                                          <ul>
-                                            <li>
-                                              <p>
-                                                如果是 RTD
-                                                编译的话，就链接到刚才的域名
-                                              </p>
-                                            </li>
-                                            <li>
-                                              <p>其他情况，就使用相对路径</p>
-                                            </li>
-                                          </ul>
-                                        </div>
-                                      </li>
-                                    </ol>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="d-print-none">
-                            <footer class="article__footer">
-                              <meta
-                                itemprop="dateModified"
-                                content="2020-10-02T00:00:00+00:00"
-                              /><!-- start custom article footer snippet -->
-
-                              <!-- end custom article footer snippet -->
-                              <div class="article__license"></div>
-                            </footer>
-                            <div class="article__section-navigator clearfix">
-                              <div class="previous">
-                                <span>PREVIOUS</span
-                                ><a href="/2020/09/30/error-code.html"
-                                  >std::error_code</a
-                                >
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <script>
-                          (function () {
-                            var SOURCES = window.TEXT_VARIABLES.sources;
-                            window.Lazyload.js(SOURCES.jquery, function () {
-                              $(function () {
-                                var $this, $scroll;
-                                var $articleContent = $(".js-article-content");
-                                var hasSidebar = $(".js-page-root").hasClass(
-                                  "layout--page--sidebar"
-                                );
-                                var scroll = hasSidebar
-                                  ? ".js-page-main"
-                                  : "html, body";
-                                $scroll = $(scroll);
-
-                                $articleContent
-                                  .find(".highlight")
-                                  .each(function () {
-                                    $this = $(this);
-                                    $this.attr(
-                                      "data-lang",
-                                      $this.find("code").attr("data-lang")
-                                    );
-                                  });
-                                $articleContent
-                                  .find(
-                                    "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
-                                  )
-                                  .each(function () {
-                                    $this = $(this);
-                                    $this.append(
-                                      $(
-                                        '<a class="anchor d-print-none" aria-hidden="true"></a>'
-                                      ).html('<i class="fas fa-anchor"></i>')
-                                    );
-                                  });
-                                $articleContent.on(
-                                  "click",
-                                  ".anchor",
-                                  function () {
-                                    $scroll.scrollToAnchor(
-                                      "#" + $(this).parent().attr("id"),
-                                      400
-                                    );
-                                  }
-                                );
-                              });
-                            });
-                          })();
-                        </script>
-                      </div>
-                      <section class="page__comments d-print-none"></section>
-                    </article>
-                    <!-- start custom main bottom snippet -->
-
-                    <!-- end custom main bottom snippet -->
-                  </div>
-                </div>
+                  </li>
+                </ul>
               </div>
             </div>
-            <div class="page__footer d-print-none">
-              <footer class="footer py-4 js-page-footer">
-                <div class="main">
-                  <div itemscope itemtype="http://schema.org/Person">
-                    <meta itemprop="name" content="Kefu Chai" /><meta
-                      itemprop="url"
-                      content="https://blog.k3fu.xyz"
-                    /><meta
-                      itemprop="description"
-                      content="yet another lamer"
-                    />
-                    <div class="footer__author-links">
-                      <div class="author-links">
-                        <ul class="menu menu--nowrap menu--inline">
-                          <link itemprop="url" href="https://blog.k3fu.xyz" />
-                          <li title="Send me an Email.">
-                            <a
-                              class="button button--circle mail-button"
-                              itemprop="email"
-                              href="mailto:tchaikov@gmail.com"
-                              target="_blank"
-                            >
-                              <i class="fas fa-envelope"></i>
-                            </a>
-                          </li>
-
-                          <li title="Follow me on Github.">
-                            <a
-                              class="button button--circle github-button"
-                              itemprop="sameAs"
-                              href="https://github.com/tchaikov"
-                              target="_blank"
-                            >
-                              <div class="icon">
-                                <svg
-                                  fill="#000000"
-                                  width="24px"
-                                  height="24px"
-                                  viewBox="0 0 1024 1024"
-                                  version="1.1"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    class="svgpath"
-                                    data-index="path_0"
-                                    fill="#272636"
-                                    d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z"
-                                  />
-                                </svg>
-                              </div>
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="site-info mt-2">
-                    <div>
-                      © some random rants 2020, Powered by
+          </div>
+          <div class="sect1">
+            <h2 id="ceph-里的-api-文档">Ceph 里的 API 文档</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  Ceph 用
+                  <a href="https://www.sphinx-doc.org/">Sphinx</a>
+                  编译文档。它作为一个平台提供
+                  librados，让大家可以用它写程序。librados
+                  有各种语言的绑定，其中一些有对应的文档：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      C: 用
+                      <a href="https://breathe.readthedocs.io/">Breathe</a> 的
                       <a
-                        title="Jekyll is a simple, blog-aware, static site generator."
-                        href="http://jekyllrb.com/"
-                        >Jekyll</a
+                        href="https://breathe.readthedocs.io/en/latest/directives.html#autodoxygenfile"
+                        >autodoxygenfile</a
                       >
-                      &
+                      directive
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      C&#43;&#43;: 还没有加上去。不过我觉得用 Breathe 和 Doxygen
+                      的组合应该就够了
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      Python: Sphinx 有内置的支持，即
                       <a
-                        title="TeXt is a super customizable Jekyll theme."
-                        href="https://github.com/kitian616/jekyll-TeXt-theme"
-                        >TeXt Theme</a
-                      >.
-                    </div>
-                  </div>
-                </div>
-              </footer>
-            </div>
-          </div>
-        </div>
-        <script>
-          (function () {
-            var SOURCES = window.TEXT_VARIABLES.sources;
-            window.Lazyload.js(SOURCES.jquery, function () {
-              var $body = $("body"),
-                $window = $(window);
-              var $pageRoot = $(".js-page-root"),
-                $pageMain = $(".js-page-main");
-              var activeCount = 0;
-              function modal(options) {
-                var $root = this,
-                  visible,
-                  onChange,
-                  hideWhenWindowScroll = false;
-                var scrollTop;
-                function setOptions(options) {
-                  var _options = options || {};
-                  visible =
-                    _options.initialVisible === undefined ? false : show;
-                  onChange = _options.onChange;
-                  hideWhenWindowScroll = _options.hideWhenWindowScroll;
-                }
-                function init() {
-                  setState(visible);
-                }
-                function setState(isShow) {
-                  if (isShow === visible) {
-                    return;
-                  }
-                  visible = isShow;
-                  if (visible) {
-                    activeCount++;
-                    scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
-                    $root.addClass("modal--show");
-                    $pageMain.scrollTop(scrollTop);
-                    activeCount === 1 &&
-                      ($pageRoot.addClass("show-modal"),
-                      $body.addClass("of-hidden"));
-                    hideWhenWindowScroll &&
-                      window.hasEvent("touchstart") &&
-                      $window.on("scroll", hide);
-                    $window.on("keyup", handleKeyup);
-                  } else {
-                    activeCount > 0 && activeCount--;
-                    $root.removeClass("modal--show");
-                    $window.scrollTop(scrollTop);
-                    activeCount === 0 &&
-                      ($pageRoot.removeClass("show-modal"),
-                      $body.removeClass("of-hidden"));
-                    hideWhenWindowScroll &&
-                      window.hasEvent("touchstart") &&
-                      $window.off("scroll", hide);
-                    $window.off("keyup", handleKeyup);
-                  }
-                  onChange && onChange(visible);
-                }
-                function show() {
-                  setState(true);
-                }
-                function hide() {
-                  setState(false);
-                }
-                function handleKeyup(e) {
-                  // Char Code: 27  ESC
-                  if (e.which === 27) {
-                    hide();
-                  }
-                }
-                setOptions(options);
-                init();
-                return {
-                  show: show,
-                  hide: hide,
-                  $el: $root,
-                };
-              }
-              $.fn.modal = modal;
-            });
-          })();
-        </script>
-        <div
-          class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"
-        >
-          <script>
-            (function () {
-              var SOURCES = window.TEXT_VARIABLES.sources;
-              window.Lazyload.js(SOURCES.jquery, function () {
-                // search panel
-                var search = window.search || (window.search = {});
-                var useDefaultSearchBox =
-                  window.useDefaultSearchBox === undefined
-                    ? true
-                    : window.useDefaultSearchBox;
-
-                var $searchModal = $(".js-page-search-modal");
-                var $searchToggle = $(".js-search-toggle");
-                var searchModal = $searchModal.modal({
-                  onChange: handleModalChange,
-                  hideWhenWindowScroll: true,
-                });
-                var modalVisible = false;
-                search.searchModal = searchModal;
-
-                var $searchBox = null;
-                var $searchInput = null;
-                var $searchClear = null;
-
-                function getModalVisible() {
-                  return modalVisible;
-                }
-                search.getModalVisible = getModalVisible;
-
-                function handleModalChange(visible) {
-                  modalVisible = visible;
-                  if (visible) {
-                    search.onShow && search.onShow();
-                    useDefaultSearchBox &&
-                      $searchInput[0] &&
-                      $searchInput[0].focus();
-                  } else {
-                    search.onShow && search.onHide();
-                    useDefaultSearchBox &&
-                      $searchInput[0] &&
-                      $searchInput[0].blur();
-                    setTimeout(function () {
-                      useDefaultSearchBox &&
-                        ($searchInput.val(""),
-                        $searchBox.removeClass("not-empty"));
-                      search.clear && search.clear();
-                      window.pageAsideAffix && window.pageAsideAffix.refresh();
-                    }, 400);
-                  }
-                }
-
-                $searchToggle.on("click", function () {
-                  modalVisible ? searchModal.hide() : searchModal.show();
-                });
-                // Char Code: 83  S, 191 /
-                $(window).on("keyup", function (e) {
-                  if (
-                    !modalVisible &&
-                    !window.isFormElement(e.target || e.srcElement) &&
-                    (e.which === 83 || e.which === 191)
-                  ) {
-                    modalVisible || searchModal.show();
-                  }
-                });
-
-                if (useDefaultSearchBox) {
-                  $searchBox = $(".js-search-box");
-                  $searchInput = $searchBox.children("input");
-                  $searchClear = $searchBox.children(".js-icon-clear");
-                  search.getSearchInput = function () {
-                    return $searchInput.get(0);
-                  };
-                  search.getVal = function () {
-                    return $searchInput.val();
-                  };
-                  search.setVal = function (val) {
-                    $searchInput.val(val);
-                  };
-
-                  $searchInput.on("focus", function () {
-                    $(this).addClass("focus");
-                  });
-                  $searchInput.on("blur", function () {
-                    $(this).removeClass("focus");
-                  });
-                  $searchInput.on(
-                    "input",
-                    window.throttle(function () {
-                      var val = $(this).val();
-                      if (val === "" || typeof val !== "string") {
-                        search.clear && search.clear();
-                      } else {
-                        $searchBox.addClass("not-empty");
-                        search.onInputNotEmpty && search.onInputNotEmpty(val);
-                      }
-                    }, 400)
-                  );
-                  $searchClear.on("click", function () {
-                    $searchInput.val("");
-                    $searchBox.removeClass("not-empty");
-                    search.clear && search.clear();
-                  });
-                }
-              });
-            })();
-          </script>
-          <div class="search search--dark">
-            <div class="main">
-              <div class="search__header">Search</div>
-              <div class="search-bar">
-                <div class="search-box js-search-box">
-                  <div class="search-box__icon-search">
-                    <i class="fas fa-search"></i>
-                  </div>
-                  <input type="text" />
-                  <div class="search-box__icon-clear js-icon-clear">
-                    <a><i class="fas fa-times"></i></a>
-                  </div>
-                </div>
-                <button
-                  class="button button--theme-dark button--pill search__cancel js-search-toggle"
-                >
-                  Cancel
-                </button>
+                        href="https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html"
+                        >sphinx.ext.autodoc</a
+                      >
+                      扩展。我们主要用它的 <code>automethod</code> directive
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      OpenAPI: 用
+                      <a href="https://github.com/sphinx-contrib/openapi"
+                        >sphinxcontrib.openapi</a
+                      >
+                      提供的 <code>openapi</code> directive
+                    </p>
+                  </li>
+                </ul>
               </div>
-              <div class="search-result js-search-result"></div>
             </div>
           </div>
-          <script>
-            var SOURCES = window.TEXT_VARIABLES.sources;
-            var PAHTS = window.TEXT_VARIABLES.paths;
-            window.Lazyload.js([SOURCES.jquery, PAHTS.search_js], function () {
-              var search = window.search || (window.search = {});
-              var searchData = window.TEXT_SEARCH_DATA || {};
+          <div class="sect1">
+            <h2 id="sphinx-的搜索">Sphinx 的搜索</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  Sphinx 内置有搜索功能，它也支持多词搜索，但是通常我们希望搜索
+                  source code 的话，Sphinx 会返回所有包含 source code
+                  的文档，即使文档里面出现的是 "code source" 或者 "source of
+                  code"。换言之，它不是我们习惯上的多词搜索。这个问题其他开发者也碰到了，在
+                  Sphinx 上有相关的
+                  <a href="https://github.com/sphinx-doc/sphinx/issues/3301"
+                    >issue</a
+                  >。我研究了一下，这个问题在于 Sphinx
+                  搜索的实现比较直接。它分这么几步
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      分词。每种语言的分词都不一样。值得一提的是，中文分词用的是<a
+                        href="https://github.com/fxsjy/jieba"
+                        >“结巴”分词</a
+                      >
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      逐词预处理，用对应语言的 stemming
+                      规则把词归一化。英语的实现可以参考<a
+                        href="https://github.com/sphinx-doc/sphinx/blob/master/sphinx/search/en.py"
+                        >这里</a
+                      >
+                    </p>
+                    <div class="olist loweralpha">
+                      <ol class="loweralpha" type="a">
+                        <li>
+                          <p>
+                            去掉后缀。比如说 apples 这个词就会变成
+                            apple。civilize 则会变成 civil。
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            去掉常见的介词、连词和代词。比如说 at、and 和 they
+                            就会被去掉。
+                          </p>
+                        </li>
+                      </ol>
+                    </div>
+                  </li>
+                  <li>
+                    <p>
+                      把索引关系加入倒排表。组织成一个大数据结构，保存在磁盘上。
+                    </p>
+                  </li>
+                  <li>
+                    <p>在搜索的时候，javascript 会直接从这个表里面找。</p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  所以可以想见，如果我们搜索 "fuse support" 想看看 Ceph 对 FUSE
+                  的支持，它会返回 mount.fuse.ceph 的
+                  <a
+                    href="https://docs.ceph.com/en/latest/man/8/mount.fuse.ceph/"
+                    >manpage</a
+                  >。这虽然也不算离谱，但是里面出现的 support 是这么一句话
+                </p>
+              </div>
+              <div class="quoteblock">
+                <blockquote>
+                  <div class="paragraph">
+                    <p>The old format /etc/fstab entries are also supported:</p>
+                  </div>
+                </blockquote>
+              </div>
+              <div class="paragraph">
+                <p>
+                  通篇没有出现 "fuse support" 这个序列。搜索返回了 32 篇文章，后
+                  31 篇 文章被检索到的关键字就是
+                  unsupported。这个很可能不是我们想要的。而 RTD 的多词搜索的<a
+                    href="https://docs.ceph.com/en/latest/search/?q=fuse+support"
+                    >结果</a
+                  >要好很多。对于不挑剔的读者基本上够用了。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  那为什么要纠结多词搜索呢？因为我们很多命令是多个单词构成的。比如说
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="shell">ceph <span class="nb">df</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  要是用户想搜索 "ceph
+                  df"，多词搜索要是能精确匹配，问题不就能解决了吗？那有没有其他办法呢？
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      google 的站内搜索。但是 google
+                      是一个商业公司。有的人可能会浑身不自在，如果他用一个广告公司的搜索。虽然在这个世界上，我们和商业公司有千丝万缕的联系，但是，哎。让我们留一点理想主义的念想吧。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      直接用 Read the Docs 的一揽子方案。它和
+                      <a href="https://travis-ci.org">travis</a>
+                      这些服务很像，不仅内置了 CI 的功能，也能帮着 host
+                      这些静态页面。对我们很合适。但是它的 build
+                      流程是很死的。看看它的<a
+                        href="https://docs.readthedocs.io/en/stable/config-file/v2.html"
+                        >配置文件</a
+                      >就知道了。这是为一个纯 Python
+                      项目度身定制的。我们后文分析这个限制的影响。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      其他 sphinx search
+                      plugin。找了一圈，没有不收费的。功能比较好的也需要自己搭建
+                      <a href="https://www.elastic.co/products/elasticsearch"
+                        >Elasticsearch</a
+                      >。RTD 开源了他们的<a
+                        href="https://github.com/readthedocs/readthedocs-sphinx-search"
+                        >方案</a
+                      >。但是一想到要挠我们实验室小哥的门，我就知趣地把爪子收起来了。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="假的-librados">假的 librados</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>Read the Docs 的搜索不错，但是它的限制也很明显。</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      只能通过
+                      <code>requirements.txt</code> 安装第三方依赖。那么
+                      <code>requirements.txt</code> 到底是啥呢？它是 pip 用来给
+                      <code>pip install</code> 传参数的。
+                      <a
+                        href="https://pip.pypa.io/en/stable/reference/pip_install/#requirements-file-format"
+                        >文档</a
+                      >说得明白。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      也可以用 setuptools 或者 pip 安装源码里面的 Python 项目。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      没有预处理阶段。<code>pip</code> 装好了，直接就是
+                      <code>sphinx-build</code>。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>我们回到各种语言的绑定：</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      C:
+                      <a href="https://breathe.readthedocs.io/">Breathe</a>
+                      其实本身并不能解析 C
+                      代码里面的注释，也不能理解头文件。它事实上担当的角色是
+                      Doxygen 产生的 XML 文件到 Sphinx 中间的桥梁。但是如果这些
+                      XML 不存在，巧妇难为无米之炊。所以它会调用用 Doxygen
+                      预处理一下指定的文件。但是问题来了，doxygen
+                      怎么安装呢？它是一个 C++ 的项目。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      Python: <code>automethod</code> 读取制定方法的
+                      docstring，产生 Sphinx 的文档。最近一部分代码用上了
+                      <a href="https://www.python.org/dev/peps/pep-0484/"
+                        >PEP484</a
+                      >
+                      风格的标注，所以我们也用
+                      <a
+                        href="https://github.com/agronholm/sphinx-autodoc-typehints"
+                        >sphinx_autodoc_typehints</a
+                      >
+                      来把这些标注变成 Sphinx 文档。这两种办法都要求 Sphinx 的
+                      Python 环境能访问被处理的 Python 扩展 (模块)。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      OpenAPI: <code>openapi</code> 读取的是一个 yaml
+                      文件。我们目前解决这个问题的办法是直接把这个文件放到了
+                      repo 里面。但是大家都知道这个 yaml
+                      文件其实是从代码产生的。把预处理的结果放到 repo
+                      里面显然不是一个最好的方案，在现阶段这是一个折中。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  但是对于 Python API 来说，以 python-rados 为例，它是用
+                  <a href="https://cython.org">Cython</a> 编写的 Python
+                  扩展，它的底层则是 librados C
+                  API。我们编译文档的时候其实并不需要一个功能上完备的
+                  librados，我们只需要让 sphinx 能导入 python-rados
+                  就行了。sphinx 并不会真正运行 python-rados
+                  的函数，它只会读取代码里面的元数据。所以 Ceph
+                  里面用了一个比较取巧的<a
+                    href="https://github.com/ceph/ceph/blob/master/admin/build-doc"
+                    >方法</a
+                  >。
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      为 <code>lib/librados.so</code> 建立一个空链接，指向
+                      <code>lib/librados.so.1</code>
+                    </p>
+                  </li>
+                  <li>
+                    <p>用 GCC 编译一个空的 <code>lib/librados.so.1</code></p>
+                  </li>
+                  <li>
+                    <p>
+                      用 <code>pip</code> 安装 python-rados，pip 会自动执行
+                      <code>setup.py</code> 脚本，后者会
+                    </p>
+                    <div class="olist loweralpha">
+                      <ol class="loweralpha" type="a">
+                        <li>
+                          <p>
+                            调用 Cython 编译对应的 rados.pyx，生成 C 代码，然后
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            GCC
+                            继续用指定源代码里的头文件目录，刚才生成的空动态链接库，生成
+                            rados 的 Python 扩展。
+                          </p>
+                        </li>
+                      </ol>
+                    </div>
+                  </li>
+                  <li>
+                    <p>
+                      至此，rados 的 python 扩展编译好了。但是它链接的
+                      <code>librados.so</code> 只是个空壳子。如果有人希望
+                      <code>import rados</code>
+                      ，一定会出错。因为那些符号都不存在呢。所以我们用
+                      <code>nm</code> 分析这个 Python
+                      extension，找出它引用的所有符号，看看它有没有 librados API
+                      的前缀。把这些符号，其实也是函数，统一写成
+                      <code>void func(void) {}</code> 的样子，用管道交给 GCC
+                      生成新的
+                      <code>lib/librados.so.1</code> 。虽然它是假的，但是至少
+                      <code>import</code> 的时候就不会出错了。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-575fae6deb6a6d2a191da4c460feaf0f.png"
+                    alt="Diagram"
+                    width="1010"
+                    height="336"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  OpenAPI 文档的 yaml
+                  文件的产生过程要简单很多，但是也需要使用我们自己编写的 python
+                  脚本。但是 RTD 的
+                  <code>requirements.txt</code> 没法实现这么复杂的预处理逻辑。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="方案">方案</h2>
+            <div class="sectionbody">
+              <div class="sect2">
+                <h3 id="sphinx-能看见的预处理结果">
+                  Sphinx 能看见的预处理结果
+                </h3>
+                <div class="paragraph">
+                  <p>
+                    为了能有一个 librados，我们可以在
+                    <a href="https://pypi.org">PyPI</a> 注册一个项目，让 Ceph
+                    发布新版本的时候也更新它。同时，我们的文档编译流程也能直接从
+                    PyPI 安装 python-rados。openapi.yaml
+                    其实也可以放在这里面。具体说就是
+                  </p>
+                </div>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>
+                        注册 python-rados 项目。其他 Python 绑定也同理，比如
+                        cephfs、rgw、rbd。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        一旦修改任何 Python 绑定的 pyx，就需要发布一个新版。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        让 <code>ceph/admin/doc-read-the-docs.txt</code> 安装
+                        python-rados， python-cephfs 等。
+                      </p>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="加入-stub-函数">加入 stub 函数</h3>
+                <div class="paragraph">
+                  <p>
+                    在编译文档的时候，在
+                    <code>rados.pyx</code> 中实现所有使用到的 C
+                    函数。不过需要注意，这些函数也应该暴露出来给 python-cephfs
+                    它们用。当然，只有在编译文档的时候才这么做。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="浏览器能看到的">浏览器能看到的</h3>
+                <div class="paragraph">
+                  <p>
+                    另外一个办法就是保留我们的 CI 流程，让它编译 API
+                    相关的文档，然后让 RTD 的文档引用我们自己编译的文档。这需要
+                  </p>
+                </div>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>
+                        新建一个域名，专门用来保存 API
+                        文档。题外话，它也可以用来保存 CI 产生的文档。
+                      </p>
+                    </li>
+                    <li>
+                      <p>修改文档里面所有引用 API 文档的超链接，加入条件：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>如果是 RTD 编译的话，就链接到刚才的域名</p>
+                          </li>
+                          <li>
+                            <p>其他情况，就使用相对路径</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-              function memorize(f) {
-                var cache = {};
-                return function () {
-                  var key = Array.prototype.join.call(arguments, ",");
-                  if (key in cache) return cache[key];
-                  else return (cache[key] = f.apply(this, arguments));
-                };
-              }
+        <!-- Social media shares -->
 
-              /// search
-              function searchByQuery(query) {
-                var i,
-                  j,
-                  key,
-                  keys,
-                  cur,
-                  _title,
-                  result = {};
-                keys = Object.keys(searchData);
-                for (i = 0; i < keys.length; i++) {
-                  key = keys[i];
-                  for (j = 0; j < searchData[key].length; j++) {
-                    (cur = searchData[key][j]), (_title = cur.title);
-                    if (
-                      (result[key] === undefined ||
-                        (result[key] && result[key].length < 4)) &&
-                      _title.toLowerCase().indexOf(query.toLowerCase()) >= 0
-                    ) {
-                      if (result[key] === undefined) {
-                        result[key] = [];
-                      }
-                      result[key].push(cur);
-                    }
-                  }
-                }
-                return result;
-              }
+        <!-- Tag list -->
 
-              var renderHeader = memorize(function (header) {
-                return $('<p class="search-result__header">' + header + "</p>");
-              });
+        <footer>
+          <div class="tag-list">
+            <div class="meta">Tags</div>
 
-              var renderItem = function (index, title, url) {
-                return $(
-                  '<li class="search-result__item" data-index="' +
-                    index +
-                    '"><a class="button" href="' +
-                    url +
-                    '">' +
-                    title +
-                    "</a></li>"
-                );
-              };
+            <a class="button" href="/tags#ceph">
+              <p><i class="fa fa-tag fa-fw"></i> ceph</p>
+            </a>
 
-              function render(data) {
-                if (!data) {
-                  return null;
-                }
-                var $root = $("<ul></ul>"),
-                  i,
-                  j,
-                  key,
-                  keys,
-                  cur,
-                  itemIndex = 0;
-                keys = Object.keys(data);
-                for (i = 0; i < keys.length; i++) {
-                  key = keys[i];
-                  $root.append(renderHeader(key));
-                  for (j = 0; j < data[key].length; j++) {
-                    cur = data[key][j];
-                    $root.append(renderItem(itemIndex++, cur.title, cur.url));
-                  }
-                }
-                return $root;
-              }
+            <a class="button" href="/tags#ci">
+              <p><i class="fa fa-tag fa-fw"></i> ci</p>
+            </a>
+          </div>
+        </footer>
+      </article>
 
-              // search box
-              var $result = $(".js-search-result"),
-                $resultItems;
-              var lastActiveIndex, activeIndex;
+      <!-- Disqus -->
 
-              function clear() {
-                $result.html(null);
-                $resultItems = $(".search-result__item");
-                activeIndex = 0;
-              }
-              function onInputNotEmpty(val) {
-                $result.html(render(searchByQuery(val)));
-                $resultItems = $(".search-result__item");
-                activeIndex = 0;
-                $resultItems.eq(0).addClass("active");
-              }
+      <!-- Post navigation -->
 
-              search.clear = clear;
-              search.onInputNotEmpty = onInputNotEmpty;
-
-              function updateResultItems() {
-                lastActiveIndex >= 0 &&
-                  $resultItems.eq(lastActiveIndex).removeClass("active");
-                activeIndex >= 0 &&
-                  $resultItems.eq(activeIndex).addClass("active");
-              }
-
-              function moveActiveIndex(direction) {
-                var itemsCount = $resultItems ? $resultItems.length : 0;
-                if (itemsCount > 1) {
-                  lastActiveIndex = activeIndex;
-                  if (direction === "up") {
-                    activeIndex = (activeIndex - 1 + itemsCount) % itemsCount;
-                  } else if (direction === "down") {
-                    activeIndex = (activeIndex + 1 + itemsCount) % itemsCount;
-                  }
-                  updateResultItems();
-                }
-              }
-
-              // Char Code: 13  Enter, 37  ⬅, 38  ⬆, 39  ➡, 40  ⬇
-              $(window).on("keyup", function (e) {
-                var modalVisible =
-                  search.getModalVisible && search.getModalVisible();
-                if (modalVisible) {
-                  if (e.which === 38) {
-                    modalVisible && moveActiveIndex("up");
-                  } else if (e.which === 40) {
-                    modalVisible && moveActiveIndex("down");
-                  } else if (e.which === 13) {
-                    modalVisible &&
-                      $resultItems &&
-                      activeIndex >= 0 &&
-                      $resultItems.eq(activeIndex).children("a")[0].click();
-                  }
-                }
-              });
-
-              $result.on("mouseover", ".search-result__item > a", function () {
-                var itemIndex = $(this).parent().data("index");
-                itemIndex >= 0 &&
-                  ((lastActiveIndex = activeIndex),
-                  (activeIndex = itemIndex),
-                  updateResultItems());
-              });
-            });
-          </script>
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="std::error_code" href="/2020/09/30/error-code.html">
+            <p>Next post</p>
+            std::error_code
+          </a>
         </div>
       </div>
 
-      <script>
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function scrollToAnchor(anchor, duration, callback) {
-              var $root = this;
-              $root.animate(
-                { scrollTop: $(anchor).position().top },
-                duration,
-                function () {
-                  window.history.replaceState(
-                    null,
-                    "",
-                    window.location.href.split("#")[0] + anchor
-                  );
-                  callback && callback();
-                }
-              );
-            }
-            $.fn.scrollToAnchor = scrollToAnchor;
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function affix(options) {
-              var $root = this,
-                $window = $(window),
-                $scrollTarget,
-                $scroll,
-                offsetBottom = 0,
-                scrollTarget = window,
-                scroll = window.document,
-                disabled = false,
-                isOverallScroller = true,
-                rootTop,
-                rootLeft,
-                rootHeight,
-                scrollBottom,
-                rootBottomTop,
-                hasInit = false,
-                curState;
-
-              function setOptions(options) {
-                var _options = options || {};
-                _options.offsetBottom && (offsetBottom = _options.offsetBottom);
-                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-                _options.scroll && (scroll = _options.scroll);
-                _options.disabled !== undefined &&
-                  (disabled = _options.disabled);
-                $scrollTarget = $(scrollTarget);
-                isOverallScroller = window.isOverallScroller($scrollTarget[0]);
-                $scroll = $(scroll);
-              }
-              function preCalc() {
-                top();
-                rootHeight = $root.outerHeight();
-                rootTop =
-                  $root.offset().top +
-                  (isOverallScroller ? 0 : $scrollTarget.scrollTop());
-                rootLeft = $root.offset().left;
-              }
-              function calc(needPreCalc) {
-                needPreCalc && preCalc();
-                scrollBottom =
-                  $scroll.outerHeight() - offsetBottom - rootHeight;
-                rootBottomTop = scrollBottom - rootTop;
-              }
-              function top() {
-                if (curState !== "top") {
-                  $root.removeClass("fixed").css({
-                    left: 0,
-                    top: 0,
-                  });
-                  curState = "top";
-                }
-              }
-              function fixed() {
-                if (curState !== "fixed") {
-                  $root.addClass("fixed").css({
-                    left: rootLeft + "px",
-                    top: 0,
-                  });
-                  curState = "fixed";
-                }
-              }
-              function bottom() {
-                if (curState !== "bottom") {
-                  $root.removeClass("fixed").css({
-                    left: 0,
-                    top: rootBottomTop + "px",
-                  });
-                  curState = "bottom";
-                }
-              }
-              function setState() {
-                var scrollTop = $scrollTarget.scrollTop();
-                if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
-                  fixed();
-                } else if (scrollTop < rootTop) {
-                  top();
-                } else {
-                  bottom();
-                }
-              }
-              function init() {
-                if (!hasInit) {
-                  var interval, timeout;
-                  calc(true);
-                  setState();
-                  // run calc every 100 millisecond
-                  interval = setInterval(function () {
-                    calc();
-                  }, 100);
-                  timeout = setTimeout(function () {
-                    clearInterval(interval);
-                  }, 45000);
-                  window.pageLoad.then(function () {
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      clearTimeout(timeout);
-                    }, 3000);
-                  });
-                  $scrollTarget.on("scroll", function () {
-                    disabled || setState();
-                  });
-                  $window.on("resize", function () {
-                    disabled || (calc(true), setState());
-                  });
-                  hasInit = true;
-                }
-              }
-
-              setOptions(options);
-              if (!disabled) {
-                init();
-              }
-              $window.on(
-                "resize",
-                window.throttle(function () {
-                  init();
-                }, 200)
-              );
-              return {
-                setOptions: setOptions,
-                refresh: function () {
-                  calc(true, { animation: false });
-                  setState();
-                },
-              };
-            }
-            $.fn.affix = affix;
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            function toc(options) {
-              var $root = this,
-                $window = $(window),
-                $scrollTarget,
-                $scroller,
-                $tocUl = $('<ul class="toc toc--ellipsis"></ul>'),
-                $tocLi,
-                $headings,
-                $activeLast,
-                $activeCur,
-                selectors = "h1,h2,h3",
-                container = "body",
-                scrollTarget = window,
-                scroller = "html, body",
-                disabled = false,
-                headingsPos,
-                scrolling = false,
-                hasRendered = false,
-                hasInit = false;
-
-              function setOptions(options) {
-                var _options = options || {};
-                _options.selectors && (selectors = _options.selectors);
-                _options.container && (container = _options.container);
-                _options.scrollTarget && (scrollTarget = _options.scrollTarget);
-                _options.scroller && (scroller = _options.scroller);
-                _options.disabled !== undefined &&
-                  (disabled = _options.disabled);
-                $headings = $(container).find(selectors).filter("[id]");
-                $scrollTarget = $(scrollTarget);
-                $scroller = $(scroller);
-              }
-              function calc() {
-                headingsPos = [];
-                $headings.each(function () {
-                  headingsPos.push(Math.floor($(this).position().top));
-                });
-              }
-              function setState(element, disabled) {
-                var scrollTop = $scrollTarget.scrollTop(),
-                  i;
-                if (disabled || !headingsPos || headingsPos.length < 1) {
-                  return;
-                }
-                if (element) {
-                  $activeCur = element;
-                } else {
-                  for (i = 0; i < headingsPos.length; i++) {
-                    if (scrollTop >= headingsPos[i]) {
-                      $activeCur = $tocLi.eq(i);
-                    } else {
-                      $activeCur || ($activeCur = $tocLi.eq(i));
-                      break;
-                    }
-                  }
-                }
-                $activeLast && $activeLast.removeClass("active");
-                ($activeLast = $activeCur).addClass("active");
-              }
-              function render() {
-                if (!hasRendered) {
-                  $root.append($tocUl);
-                  $headings.each(function () {
-                    var $this = $(this);
-                    $tocUl.append(
-                      $("<li></li>")
-                        .addClass("toc-" + $this.prop("tagName").toLowerCase())
-                        .append(
-                          $("<a></a>")
-                            .text($this.text())
-                            .attr("href", "#" + $this.prop("id"))
-                        )
-                    );
-                  });
-                  $tocLi = $tocUl.children("li");
-                  $tocUl.on("click", "a", function (e) {
-                    e.preventDefault();
-                    var $this = $(this);
-                    scrolling = true;
-                    setState($this.parent());
-                    $scroller.scrollToAnchor(
-                      $this.attr("href"),
-                      400,
-                      function () {
-                        scrolling = false;
-                      }
-                    );
-                  });
-                }
-                hasRendered = true;
-              }
-              function init() {
-                var interval, timeout;
-                if (!hasInit) {
-                  render();
-                  calc();
-                  setState(null, scrolling);
-                  // run calc every 100 millisecond
-                  interval = setInterval(function () {
-                    calc();
-                  }, 100);
-                  timeout = setTimeout(function () {
-                    clearInterval(interval);
-                  }, 45000);
-                  window.pageLoad.then(function () {
-                    setTimeout(function () {
-                      clearInterval(interval);
-                      clearTimeout(timeout);
-                    }, 3000);
-                  });
-                  $scrollTarget.on("scroll", function () {
-                    disabled || setState(null, scrolling);
-                  });
-                  $window.on(
-                    "resize",
-                    window.throttle(function () {
-                      if (!disabled) {
-                        render();
-                        calc();
-                        setState(null, scrolling);
-                      }
-                    }, 100)
-                  );
-                }
-                hasInit = true;
-              }
-
-              setOptions(options);
-              if (!disabled) {
-                init();
-              }
-              $window.on(
-                "resize",
-                window.throttle(function () {
-                  init();
-                }, 200)
-              );
-              return {
-                setOptions: setOptions,
-              };
-            }
-            $.fn.toc = toc;
-          });
-        })();
-        /*(function () {
-
-})();*/
-      </script>
-      <script>
-        /* toc must before affix, since affix need to konw toc' height. */ (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            var $window = $(window);
-            var $articleContent = $(".js-article-content");
-            var $tocRoot = $(".js-toc-root"),
-              $col2 = $(".js-col-aside");
-            var toc;
-            var tocDisabled = false;
-            var hasSidebar = $(".js-page-root").hasClass(
-              "layout--page--sidebar"
-            );
-            var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
-
-            function disabled() {
-              return $col2.css("display") === "none" || !hasToc;
-            }
-
-            tocDisabled = disabled();
-
-            toc = $tocRoot.toc({
-              selectors: TOC_SELECTOR,
-              container: $articleContent,
-              scrollTarget: hasSidebar ? ".js-page-main" : null,
-              scroller: hasSidebar ? ".js-page-main" : null,
-              disabled: tocDisabled,
-            });
-
-            $window.on(
-              "resize",
-              window.throttle(function () {
-                tocDisabled = disabled();
-                toc &&
-                  toc.setOptions({
-                    disabled: tocDisabled,
-                  });
-              }, 100)
-            );
-          });
-        })();
-        (function () {
-          var SOURCES = window.TEXT_VARIABLES.sources;
-          window.Lazyload.js(SOURCES.jquery, function () {
-            var $window = $(window),
-              $pageFooter = $(".js-page-footer");
-            var $pageAside = $(".js-page-aside");
-            var affix;
-            var tocDisabled = false;
-            var hasSidebar = $(".js-page-root").hasClass(
-              "layout--page--sidebar"
-            );
-
-            affix = $pageAside.affix({
-              offsetBottom: $pageFooter.outerHeight(),
-              scrollTarget: hasSidebar ? ".js-page-main" : null,
-              scroller: hasSidebar ? ".js-page-main" : null,
-              scroll: hasSidebar ? $(".js-page-main").children() : null,
-              disabled: tocDisabled,
-            });
-
-            $window.on(
-              "resize",
-              window.throttle(function () {
-                affix &&
-                  affix.setOptions({
-                    disabled: tocDisabled,
-                  });
-              }, 100)
-            );
-
-            window.pageAsideAffix = affix;
-          });
-        })();
-      </script>
-    </div>
-    <script>
-      (function () {
-        var $root = document.getElementsByClassName("root")[0];
-        if (window.hasEvent("touchstart")) {
-          $root.dataset.isTouch = true;
-          document.addEventListener("touchstart", function () {}, false);
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-repeat: no-repeat;
         }
-      })();
-    </script>
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
   </body>
 </html>
