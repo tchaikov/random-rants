@@ -1,0 +1,4 @@
+:page-layout: tags
+:page-title: Tags
+:page-permalink: /tags/
+:page-icon: "fa-tags"

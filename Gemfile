@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 gem "jekyll", "~> 4.1.1"
-gem "jekyll-text-theme", github: 'tchaikov/jekyll-text-theme', branch: 'master'
+gem "type-on-strap"
 gem "tzinfo-data"
 
 group :jekyll_plugins do
@@ -10,5 +10,4 @@ group :jekyll_plugins do
   gem 'jekyll-asciidoc', github: 'tchaikov/jekyll-asciidoc', branch: 'master'
   gem 'jekyll-paginate'
   gem 'jekyll-sitemap'
-  gem 'jemoji'
 end

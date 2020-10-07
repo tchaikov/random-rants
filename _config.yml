@@ -20,32 +20,23 @@ repository_tree: master
 paginate: 8
 paginate_path: /page:num
 
-highlighter: rouge
-permalink: date
-
 exclude:
   - Gemfile.lock
   - Gemfile
-  - Rakefile
   - Makefile
   - README.adoc
   - LICENSE
   - /vendor
   - /docs
+  - /assets/node_modules
 
-defaults:
-  - scope:
-      path: ""
-      type: posts
-    values:
-      layout: article
-      sharing: false
-      license: true
-      aside:
-        toc: true
-      show_edit_on_github: false
-      show_subscribe: false
-      pageview: true
+header_text: 一亩三分地
+excerpt: true
+post_navigation: true
+katex: true
+
+paginate: 5
+paginate_path: "/blog/page:num"
 
 keep_files:
   - images
@@ -59,4 +50,9 @@ asciidoctor:
     - imagesdir=/images
     - source-highlighter=rouge
 
-theme: jekyll-text-theme
+sass:
+    sass_dir: _sass
+    style: nested
+
+theme: type-on-strap
+

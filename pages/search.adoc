@@ -1,0 +1,5 @@
+:page-layout: search
+:page-title: "搜索"
+:page-permalink: /search/
+:page-subtitle: "你在找啥呢?"
+:page-icon: "fa-search"

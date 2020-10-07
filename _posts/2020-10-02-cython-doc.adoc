@@ -2,8 +2,12 @@
 :page-tags: [ceph, ci]
 :date: 2020-10-02 12:35:43 +0800
 :pp: {plus}{plus}
+:toc: macro
+:!toc-title:
 
 最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 https://readthedocs.org[Read the Docs] 上。但是还有一些问题。
+
+toc::[]
 
 == Ceph 里的 API 文档
 
