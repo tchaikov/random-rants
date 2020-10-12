@@ -282,7 +282,7 @@
           <div class="imageblock">
             <div class="content">
               <img
-                src="/images/diag-05226f529621e31d44d9ae5318c09206.png"
+                src="/images/diag-9285d44a0dc2f44729db42b65a8b841d.png"
                 alt="Diagram"
                 width="630"
                 height="210"
@@ -291,27 +291,42 @@
           </div>
           <div class="paragraph">
             <p>
-              很明显，这里的 AST 的树根是个函数调用。n4659
-              中，http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf[expr.call]
-              说道
+              很明显，这里的 AST 的树根是个函数调用。n4659 中，
+              <a
+                href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf"
+                >expr.call</a
+              >
+              一节说道
             </p>
           </div>
-          <div class="listingblock">
-            <div class="content">
-              <pre>
-A function call is a postfix expression followed by parentheses containing a possibly empty, comma-separated list of _initializer-clauses_ which constitute the arguments to the function.</pre
-              >
-            </div>
+          <div class="quoteblock">
+            <blockquote>
+              <div class="paragraph">
+                <p>
+                  A function call is a postfix expression followed by
+                  parentheses containing a possibly empty, comma-separated list
+                  of <em>initializer-clauses</em> which constitute the arguments
+                  to the function.
+                </p>
+              </div>
+            </blockquote>
           </div>
           <div class="paragraph">
             <p>接着标准规定了函数参数的求值顺序</p>
           </div>
-          <div class="listingblock">
-            <div class="content">
-              <pre>
-The _postfix-expression_ is sequenced before each _expression_ in the _expression-list_ and any default argument. The initialization of a parameter, including every associated value computation and side effect, is indeterminately sequenced with respect to that of any other parameter.</pre
-              >
-            </div>
+          <div class="quoteblock">
+            <blockquote>
+              <div class="paragraph">
+                <p>
+                  The <em>postfix-expression</em> is sequenced before each
+                  <em>expression</em> in the <em>expression-list</em> and any
+                  default argument. The initialization of a parameter, including
+                  every associated value computation and side effect, is
+                  indeterminately sequenced with respect to that of any other
+                  parameter.
+                </p>
+              </div>
+            </blockquote>
           </div>
           <div class="paragraph">
             <p>
@@ -320,12 +335,20 @@ The _postfix-expression_ is sequenced before each _expression_ in the _expressio
               >，就是：
             </p>
           </div>
-          <div class="listingblock">
-            <div class="content">
-              <pre>
-When calling a function (whether or not the function is inline, and whether or not explicit function call syntax is used), every value computation and side effect associated with any argument expression, or with the postfix expression designating the called function, is sequenced before execution of every expression or statement in the body of the called function.</pre
-              >
-            </div>
+          <div class="quoteblock">
+            <blockquote>
+              <div class="paragraph">
+                <p>
+                  When calling a function (whether or not the function is
+                  inline, and whether or not explicit function call syntax is
+                  used), every value computation and side effect associated with
+                  any argument expression, or with the postfix expression
+                  designating the called function, is sequenced before execution
+                  of every expression or statement in the body of the called
+                  function.
+                </p>
+              </div>
+            </blockquote>
           </div>
           <div class="paragraph">
             <p>
@@ -359,6 +382,39 @@ When calling a function (whether or not the function is inline, and whether or n
               也会随之而去。我们并不需要为它专门做一个
               <code>seastar::do_with()</code>
               用智能指针保存它的值，延长其生命周期。
+            </p>
+          </div>
+          <div class="paragraph">
+            <p>
+              回到一开始的
+              <code>foo_t</code>
+              的那个例子，其实它有些许误导。我们按照结合律，可以把这个表达式拆成这么几个
+            </p>
+          </div>
+          <div class="imageblock">
+            <div class="content">
+              <img
+                src="/images/diag-12f3688866fca34d79a454bfb30b7c72.png"
+                alt="Diagram"
+                width="560"
+                height="196"
+              />
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              所以对第二个 <code>.func()</code> 求值，我们必须先对
+              <code>foo.func(1)</code> 和
+              <code>gen(2)</code> 求值，当然它们的顺序不一定。然后再调用
+              <code>foo.func(2)</code>。
+            </p>
+          </div>
+          <div class="paragraph">
+            <p>
+              但是和前文 <code>scan()</code> 的例子不一样，<code>scan()</code>
+              的第二个参数是个 lambda 表达式，为了对它求值，我们必须初始化
+              lambda 表达式中的 capture
+              列表。所以看上去好像有“写在后面的代码反而在之前执行了”的错觉。但是如果把语法关系理清楚，这个问题就迎刃而解了。
             </p>
           </div>
         </section>
