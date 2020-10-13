@@ -15,11 +15,16 @@ figure.highlight,
   border-radius: $border-radius;
 
 
-  > pre,
-  pre.highlight {
+  pre {
     margin: 0;
-    padding: 1em;
+    padding: 0.5em;
   }
+}
+
+div.highlighter-rouge,
+div.listingblock,
+figure.highlight {
+  margin-bottom: 1em;
 }
 
 li .highlight * {
@@ -46,13 +51,11 @@ figure.highlight {
   margin-bottom: 1em;
 }
 
-code.highlighter-rouge {
-  padding: 0.2em 0.4em;
-  font-size: $font-size-code;
+p code {
   background-color: transparentize($base00, 0.85);
-  color: rgb(36, 41, 46);
-  border-radius: 2px;
-  font-family: $monospace;
+  font-size: $font-size-code;
+  border-radius: $border-radius;
+  padding: 0.2em 0.4em;
 }
 
 table.rouge-table {
