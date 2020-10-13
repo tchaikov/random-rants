@@ -3981,7 +3981,7 @@ div.highlighter-rouge,
 figure.highlight {
   margin-bottom: 1em; }
 
-code.highlighter-rouge {
+code.highlighter-rouge, code {
   padding: 0.2em 0.4em;
   font-size: 0.85em;
   background-color: rgba(48, 47, 45, 0.15);
