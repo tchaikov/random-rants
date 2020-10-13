@@ -3981,13 +3981,11 @@ div.highlighter-rouge,
 figure.highlight {
   margin-bottom: 1em; }
 
-code.highlighter-rouge, code {
-  padding: 0.2em 0.4em;
-  font-size: 0.85em;
+p code {
   background-color: rgba(48, 47, 45, 0.15);
-  color: #24292e;
-  border-radius: 2px;
-  font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, sans-serif; }
+  font-size: 0.85em;
+  border-radius: 4px;
+  padding: 0.2em 0.4em; }
 
 table.rouge-table {
   margin-bottom: 0;
