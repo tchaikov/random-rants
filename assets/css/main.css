@@ -3897,7 +3897,7 @@ ul,
 dl,
 .math-display {
   line-height: 1.5;
-  margin-bottom: 1em; }
+  margin-bottom: 0.3em; }
 
 .math-display {
   display: inline-block;
@@ -3950,16 +3950,17 @@ figure.highlight,
   font-size: 0.85em;
   line-height: 1.3em;
   border-radius: 4px; }
-  div.highlighter-rouge > pre,
-  div.highlighter-rouge pre.highlight,
-  div.listingblock > pre,
-  div.listingblock pre.highlight,
-  figure.highlight > pre,
-  figure.highlight pre.highlight,
-  .highlight code > pre,
-  .highlight code pre.highlight {
+  div.highlighter-rouge pre,
+  div.listingblock pre,
+  figure.highlight pre,
+  .highlight code pre {
     margin: 0;
-    padding: 1em; }
+    padding: 0.5em; }
+
+div.highlighter-rouge,
+div.listingblock,
+figure.highlight {
+  margin-bottom: 1em; }
 
 li .highlight * {
   font-size: 14px; }

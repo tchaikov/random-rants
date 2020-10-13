@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-13T01:40:31+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">求值的顺序</title><link href="https://blog.k3fu.xyz/2020/10/12/order-of-evaluation.html" rel="alternate" type="text/html" title="求值的顺序" /><published>2020-10-12T00:00:00+00:00</published><updated>2020-10-12T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/12/order-of-evaluation</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/12/order-of-evaluation.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-10-13T02:45:34+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">求值的顺序</title><link href="https://blog.k3fu.xyz/2020/10/12/order-of-evaluation.html" rel="alternate" type="text/html" title="求值的顺序" /><published>2020-10-12T00:00:00+00:00</published><updated>2020-10-12T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/12/order-of-evaluation</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/12/order-of-evaluation.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -70,9 +70,9 @@
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre&gt; func(1)
- gen(2)
- func(2)&lt;/pre&gt;
+&lt;pre&gt;func(1)
+gen(2)
+func(2)&lt;/pre&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -81,13 +81,21 @@
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;但是从 C&amp;#43;&amp;#43; 的角度来说呢？简化版本的代码中，有这么个表达式&lt;/p&gt;
 &lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;c++&quot;&gt;&lt;span class=&quot;n&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gen&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;它用来模拟 Seastar 里面 &lt;code&gt;.then()&lt;/code&gt; 的调用，方便理解求值的先后顺序。很明显，这里的 AST 的树根是个函数调用。&lt;/p&gt;
+&lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
 &lt;img src=&quot;/images/diag-9285d44a0dc2f44729db42b65a8b841d.png&quot; alt=&quot;Diagram&quot; width=&quot;630&quot; height=&quot;210&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;很明显，这里的 AST 的树根是个函数调用。n4659 中， &lt;a href=&quot;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf&quot;&gt;expr.call&lt;/a&gt; 一节说道&lt;/p&gt;
+&lt;p&gt;n4659 中， &lt;a href=&quot;http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf&quot;&gt;expr.call&lt;/a&gt; 一节说道&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;quoteblock&quot;&gt;
 &lt;blockquote&gt;
@@ -137,7 +145,7 @@
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;/images/diag-12f3688866fca34d79a454bfb30b7c72.png&quot; alt=&quot;Diagram&quot; width=&quot;560&quot; height=&quot;196&quot;&gt;
+&lt;img src=&quot;/images/diag-372ff6cf49d5dafdd439f671752671ca.png&quot; alt=&quot;Diagram&quot; width=&quot;550&quot; height=&quot;196&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;

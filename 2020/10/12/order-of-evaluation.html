@@ -272,9 +272,9 @@
           <div class="listingblock">
             <div class="content">
               <pre>
- func(1)
- gen(2)
- func(2)</pre
+func(1)
+gen(2)
+func(2)</pre
               >
             </div>
           </div>
@@ -295,6 +295,21 @@
               但是从 C&#43;&#43; 的角度来说呢？简化版本的代码中，有这么个表达式
             </p>
           </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++"><span class="n">foo</span><span class="p">.</span><span class="n">func</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">func</span><span class="p">(</span><span class="n">gen</span><span class="p">(</span><span class="mi">2</span><span class="p">));</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              它用来模拟 Seastar 里面
+              <code>.then()</code>
+              的调用，方便理解求值的先后顺序。很明显，这里的 AST
+              的树根是个函数调用。
+            </p>
+          </div>
           <div class="imageblock">
             <div class="content">
               <img
@@ -307,7 +322,7 @@
           </div>
           <div class="paragraph">
             <p>
-              很明显，这里的 AST 的树根是个函数调用。n4659 中，
+              n4659 中，
               <a
                 href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/n4659.pdf"
                 >expr.call</a
@@ -410,9 +425,9 @@
           <div class="imageblock">
             <div class="content">
               <img
-                src="/images/diag-12f3688866fca34d79a454bfb30b7c72.png"
+                src="/images/diag-372ff6cf49d5dafdd439f671752671ca.png"
                 alt="Diagram"
-                width="560"
+                width="550"
                 height="196"
               />
             </div>
