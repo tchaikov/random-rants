@@ -63,11 +63,11 @@
     <meta property="og:locale" content="en" />
     <meta
       name="description"
-      content="用 Seastar 的时候，常常需要推迟一个 lvalue reference 对象的析构。于是面试开始了。"
+      content="用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。"
     />
     <meta
       property="og:description"
-      content="用 Seastar 的时候，常常需要推迟一个 lvalue reference 对象的析构。于是面试开始了。"
+      content="用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。"
     />
     <link
       rel="canonical"
@@ -85,7 +85,7 @@
     />
     <script type="application/ld+json">
       {
-        "description": "用 Seastar 的时候，常常需要推迟一个 lvalue reference 对象的析构。于是面试开始了。",
+        "description": "用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。",
         "url": "https://blog.k3fu.xyz/2020/10/12/order-of-evaluation.html",
         "@type": "BlogPosting",
         "headline": "求值的顺序",
@@ -113,7 +113,7 @@
     <meta name="twitter:title" content="求值的顺序" />
     <meta
       name="twitter:description"
-      content="用 Seastar 的时候，常常需要推迟一个 lvalue reference 对象的析构。于是面试开始了。我们看看这段代码：seastar::future&lt;&gt; scan(func_t&amp;&amp; f){  return seastar::do_with(std::move(f), [this..."
+      content="用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。平时，我们这样写程序：void scan(func_t&amp;&amp; f){  Node root = get_root();  return root.scan(std::move(f));}但是用 Seastar 的话，因为 get_..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -184,13 +184,47 @@
 
         <section class="post-content">
           <div class="paragraph">
-            <p>
-              用 Seastar 的时候，常常需要推迟一个 lvalue reference
-              对象的析构。于是面试开始了。
-            </p>
+            <p>用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。</p>
           </div>
           <div class="paragraph">
-            <p>我们看看这段代码：</p>
+            <p>平时，我们这样写程序：</p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++"><span class="kt">void</span> <span class="nf">scan</span><span class="p">(</span><span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">Node</span> <span class="n">root</span> <span class="o">=</span> <span class="n">get_root</span><span class="p">();</span>
+  <span class="k">return</span> <span class="n">root</span><span class="p">.</span><span class="n">scan</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
+<span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              但是用 Seastar 的话，因为
+              <code>get_root()</code>
+              可能会阻塞，我们可能可以把代码写成下面这样：
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++"><span class="n">seastar</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">scan</span><span class="p">(</span><span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="n">get_root</span><span class="p">().</span><span class="n">then</span><span class="p">([</span><span class="n">f</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">)](</span><span class="n">Node</span><span class="o">&amp;&amp;</span> <span class="n">root</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">root</span><span class="p">.</span><span class="n">scan</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
+  <span class="p">});</span>
+<span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              那么既然 <code>get_root()</code> 是异步的，那么等到调用
+              <code>then()</code> 的时候，<code>f</code>
+              会不会已经析构了呢？我们是不是应该这么写？
+            </p>
           </div>
           <div class="listingblock">
             <div class="content">
@@ -207,25 +241,7 @@
             </div>
           </div>
           <div class="paragraph">
-            <p>为什么不干脆写成下面这样呢？</p>
-          </div>
-          <div class="listingblock">
-            <div class="content">
-              <pre
-                class="rouge highlight"
-              ><code data-lang="c++"><span class="n">seastar</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">scan</span><span class="p">(</span><span class="n">func_t</span><span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="k">return</span> <span class="n">get_root</span><span class="p">().</span><span class="n">then</span><span class="p">([</span><span class="n">f</span><span class="o">=</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">)](</span><span class="n">Node</span><span class="o">&amp;&amp;</span> <span class="n">root</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">root</span><span class="p">.</span><span class="n">scan</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
-  <span class="p">});</span>
-<span class="p">}</span></code></pre>
-            </div>
-          </div>
-          <div class="paragraph">
-            <p>
-              我觉得原因是作者担心 <code>f</code> 在调用到
-              <code>.then()</code> 里面的的时候已经析构了。因为
-            </p>
+            <p>这里就是例子：</p>
           </div>
           <div class="listingblock">
             <div class="content">
