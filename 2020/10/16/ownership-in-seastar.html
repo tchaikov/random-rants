@@ -417,7 +417,8 @@ seastar::noncopyable_function&lt;void ()&gt;::operator()() const at /var/ssd/cep
             <p>
               这个 <code>take()</code> 很奇怪。<code>get()</code> 和
               <code>take()</code>
-              的语义是不一样的。一个是返回拷贝或者引用，一个则是从所有者*夺走*，然后返回抢到的东西。果不其然：
+              的语义是不一样的。一个是返回拷贝或者引用，一个则是从所有者手中
+              <strong>夺走</strong>，然后返回抢到的东西。果不其然：
             </p>
           </div>
           <div class="listingblock">
@@ -462,7 +463,7 @@ seastar::noncopyable_function&lt;void ()&gt;::operator()() const at /var/ssd/cep
           <div class="paragraph">
             <p>
               原来 <code>_promise</code> 是在这里被拿走的，罪魁祸首并非
-              <code>schedule()</code>。调整一下顺序，最后再
+              <code>schedule()</code>。人家只是受害者。调整一下顺序，最后再
               <code>get()</code>，问题就解决了。
             </p>
           </div>
