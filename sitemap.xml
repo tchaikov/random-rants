@@ -29,12 +29,16 @@
 <lastmod>2020-09-30T00:00:00+00:00</lastmod>
 </url>
 <url>
-<loc>https://blog.k3fu.xyz/2020/10/02/cython-doc.html</loc>
+<loc>https://blog.k3fu.xyz/2020/10/02/road-to-rtd.html</loc>
 <lastmod>2020-10-02T00:00:00+00:00</lastmod>
 </url>
 <url>
 <loc>https://blog.k3fu.xyz/2020/10/12/order-of-evaluation.html</loc>
 <lastmod>2020-10-12T00:00:00+00:00</lastmod>
+</url>
+<url>
+<loc>https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html</loc>
+<lastmod>2020-10-16T00:00:00+00:00</lastmod>
 </url>
 <url>
 <loc>https://blog.k3fu.xyz/about/</loc>

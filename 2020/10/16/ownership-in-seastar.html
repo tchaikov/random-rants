@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.2.6
+    Copyright 2016-2020 Sylhare
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- Canonical -->
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html"
+    />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+
+    <!-- KaTeX 0.12.0 -->
+    <!-- if you have any issue check https://github.com/KaTeX/KaTeX -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+    <!-- Begin Jekyll SEO tag v2.6.1 -->
+    <title>seastar::future 中的 ownership | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="seastar::future 中的 ownership" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta
+      name="description"
+      content="最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单："
+    />
+    <meta
+      property="og:description"
+      content="最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单："
+    />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html"
+    />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2020-10-16T00:00:00+00:00"
+    />
+    <script type="application/ld+json">
+      {
+        "description": "最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单：",
+        "url": "https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html",
+        "@type": "BlogPosting",
+        "headline": "seastar::future 中的 ownership",
+        "dateModified": "2020-10-16T00:00:00+00:00",
+        "datePublished": "2020-10-16T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html"
+        },
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="seastar::future 中的 ownership" />
+    <meta
+      name="twitter:description"
+      content="最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单：  future&lt;&gt; test()  {    return crimson::do_until([this]() -&gt; future&lt;bool..."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <h1 class="site-title">
+          <a aria-label="some random rants" href="/">
+            some random rants
+          </a>
+        </h1>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fa fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fa fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fa fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1
+              id="seastar%3A%3Afuture+%E4%B8%AD%E7%9A%84+ownership"
+              class="title"
+            >
+              seastar::future 中的 ownership
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">
+                October 16, 2020
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div class="paragraph">
+            <p>
+              最近有同事说，在测试 Release build 的时候发现
+              <code>crimson::do_until()</code> 会产生
+              segfault。重现的代码很简单：
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++">  <span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">test</span><span class="p">()</span>
+  <span class="p">{</span>
+    <span class="k">return</span> <span class="n">crimson</span><span class="o">::</span><span class="n">do_until</span><span class="p">([</span><span class="k">this</span><span class="p">]()</span> <span class="o">-&gt;</span> <span class="n">future</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">++</span><span class="n">i</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">ertr</span><span class="o">::</span><span class="n">make_ready_future</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ertr</span><span class="o">::</span><span class="n">make_ready_future</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>看了下，的确如此。祭出 <code>seastar-addr2line</code></p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre>
+?? ??:0
+seastar::internal::future_base::detach_promise() at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1169
+ (inlined by) seastar::internal::future_base::schedule(seastar::task*, seastar::future_state_base*) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1175
+ (inlined by) seastar::future&lt;bool&gt;::schedule(seastar::continuation_base&lt;bool&gt;*) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1372
+ (inlined by) void seastar::future&lt;bool&gt;::schedule&lt;seastar::internal::promise_base_with_type&lt;&gt;, crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}, seastar::future&lt;bool&gt;::then_impl_nrvo&lt;a_basic_test_t::test()::{lambda()#1}&amp;&amp;, crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; &gt;(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)::{lambda(seastar::internal::promise_base_with_type&lt;&gt;&amp;&amp;, a_basic_test_t::test()::{lambda()#1}&amp;, seastar::future_state&lt;bool&gt;&amp;&amp;)#1}&gt;(seastar::internal::promise_base_with_type&lt;&gt;, crimson::errorated_future_marker&lt;&gt;&amp;&amp;, seastar::future&lt;bool&gt;::then_impl_nrvo&lt;a_basic_test_t::test()::{lambda()#1}&amp;&amp;, crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; &gt;(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)::{lambda(seastar::internal::promise_base_with_type&lt;&gt;&amp;&amp;, a_basic_test_t::test()::{lambda()#1}&amp;, seastar::future_state&lt;bool&gt;&amp;&amp;)#1}&amp;&amp;) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1391
+ (inlined by) crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; seastar::future&lt;bool&gt;::then_impl_nrvo&lt;crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}, crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; &gt;(crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1571
+ (inlined by) crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; seastar::future&lt;bool&gt;::then_impl&lt;crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}, crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; &gt;(crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1605
+ (inlined by) seastar::internal::future_result&lt;a_basic_test_t::test()::{lambda()#1}, bool&gt;::future_type seastar::internal::call_then_impl&lt;seastar::future&lt;bool&gt; &gt;::run&lt;crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}&gt;(seastar::future&lt;bool&gt;&amp;, crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1234
+ (inlined by) crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; seastar::future&lt;bool&gt;::then&lt;crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}, crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;&gt; &gt; &gt;(crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}) at /var/ssd/ceph/build-release/../src/seastar/include/seastar/core/future.hh:1520
+ (inlined by) auto crimson::errorator&lt;crimson::unthrowable_wrapper&lt;std::error_code const&amp;, crimson::ec&lt;(std::errc)22&gt; &gt; &gt;::_future&lt;crimson::errorated_future_marker&lt;bool&gt; &gt;::_then&lt;crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}&gt;(crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1})::{lambda(a_basic_test_t::test()::{lambda()#1}&amp;&amp;)#1}) at /var/ssd/ceph/build-release/../src/crimson/common/errorator.h:676
+ (inlined by) auto crimson::do_until&lt;a_basic_test_t::test()::{lambda()#1}&gt;(a_basic_test_t::test()::{lambda()#1}) at /var/ssd/ceph/build-release/../src/crimson/common/errorator.h:68
+seastar::noncopyable_function&lt;void ()&gt;::direct_vtable_for&lt;seastar::async&lt;a_basic_test_t_0_basic_Test::TestBody()::{lambda()#1}&gt;(seastar::thread_attributes, std::decay&amp;&amp;, (std::decay&lt;a_basic_test_t_0_basic_Test::TestBody()::{lambda()#1}&gt;::type&amp;&amp;)...)::{lambda()#1}&gt;::call(seastar::noncopyable_function&lt;void ()&gt; const*) at /var/ssd/ceph/build-release/../src/test/crimson/test_errorator.cc:22
+seastar::noncopyable_function&lt;void ()&gt;::operator()() const at /var/ssd/ceph/build-release/../src/seastar/include/seastar/util/noncopyable_function.hh:201
+ (inlined by) seastar::thread_context::main() at /var/ssd/ceph/build-release/../src/seastar/src/core/thread.cc:297</pre
+              >
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              这个问题的特点是 Release 版本才有。注意到 Seastar 中
+              <code>future::schedule()</code> 的实现
+              (文中把过长的行折成多行，方便阅读)
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++">    <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="nc">Pr</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Func</span><span class="p">,</span> <span class="k">typename</span> <span class="nc">Wrapper</span><span class="p">&gt;</span>
+    <span class="kt">void</span> <span class="n">schedule</span><span class="p">(</span><span class="n">Pr</span><span class="o">&amp;&amp;</span> <span class="n">pr</span><span class="p">,</span> <span class="n">Func</span><span class="o">&amp;&amp;</span> <span class="n">func</span><span class="p">,</span> <span class="n">Wrapper</span><span class="o">&amp;&amp;</span> <span class="n">wrapper</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+        <span class="c1">// If this new throws a std::bad_alloc there is nothing that</span>
+        <span class="c1">// can be done about it. The corresponding future is not ready</span>
+        <span class="c1">// and we cannot break the chain. Since this function is</span>
+        <span class="c1">// noexcept, it will call std::terminate if new throws.</span>
+        <span class="n">memory</span><span class="o">::</span><span class="n">disable_failure_guard</span> <span class="n">dfg</span><span class="p">;</span>
+        <span class="k">auto</span> <span class="n">tws</span> <span class="o">=</span> <span class="k">new</span> <span class="n">continuation</span><span class="o">&lt;</span><span class="n">Pr</span><span class="p">,</span> <span class="n">Func</span><span class="p">,</span> <span class="n">Wrapper</span><span class="p">,</span> <span class="n">T</span> <span class="n">SEASTAR_ELLIPSIS</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">pr</span><span class="p">),</span>
+                                                                           <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">func</span><span class="p">),</span>
+                                                                           <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">wrapper</span><span class="p">));</span>
+        <span class="c1">// In a debug build we schedule ready futures, but not in</span>
+        <span class="c1">// other build modes.</span>
+<span class="cp">#ifdef SEASTAR_DEBUG
+</span>        <span class="k">if</span> <span class="p">(</span><span class="n">_state</span><span class="p">.</span><span class="n">available</span><span class="p">())</span> <span class="p">{</span>
+            <span class="n">tws</span><span class="o">-&gt;</span><span class="n">set_state</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">_state</span><span class="p">));</span>
+            <span class="o">::</span><span class="n">seastar</span><span class="o">::</span><span class="n">schedule</span><span class="p">(</span><span class="n">tws</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+<span class="cp">#endif
+</span>        <span class="n">schedule</span><span class="p">(</span><span class="n">tws</span><span class="p">);</span>
+        <span class="n">_state</span><span class="p">.</span><span class="n">_u</span><span class="p">.</span><span class="n">st</span> <span class="o">=</span> <span class="n">future_state_base</span><span class="o">::</span><span class="n">state</span><span class="o">::</span><span class="n">invalid</span><span class="p">;</span>
+    <span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              其中对 Debug 版本有特殊的处理，如果
+              <code>future::_state</code> 当时就有，那么调用
+              <code>continuation_base::set_state()</code> 把
+              <code>_state</code> 搬到新建的 <code>tws</code> 里面。
+              <code>future_state::move_it()</code> 是
+              <code>future_state(future_state&amp;&amp;)</code>
+              的具体实现。它比较直接，把值 move 或者
+              <code>memmove</code> 到自己手里面。
+            </p>
+          </div>
+          <div class="paragraph">
+            <p>
+              但是 Release 版则会调用
+              <code>future_base::schedule(tws, &amp;tws&#8594;_state)</code>
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++"><table class="linenotable"><tbody><tr><td class="linenos gl"><pre class="lineno"> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+</pre></td><td class="code"><pre>    <span class="n">promise_base</span><span class="o">*</span> <span class="n">detach_promise</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+        <span class="n">_promise</span><span class="o">-&gt;</span><span class="n">_state</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+        <span class="n">_promise</span><span class="o">-&gt;</span><span class="n">_future</span> <span class="o">=</span> <span class="nb">nullptr</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">exchange</span><span class="p">(</span><span class="n">_promise</span><span class="p">,</span> <span class="nb">nullptr</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kt">void</span> <span class="nf">schedule</span><span class="p">(</span><span class="n">task</span><span class="o">*</span> <span class="n">tws</span><span class="p">,</span> <span class="n">future_state_base</span><span class="o">*</span> <span class="n">state</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+        <span class="n">promise_base</span><span class="o">*</span> <span class="n">p</span> <span class="o">=</span> <span class="n">detach_promise</span><span class="p">();</span>
+        <span class="n">p</span><span class="o">-&gt;</span><span class="n">_state</span> <span class="o">=</span> <span class="n">state</span><span class="p">;</span>
+        <span class="n">p</span><span class="o">-&gt;</span><span class="n">_task</span> <span class="o">=</span> <span class="n">tws</span><span class="p">;</span>
+    <span class="err">}</span>
+</pre></td></tr></tbody></table></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              segfault 发生在第 2 行，所以说
+              <code>_promise</code>
+              在那个时候已经是个空指针。这是谁干的呢？我们回过头看看
+              <code>do_until()</code> 的实现
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++"><table class="linenotable"><tbody><tr><td class="linenos gl"><pre class="lineno"> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+</pre></td><td class="code"><pre><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">AsyncAction</span><span class="p">&gt;</span>
+<span class="kr">inline</span> <span class="k">auto</span> <span class="nf">do_until</span><span class="p">(</span><span class="n">AsyncAction</span> <span class="n">action</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">using</span> <span class="n">futurator</span> <span class="o">=</span> \
+    <span class="o">::</span><span class="n">seastar</span><span class="o">::</span><span class="n">futurize</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">result_of_t</span><span class="o">&lt;</span><span class="n">AsyncAction</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+  <span class="k">while</span> <span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">f</span> <span class="o">=</span> <span class="n">futurator</span><span class="o">::</span><span class="n">invoke</span><span class="p">(</span><span class="n">action</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">seastar</span><span class="o">::</span><span class="n">need_preempt</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">.</span><span class="n">available</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">f</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">futurator</span><span class="o">::</span><span class="n">type</span><span class="o">::</span><span class="n">errorator_type</span><span class="o">::</span><span class="k">template</span> <span class="n">make_ready_future</span><span class="o">&lt;</span><span class="p">&gt;();</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">f</span><span class="p">.</span><span class="n">available</span><span class="p">()</span> <span class="o">||</span> <span class="n">seastar</span><span class="o">::</span><span class="n">need_preempt</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">f</span><span class="p">).</span><span class="n">_then</span><span class="p">(</span>
+        <span class="p">[</span> <span class="n">action</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">action</span><span class="p">)]</span> <span class="p">(</span><span class="k">auto</span> <span class="o">&amp;&amp;</span><span class="n">done</span><span class="p">)</span> <span class="k">mutable</span> <span class="p">{</span>
+          <span class="k">if</span> <span class="p">(</span><span class="n">done</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">futurator</span><span class="o">::</span><span class="n">type</span><span class="o">::</span><span class="n">errorator_type</span><span class="o">::</span><span class="k">template</span> <span class="n">make_ready_future</span><span class="o">&lt;</span><span class="p">&gt;();</span>
+          <span class="p">}</span>
+          <span class="k">return</span> <span class="o">::</span><span class="n">crimson</span><span class="o">::</span><span class="n">do_until</span><span class="p">(</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">action</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">f</span><span class="p">.</span><span class="n">failed</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">futurator</span><span class="o">::</span><span class="n">type</span><span class="o">::</span><span class="n">errorator_type</span><span class="o">::</span><span class="k">template</span> <span class="n">make_exception_future2</span><span class="o">&lt;</span><span class="p">&gt;(</span>
+        <span class="n">f</span><span class="p">.</span><span class="n">get_exception</span><span class="p">()</span>
+      <span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              思路很简单，就是递归调用，直到
+              <code>f</code> 返回真。因为递归是通过 post message
+              风格的调用实现的，所以不需要担心栈的大小问题。其中最可疑的地方就是
+              <code>._then()</code> 了，它其实就是
+              <code>future::then()</code>。后者分情况讨论，如果 future 的 state
+              是立等可取的，那么就直接
+              <code>futurator::invoke()</code> 了，否则调用
+              <code>then_impl_nrvo()</code>。接下来则是
+              <code>future::schedule()</code>。<code>schedule()</code> 会把
+              <code>future</code> 的
+              <code>_promise</code> 取走，留下一个空指针。这下子就和前面的
+              backtrace 对上了。但是稍等，为什么要调用
+              <code>schedule()</code> 呢？<code>test()</code> 里面都返回的
+              future 的 state 都是 <code>available</code> 的啊。
+            </p>
+          </div>
+          <div class="paragraph">
+            <p>我们再看看 <code>future::get()</code> 吧</p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++">    <span class="p">[[</span><span class="n">gnu</span><span class="o">::</span><span class="n">always_inline</span><span class="p">]]</span>
+    <span class="n">value_type</span><span class="o">&amp;&amp;</span> <span class="n">get</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">wait</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">get_available_state_ref</span><span class="p">().</span><span class="n">take</span><span class="p">();</span>
+    <span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              这个 <code>take()</code> 很奇怪。<code>get()</code> 和
+              <code>take()</code>
+              的语义是不一样的。一个是返回拷贝或者引用，一个则是从所有者*夺走*，然后返回抢到的东西。果不其然：
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++">    <span class="n">T</span><span class="o">&amp;&amp;</span> <span class="n">take</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="p">{</span>
+        <span class="n">assert</span><span class="p">(</span><span class="n">available</span><span class="p">());</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">_u</span><span class="p">.</span><span class="n">st</span> <span class="o">&gt;=</span> <span class="n">state</span><span class="o">::</span><span class="n">exception_min</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">).</span><span class="n">rethrow_exception</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="n">_u</span><span class="p">.</span><span class="n">st</span> <span class="o">=</span> <span class="n">state</span><span class="o">::</span><span class="n">result_unavailable</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&amp;&amp;&gt;</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">uninitialized_get</span><span class="p">());</span>
+    <span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              所以 <code>take()</code> 之后，<code>future</code> 里面原来的
+              state 成了 unavailable 的状态。难怪
+              <code>do_until()</code> 回过头再看
+              <code>f</code> 的时候，它已经变成了
+              unavailable，所以就傻乎乎地去调用 <code>_then()</code> 了。
+            </p>
+          </div>
+          <div class="paragraph">
+            <p>再看看 <code>get_available_state_ref()</code></p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="c++">    <span class="p">[[</span><span class="n">gnu</span><span class="o">::</span><span class="n">always_inline</span><span class="p">]]</span>
+    <span class="n">future_state</span><span class="o">&amp;&amp;</span> <span class="n">get_available_state_ref</span><span class="p">()</span> <span class="k">noexcept</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">_promise</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">detach_promise</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">_state</span><span class="p">);</span>
+    <span class="p">}</span></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>
+              原来 <code>_promise</code> 是在这里被拿走的，罪魁祸首并非
+              <code>schedule()</code>。调整一下顺序，最后再
+              <code>get()</code>，问题就解决了。
+            </p>
+          </div>
+          <div class="paragraph">
+            <p>
+              这两天学 Rust。现炒现卖一下，用 Rust 的来写这个有 bug 的
+              <code>do_until</code>，就是
+            </p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre
+                class="rouge highlight"
+              ><code data-lang="rust"><table class="linenotable"><tbody><tr><td class="linenos gl"><pre class="lineno"> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+</pre></td><td class="code"><pre><span class="k">struct</span> <span class="n">Future</span> <span class="p">{</span>
+  <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">impl</span> <span class="n">Future</span> <span class="p">{</span>
+  <span class="k">fn</span> <span class="nf">get</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c">// takes the ownership of self</span>
+  <span class="p">}</span>
+  <span class="k">fn</span> <span class="mi">_</span><span class="nf">then</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c">// also takes the ownership of self</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">loop</span> <span class="p">{</span>
+  <span class="k">let</span> <span class="k">mut</span> <span class="n">f</span> <span class="o">=</span> <span class="nn">futurator</span><span class="p">::</span><span class="nf">invoke</span><span class="p">(</span><span class="n">action</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nn">seastar</span><span class="p">::</span><span class="nf">need_preempt</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">f</span><span class="nf">.available</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">f</span><span class="nf">.get</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nf">now</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">f</span><span class="nf">.available</span><span class="p">()</span> <span class="p">||</span> <span class="nn">seastar</span><span class="p">::</span><span class="nf">need_preempt</span><span class="p">())</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">f</span><span class="nf">._then</span><span class="p">(</span> <span class="cm">/* */</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre>
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>编译的时候 rustc 就会出错：</p>
+          </div>
+          <div class="listingblock">
+            <div class="content">
+              <pre>
+error[E0382]: use of moved value: `f`
+ --&gt; src/main.rs:19:9
+   |
+16 |     if (!seastar::need_preempt() &amp;&amp; f.available() &amp;&amp; f.get()) {
+   |                                                      -- value moved here
+17 |       return now();
+18 |     }
+19 |     if (!f.available() || seastar::need_preempt()) {
+   |          ^^ value used here after move
+   |
+  = note: move occurs because `f` has type `Future`, which does not implement
+  the `Copy` trait</pre
+              >
+            </div>
+          </div>
+          <div class="paragraph">
+            <p>顿时有弃暗投明的冲动。</p>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <footer>
+          <div class="tag-list">
+            <div class="meta">Tags</div>
+
+            <a class="button" href="/tags#c%2B%2B">
+              <p><i class="fa fa-tag fa-fw"></i> c++</p>
+            </a>
+
+            <a class="button" href="/tags#seastar">
+              <p><i class="fa fa-tag fa-fw"></i> seastar</p>
+            </a>
+          </div>
+        </footer>
+      </article>
+
+      <!-- Disqus -->
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="求值的顺序" href="/2020/10/12/order-of-evaluation.html">
+            <p>Next post</p>
+            求值的顺序
+          </a>
+        </div>
+      </div>
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-repeat: no-repeat;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>
