@@ -63,11 +63,11 @@
     <meta property="og:locale" content="en" />
     <meta
       name="description"
-      content="最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单："
+      content="seastar::future 在 get() 之后就像被掏空了一样。"
     />
     <meta
       property="og:description"
-      content="最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单："
+      content="seastar::future 在 get() 之后就像被掏空了一样。"
     />
     <link
       rel="canonical"
@@ -85,7 +85,7 @@
     />
     <script type="application/ld+json">
       {
-        "description": "最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单：",
+        "description": "seastar::future 在 get() 之后就像被掏空了一样。",
         "url": "https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html",
         "@type": "BlogPosting",
         "headline": "seastar::future 中的 ownership",
@@ -113,7 +113,7 @@
     <meta name="twitter:title" content="seastar::future 中的 ownership" />
     <meta
       name="twitter:description"
-      content="最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单：  future&lt;&gt; test()  {    return crimson::do_until([this]() -&gt; future&lt;bool..."
+      content="seastar::future 在 get() 之后就像被掏空了一样。最近有同事说，在测试 Release build 的时候发现 crimson::do_until() 会产生 segfault。重现的代码很简单：  future&lt;&gt; test()  {    return crimson::do_..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -183,6 +183,12 @@
         </header>
 
         <section class="post-content">
+          <div class="paragraph">
+            <p>
+              <code>seastar::future</code> 在
+              <code>get()</code> 之后就像被掏空了一样。
+            </p>
+          </div>
           <div class="paragraph">
             <p>
               最近有同事说，在测试 Release build 的时候发现
