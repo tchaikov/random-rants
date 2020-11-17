@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-11-17T15:46:07+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Crimson 里面的流水线</title><link href="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html" rel="alternate" type="text/html" title="Crimson 里面的流水线" /><published>2020-11-17T00:00:00+00:00</published><updated>2020-11-17T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/11/17/pipeline-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-11-17T16:07:40+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Crimson 里面的流水线</title><link href="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html" rel="alternate" type="text/html" title="Crimson 里面的流水线" /><published>2020-11-17T00:00:00+00:00</published><updated>2020-11-17T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/11/17/pipeline-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;在处理性能问题的时候，需要知道客户请求都堵在哪儿了。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -381,7 +381,7 @@ seastar::noncopyable_function&amp;lt;void ()&amp;gt;::operator()() const at /var
 &lt;p&gt;原来 &lt;code&gt;_promise&lt;/code&gt; 是在这里被拿走的，罪魁祸首并非 &lt;code&gt;schedule()&lt;/code&gt;。人家只是受害者。调整一下顺序，最后再 &lt;code&gt;get()&lt;/code&gt;，问题就解决了。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这两天学 Rust。现炒现卖一下，用 Rust 的来写这个有 bug 的 &lt;code&gt;do_until&lt;/code&gt;，就是&lt;/p&gt;
+&lt;p&gt;这两天学 Rust。现炒现卖一下，用 Rust 来写这个有 bug 的 &lt;code&gt;do_until&lt;/code&gt;，就是&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
