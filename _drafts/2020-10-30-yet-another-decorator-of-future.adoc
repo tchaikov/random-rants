@@ -1,0 +1,146 @@
+= seastar::future 的另外一个 decorator
+:page-tags: [c++, seastar, ceph]
+:date: 2020-10-30 13:00:00 +0800
+
+妈，看啊。我在 `seastar::future` 外面又套了一层！
+
+第一层是 `errorator`，它提供了了类似 Rust 里面类似 https://doc.rust-lang.org/beta/std/result/enum.Result.html[Result] 的机制。让我们可以在类型层面上规范一个函数返回的错误，而且确保调用者处理所有的错误。即使它没办法处理做到，也必须把错误通过返回值的方式传播到它自己的调用者。
+
+很多请求需要分成好几个步骤完成，每个步骤都可能是异步的。有时候，这些异步的动作可能会被一些异常打断。比如说请求对象的 PG 的 actingset 已经变了。这个时候我们就需要重新评估我们是不是还有资格处理这个请求。有这些考虑
+
+- 要是请求是一个事务，需要取消这个事务。
+- 如果这个请求可能还有救，我们得重新启动流程，处理这个请求。
+- 同时还需要保证重启的请求的顺序性。重新排队的时候还是要按照原来的顺序来。
+
+因为在 crimson 里面没有大锁。可以想到，检查 PG 的状态变动成为了一个常规工作。就像坐地铁。本来搬家之前，从家里到单位是相邻的两个站，虽然这两个站离得远了些，但是这个粒度是保证了的。上班很简单，到站下车。虽然这条线常常出问题，不过也只有下车的时候才知道地铁站是不是封了。封站了的话，就只能在站内搭乘其他线路了。现在搬家之后，离单位更近了，也还是能坐地铁，但是多了好几个站，这条线也常出问题，每到一个站都要看看是不是需要换别的线。虽然更操心，但是出问题的情况下，能少走不少冤枉路。
+
+下面是精简之后的客户端请求的处理流程
+
+[source, c++]
+----
+  future<> serve(request_t req)
+  {
+    return get_osdmap(req.epoch).then([req] {
+      return get_pg(req.pg);
+    }).then([](auto& pg) {
+      return pg.wait_until_active();
+    }).then([req](auto& pg) {
+      return pg.wait_for_readable(req.oid);
+    }).then([req](auto& pg) {
+      return pg.load_object_context(req.oid);
+    }).then([req](auto& obc) {
+      return obc.pipelined(req);
+    }).then([req](auto& obc) {
+      return obc.pg.do_ops(req.ops);
+    }).then([req](auto& reply) {
+      return req.conn.send(reply);
+    });
+  }
+----
+
+可以注意到，就像刚才坐地铁一样，里面有很多步骤，每完成一步都好像地铁到了新的一站，我们需要抬头看看这条地铁线有没有出问题。`errorator` 提供了类似 Rust 中 https://doc.rust-lang.org/beta/std/result/enum.Result.html[Result] 的机制。只是修改其中一两步对应的函数还好，但是要在所有异步操作中都加上一个判断和退出的机制还是有点啰嗦，
+
+[source, c++]
+----
+  future<> serve(request_t req)
+  {
+    return get_osdmap(req.epoch).then([req] {
+      return get_pg(req.pg);
+    }).then([req](auto& pg) {
+      req.last_epoch = pg.epoch;
+      return pg.wait_until_active();
+    }).then([req](auto& pg) {
+      if (req.last_epoch != pg.epoch) {
+        return Error<ActingsetChanged>();
+      }
+      return pg.wait_for_readable(req.oid);
+    }).then([req](auto& pg) {
+      if (req.last_epoch != pg.epoch) {
+        return Error<ActingsetChanged>();
+      }
+      return pg.load_object_context(req.oid);
+    }).then([req](auto& obc) {
+      if (req.last_epoch != pg.epoch) {
+        return Error<ActingsetChanged>();
+      }
+      return obc.pipelined(req);
+    }).then([req](auto& obc) {
+      if (req.last_epoch != pg.epoch) {
+        return Error<ActingsetChanged>();
+      }
+      return obc.pg.do_ops(req.ops);
+    }).then([req](auto& reply) {
+      if (req.last_epoch != pg.epoch) {
+        return Error<ActingsetChanged>();
+      }
+      return req.conn.send(reply);
+    });
+  }
+----
+
+所以按照 `errorator` 的思路，我们想在 `.then()` 上做文章。下面是原版的 `seastar::future`，这里为了便于理解，用 Rust 的伪代码改写了一下
+
+[source, rust]
+----
+
+trait future<T> {
+    fn then<Ret>(self, f: fn(T) -> Ret) -> future<Ret>;
+}
+
+mod seastar {
+
+    enum State<T, E> {
+      Available<T>,
+      Failed<E>,
+      Invalid,
+    }
+    pub struct Future<T> {
+        state: State,
+    }
+
+    impl<T> From<T> for Future<T> {
+        pub fn from<T>(value: T) -> Self {
+            Self {
+                state: State::from(value)
+            }
+        }
+    }
+
+    impl<T> future<T> for Future<T> {
+        pub fn then<Ret>(self, f: fn(T) -> Ret) -> Future<Ret> {
+            match self.state {
+               Failed(error) => self.set_exception(error)
+               Available(value) => Future<Ret>::from(f(value))
+               Invalid => self.schedule(f, self.state)
+            }
+        }
+    }
+}
+----
+
+思路是在 `.then()` 的时候，根据 `state` 的状态来决定是不是能继续执行，还是需要把下一步操作打包起来进行调度，或是中断当前的流程。
+
+这里的问题在于无法对所有可能返回的错误进行细分，也没办法在类型层面要求调用方处理所有可能返回的错误，就像一些编译器在编译 `switch-case` 语句的时候就要求 `case` 语句覆盖所有可能性，否则就会出个警告。这个功能可以帮助我们避免一些 bug。Seastar 提供了错误处理的机制，甚至允许调用者根据错误的类型分别处理，但是它对被调用者抛出的异常类型没有记录，自然也无法要求调用者处理所有的错误类型了。针对这个问题，我们在 `seastar::future` 外面又包装了一层，把返回的错误类型嵌入到加强版 `future` 的里面，同时要求调用者处理所有的错误类型。下面以读操作为例。因为读数据的时候可能会发现数据对应的对象根本不存在，也可能磁盘坏了。这两种情况需要调用方区别处理。
+
+[source, rust]
+----
+enum ReadResult {
+    Ok(Bytes),
+    NoEntry,
+    InputOutputError,
+}
+
+struct Future<T> {
+    _future: seastar.Future,
+}
+
+impl<T, E> future<T> for Future<T> {
+    pub fn then<Ret, Err>(self, on_success: fn(T) -> Ret, on_error(Err)) -> Future<Ret> {
+        
+    }
+}
+class Errorator(Future):
+  def safe_then(self, func, *errors):
+    return self.then(func)
+    
+----
