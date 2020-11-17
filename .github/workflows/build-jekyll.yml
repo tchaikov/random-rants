@@ -18,7 +18,8 @@ jobs:
           ruby-version: 2.7
       - name: install packages
         run: |
-          sudo apt-get install ditaa
+          sudo apt-get update
+          sudo apt-get -y install ditaa
       - name: build and push the jekyll site
         uses: limjh16/jekyll-action-ts@v2
         with:
