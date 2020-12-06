@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-11-17T16:07:40+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Crimson 里面的流水线</title><link href="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html" rel="alternate" type="text/html" title="Crimson 里面的流水线" /><published>2020-11-17T00:00:00+00:00</published><updated>2020-11-17T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/11/17/pipeline-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2020-12-06T03:12:29+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Crimson 里面的流水线</title><link href="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html" rel="alternate" type="text/html" title="Crimson 里面的流水线" /><published>2020-11-17T00:00:00+00:00</published><updated>2020-11-17T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/11/17/pipeline-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;在处理性能问题的时候，需要知道客户请求都堵在哪儿了。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -159,7 +159,11 @@
 &lt;p&gt;如果有多个不同的请求正好访问同一 PG，即使它们对应的是不同的 object，也不得不互相保持二十米的距离，挨个等待 &lt;code&gt;PG.client_request_pg_pipeline.process&lt;/code&gt; 。前面一个人不完事儿，后面的人必须等着。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这不又是 PG 大锁嘛。&lt;/p&gt;
+&lt;p&gt;这不又是 PG 大锁嘛。我在例会上提出来这个问题。Sam 提醒我。可以从另外一个角度看这个问题。每个 OSD
+都有上百个 PG，而一个集群有成百上千个 OSD。如果 PG 的分布很均匀，那么每个 PG 同时需要处理的请求其实是不多的。而且，我一直有个误解，就是觉得 PG 大锁是现有 OSD 性能不彰的原因之一。但是 Sam 告诉我，问题不在于 lock contention，而在于 CPU 的使用率居高不下。这才想起来，官方的文档建议一个 OSD 一般需要配备两个核。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;不过还是有点放不下心，最好我们能在各个“展厅”前面设置一个计时器，看看大家都在门外面等了多久。这也是流水线机制设立的一个初衷。&lt;/p&gt;
 &lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">在处理性能问题的时候，需要知道客户请求都堵在哪儿了。</summary></entry><entry><title type="html">seastar::future 中的 ownership</title><link href="https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html" rel="alternate" type="text/html" title="seastar::future 中的 ownership" /><published>2020-10-16T00:00:00+00:00</published><updated>2020-10-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;&lt;code&gt;seastar::future&lt;/code&gt; 在 &lt;code&gt;get()&lt;/code&gt; 之后就像被掏空了一样。&lt;/p&gt;
 &lt;/div&gt;
