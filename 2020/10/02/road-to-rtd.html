@@ -115,7 +115,7 @@
     <meta name="twitter:title" content="Read the Docs 之路" />
     <meta
       name="twitter:description"
-      content="最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。Ceph 里的 API 文档Sphinx 的搜索假的 librados方案Sphinx 能看见的预处理结果加入 stub 函数浏览器能看到的Ceph 里的 API 文档Ceph 用 Sp..."
+      content="最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了 Read the Docs 上。但是还有一些问题。Ceph 里的 API 文档Sphinx 的搜索假的 librados方案Sphinx 能看见的预处理结果加入 stub 函数浏览器能看到的后记Ceph 里的 API 文档Ceph 用 ..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -206,6 +206,7 @@
                       <li><a href="#浏览器能看到的">浏览器能看到的</a></li>
                     </ul>
                   </li>
+                  <li><a href="#后记">后记</a></li>
                 </ul>
               </div>
             </div>
@@ -649,6 +650,25 @@
                     </li>
                   </ol>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="后记">后记</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  最后采用的是 stub 函数的方案。毕竟用 Cython
+                  写个假的实现相对比较容易。同时，因为我们有很多 tell
+                  命令，它们中有的是 C 实现的，有的是 Python
+                  实现的。前者有固定格式的头文件来描述命令的参数，后者是用 type
+                  annotation
+                  来标记参数类型。之前为了产生对应的文档，我们有专门的 Python
+                  脚本。但是因为 Read the Docs 不支持这样的流程。所以为了能从 C
+                  代码和 Python 代码生成文档，专门写了一个 sphinx 扩展。好在
+                  sphinx 允许在扩展里面直接插入 reStructuredText 风格的
+                  markup，这样搭配 Jinja 就方便多了。有点 PHP 的感觉，吼吼。
+                </p>
               </div>
             </div>
           </div>
