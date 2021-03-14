@@ -1,0 +1,13 @@
+= 更快的 pg_info_t
+:page-tags: [ceph]
+:date: 2020-12-28 15:37:22 +0800
+
+在 Ceph 里，用 `pg_info_t` 保存某个 PG 的状态。从统计信息，到 peering 状态，事无巨细都在这里面。PG 有什么变化都会更新它，写到
+专门的 meta object 的 omap 里面。但是因为它太大了，如果每次更新都写一个完整副本的话，就太慢了。我们把其中变化比较频繁的部分抽出来，
+叫做 `pg_fast_info_t`，在写 `pg_info` 的时候就试试看，如果 `pg_fast_info_t` 足以包含 `pg_info` 在内存里的最新版本和上次
+写到磁盘上的版本的差别，那么就直接写这个精简版的 `pg_fast_info_t`。否则就保存完整版的 `pg_info`。
+
+可以说 `pg_fast_info_t` 是一种日志，在加载 PG 的时候，只要重放对应 PG 的这个日志，按照它修改磁盘上 `pg_info`，就能得到最新的
+`pg_info`。这也正是 `PG::read_info()` 做的事情。
+
+这里说了什么时候写 `pg_fast_info_t` ，但是我们需要删除 `pg_fast_info_t` 吗？
