@@ -366,11 +366,16 @@
                   <code>failure_info</code> 中会出现大量积压的 failure
                   报告，如果在持有
                   <code>Monitor::lock</code> 大锁的时候遍历数据它，可能会加重
-                  monitor 的负担。请注意，<code>Monitor::timer</code> 是一个
-                  <code>SafeTimer</code>，而这个 "safe" 是由
+                  monitor 的负担，提高 monitor 处理消息的延迟。请注意，<code
+                    >Monitor::timer</code
+                  >
+                  是一个 <code>SafeTimer</code>，而这个 "safe" 是由
+                  <code>Monitor::lock</code> 保障的。而
+                  <code>Monitor::ms_dispatch()</code> 也是在
                   <code>Monitor::lock</code>
-                  保障的。为了缓解这个问题，可以引入一个 <code>int</code> 型的
-                  "指针"，每次在 <code>tick()</code> 里面仅仅处理一定数量的
+                  里面处理消息的。为了缓解这个问题，可以引入一个
+                  <code>int</code> 型的 "指针"，每次在
+                  <code>tick()</code> 里面仅仅处理一定数量的
                   failure，如果超过这个数量，就把工作留到下次
                   <code>tick()</code> 再做。这个 "指针"
                   就用来保存下次开始的位置。如果在某次处理部分报告的时候，正好错过了某些刚加入的信息也没关系，以后就会轮到的。除非
