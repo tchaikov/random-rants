@@ -362,7 +362,20 @@
               <li>
                 <p>
                   在 monitor
-                  这边加入衰退的机制，如果失联报告很长时间没有其他方的证据坐实这个问题，那么就取消报告。
+                  这边加入衰退的机制，如果失联报告很长时间没有其他方的证据坐实这个问题，那么就取消报告。但是在大规模的集群里面，如果集群有突发情况，比如产生大规模的网络分裂，那么短时间之内
+                  <code>failure_info</code> 中会出现大量积压的 failure
+                  报告，如果在持有
+                  <code>Monitor::lock</code> 大锁的时候遍历数据它，可能会加重
+                  monitor 的负担。请注意，<code>Monitor::timer</code> 是一个
+                  <code>SafeTimer</code>，而这个 "safe" 是由
+                  <code>Monitor::lock</code>
+                  保障的。为了缓解这个问题，可以引入一个 <code>int</code> 型的
+                  "指针"，每次在 <code>tick()</code> 里面仅仅处理一定数量的
+                  failure，如果超过这个数量，就把工作留到下次
+                  <code>tick()</code> 再做。这个 "指针"
+                  就用来保存下次开始的位置。如果在某次处理部分报告的时候，正好错过了某些刚加入的信息也没关系，以后就会轮到的。除非
+                  <code>failure_info</code> 增长的速度大大超过每次
+                  <code>tick()</code> 处理的速度。
                 </p>
               </li>
               <li>
