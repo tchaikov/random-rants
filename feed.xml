@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-03-14T04:22:13+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">永不消逝的 failure 报告</title><link href="https://blog.k3fu.xyz/2021/03/11/failure-reports.html" rel="alternate" type="text/html" title="永不消逝的 failure 报告" /><published>2021-03-11T00:00:00+00:00</published><updated>2021-03-11T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/03/11/failure-reports</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/03/11/failure-reports.html">&lt;div class=&quot;paragraph&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-03-14T14:37:29+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">永不消逝的 failure 报告</title><link href="https://blog.k3fu.xyz/2021/03/11/failure-reports.html" rel="alternate" type="text/html" title="永不消逝的 failure 报告" /><published>2021-03-11T00:00:00+00:00</published><updated>2021-03-11T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/03/11/failure-reports</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/03/11/failure-reports.html">&lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;有时候，failure 报告会化身 SLOW_OPS，并获得永生。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -76,7 +76,17 @@
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;处理完毕失联报告，就直接销毁对应的请求，让 &lt;code&gt;OpTracker&lt;/code&gt; 不再跟踪它。这样即使这个报告在短时间之内没有举报成功也不会出现在 &lt;code&gt;SLOW_OP&lt;/code&gt; 里面。但是问题在于，报告人这里对报告也有周密的跟踪机制，它把还未发出去的报告保存在 &lt;code&gt;failure_queue&lt;/code&gt; 里面，已经发出去的报告则保存在 &lt;code&gt;failure_pending&lt;/code&gt; 里面。 如果发出的报告没有下文，也就是说如果它没有撤销，而新版的 osdmap 也没有把失联的 OSD 标记成 &quot;down&quot;，那么这些报告会一直保存在 OSD 里面。&lt;/p&gt;
+&lt;p&gt;处理完毕失联报告，就直接销毁对应的请求，让 &lt;code&gt;OpTracker&lt;/code&gt; 不再跟踪它。这样即使这个报告在短时间之内没有举报成功也不会出现在 &lt;code&gt;SLOW_OP&lt;/code&gt; 里面。但是问题在于&lt;/p&gt;
+&lt;div class=&quot;ulist&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;如果失联报告暂时没有下文，我们能说处理完毕了吗？换言之，如果一个疑似失联的人没有被及时澄清，或者没有踢出 osdmap，那么这个集群的设计很可能是有问题的。它表示这个集群很可能有严重的网络分裂问题，导致一部分 OSD 之间无法互相通信，但是另外一部分 OSD 之间的网络是联通的，导致疑似失联的 OSD 没有办法在短时间之内获得足够数量的报告。所以把这个问题以 &lt;code&gt;SLOW_OPS&lt;/code&gt; 的方式暴露出来也是一个办法，让管理员觉察到问题，虽然这个错误信息比较隐晦。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;报告人这里对报告也有周密的跟踪机制，它把还未发出去的报告保存在 &lt;code&gt;failure_queue&lt;/code&gt; 里面，已经发出去的报告则保存在 &lt;code&gt;failure_pending&lt;/code&gt; 里面。 如果发出的报告没有下文，也就是说如果它没有撤销，而新版的 osdmap 也没有把失联的 OSD 标记成 &quot;down&quot;，那么这些报告会一直保存在 OSD 里面。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;在 monitor 这边加入衰退的机制，如果失联报告很长时间没有其他方的证据坐实这个问题，那么就取消报告。&lt;/p&gt;
