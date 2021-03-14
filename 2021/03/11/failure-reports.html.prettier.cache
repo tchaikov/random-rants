@@ -63,11 +63,11 @@
     <meta property="og:locale" content="en" />
     <meta
       name="description"
-      content="有时候，failure 报告会化身 SLOW_OPS，并获得永生。"
+      content="Ceph 集群里面，OSD 和 OSD 会定时互相发送心跳。如果有人很长时间不回应，那么另外一方就会打个小报告给 monitor。告诉 monitor，对方很可能已经停摆了。当然，这只是一家之言，monitor 不会因此就断定那个不回消息的人失联了。但是如果收到多个不同来源的报告，都指向同一个 OSD，那么 monitor 就会认为该 OSD 的确是有问题的。而且，本着认真负责的精神，monitor 把所有的小报告的原件都保存了起来。"
     />
     <meta
       property="og:description"
-      content="有时候，failure 报告会化身 SLOW_OPS，并获得永生。"
+      content="Ceph 集群里面，OSD 和 OSD 会定时互相发送心跳。如果有人很长时间不回应，那么另外一方就会打个小报告给 monitor。告诉 monitor，对方很可能已经停摆了。当然，这只是一家之言，monitor 不会因此就断定那个不回消息的人失联了。但是如果收到多个不同来源的报告，都指向同一个 OSD，那么 monitor 就会认为该 OSD 的确是有问题的。而且，本着认真负责的精神，monitor 把所有的小报告的原件都保存了起来。"
     />
     <link
       rel="canonical"
@@ -87,7 +87,7 @@
     <meta property="twitter:title" content="永不消逝的 failure 报告" />
     <script type="application/ld+json">
       {
-        "description": "有时候，failure 报告会化身 SLOW_OPS，并获得永生。",
+        "description": "Ceph 集群里面，OSD 和 OSD 会定时互相发送心跳。如果有人很长时间不回应，那么另外一方就会打个小报告给 monitor。告诉 monitor，对方很可能已经停摆了。当然，这只是一家之言，monitor 不会因此就断定那个不回消息的人失联了。但是如果收到多个不同来源的报告，都指向同一个 OSD，那么 monitor 就会认为该 OSD 的确是有问题的。而且，本着认真负责的精神，monitor 把所有的小报告的原件都保存了起来。",
         "url": "https://blog.k3fu.xyz/2021/03/11/failure-reports.html",
         "@type": "BlogPosting",
         "headline": "永不消逝的 failure 报告",
@@ -115,7 +115,7 @@
     <meta name="twitter:title" content="永不消逝的 failure 报告" />
     <meta
       name="twitter:description"
-      content="有时候，failure 报告会化身 SLOW_OPS，并获得永生。Ceph 集群里面，OSD 和 OSD 会定时互相发送心跳。如果有人很长时间不回应，那么另外一方就会打个小报告给 monitor。告诉 monitor，对方很可能已经停摆了。当然，这只是一家之言，monitor 不会因此就断定那个不回消息的人失联了..."
+      content="Ceph 集群里面，OSD 和 OSD 会定时互相发送心跳。如果有人很长时间不回应，那么另外一方就会打个小报告给 monitor。告诉 monitor，对方很可能已经停摆了。当然，这只是一家之言，monitor 不会因此就断定那个不回消息的人失联了。但是如果收到多个不同来源的报告，都指向同一个 OSD，那么 mo..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -181,9 +181,6 @@
         </header>
 
         <section class="post-content">
-          <div class="paragraph">
-            <p>有时候，failure 报告会化身 SLOW_OPS，并获得永生。</p>
-          </div>
           <div class="paragraph">
             <p>
               Ceph 集群里面，OSD 和 OSD
