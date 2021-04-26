@@ -69,11 +69,11 @@
     <meta property="twitter:title" content="some random rants" />
     <script type="application/ld+json">
       {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/blog/page2/",
         "@type": "WebPage",
         "headline": "some random rants",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
@@ -148,6 +148,79 @@
               <header>
                 <h1>
                   <a
+                    aria-label="seastar::future 中的 ownership"
+                    class="post-link"
+                    href="/2020/10/16/ownership-in-seastar.html"
+                  >
+                    seastar::future 中的 ownership
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">October 16, 2020</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                seastar::future 在 get() 之后就像被掏空了一样。
+              </div>
+            </span>
+          </div>
+
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="求值的顺序"
+                    class="post-link"
+                    href="/2020/10/12/order-of-evaluation.html"
+                  >
+                    求值的顺序
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">October 12, 2020</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。
+              </div>
+            </span>
+          </div>
+
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="Read the Docs 之路"
+                    class="post-link"
+                    href="/2020/10/02/road-to-rtd.html"
+                  >
+                    Read the Docs 之路
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">October 2, 2020</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了
+                Read the Docs 上。但是还有一些问题。
+              </div>
+            </span>
+          </div>
+
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
                     aria-label="std::error_code"
                     class="post-link"
                     href="/2020/09/30/error-code.html"
@@ -189,75 +262,6 @@
               <div class="excerpt">
                 乱序和并发的问题无处不在，Ceph 里面也是这样。
               </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="博客维护指南"
-                    class="post-link"
-                    href="/2020/09/05/my-blog.html"
-                  >
-                    博客维护指南
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">September 5, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">工具链</div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="TCP 长连接的最大个数"
-                    class="post-link"
-                    href="/2020/08/23/tcp-connections.html"
-                  >
-                    TCP 长连接的最大个数
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">August 23, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">
-                提个问题，单机单网卡最大对某个特定服务器 TCP
-                长连接的最大个数是多少？
-              </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="多核和顺序"
-                    class="post-link"
-                    href="/2020/08/10/memory-ordering.html"
-                  >
-                    多核和顺序
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">August 10, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">性能和易用性之间常常会有矛盾。</div>
             </span>
           </div>
         </div>

@@ -68,12 +68,12 @@
     <meta property="twitter:title" content="some random rants" />
     <script type="application/ld+json">
       {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/",
         "@type": "WebSite",
         "headline": "some random rants",
         "name": "some random rants",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
@@ -148,6 +148,76 @@
               <header>
                 <h1>
                   <a
+                    aria-label="QoS 和 dmClock"
+                    class="post-link"
+                    href="/2021/04/24/dmclock.html"
+                  >
+                    QoS 和 dmClock
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">April 24, 2021</p>
+                </div>
+              </header>
+
+              <div class="excerpt">QoS，而且是分布式的。</div>
+            </span>
+          </div>
+
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="大批量发送增量 osdmap 对性能的影响"
+                    class="post-link"
+                    href="/2021/03/29/flatten-osdmaps.html"
+                  >
+                    大批量发送增量 osdmap 对性能的影响
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">March 29, 2021</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                补丁太多了的话，加起来大小可能会比最终的版本更大。
+              </div>
+            </span>
+          </div>
+
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="方程式赛车和读写请求"
+                    class="post-link"
+                    href="/2021/03/14/lap-n-race.html"
+                  >
+                    方程式赛车和读写请求
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">March 14, 2021</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                请求 client.io-42 在第三圈超过了 client.io-17！
+              </div>
+            </span>
+          </div>
+
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
                     aria-label="永不消逝的 failure 报告"
                     class="post-link"
                     href="/2021/03/11/failure-reports.html"
@@ -187,79 +257,6 @@
 
               <div class="excerpt">
                 在处理性能问题的时候，需要知道客户请求都堵在哪儿了。
-              </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="seastar::future 中的 ownership"
-                    class="post-link"
-                    href="/2020/10/16/ownership-in-seastar.html"
-                  >
-                    seastar::future 中的 ownership
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">October 16, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">
-                seastar::future 在 get() 之后就像被掏空了一样。
-              </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="求值的顺序"
-                    class="post-link"
-                    href="/2020/10/12/order-of-evaluation.html"
-                  >
-                    求值的顺序
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">October 12, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">
-                用 Seastar 的时候，常常需要推迟一个对象的析构。于是问题来了。
-              </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="Read the Docs 之路"
-                    class="post-link"
-                    href="/2020/10/02/road-to-rtd.html"
-                  >
-                    Read the Docs 之路
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">October 2, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">
-                最近为了支持多单词的准确搜索，把 Ceph 的文档编译和 host 转移到了
-                Read the Docs 上。但是还有一些问题。
               </div>
             </span>
           </div>
