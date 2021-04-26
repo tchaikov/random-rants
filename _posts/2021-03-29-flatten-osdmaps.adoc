@@ -1,0 +1,25 @@
+= 大批量发送增量 osdmap 对性能的影响
+:page-tags: [ceph]
+:date: 2021-03-20 13:02:23 +0800
+
+补丁太多了的话，加起来大小可能会比最终的版本更大。
+
+在 Ceph 里面，osdmap 是一个很重要的数据。比如说，
+
+- 集群的拓扑
+- 集群里每个数据池的 crush 规则，甚至还有
+- 一个屏蔽列表，集群会拒绝向在列表里面的客户端提供服务
+
+但是正因为 osdmap 包含了太多信息，在集群里面传递完整的 osdmap 会耗费很多带宽，而且编解码完整版本的 osdmap 也加大了对 CPU 的压力。为了缓解这个压力，我们选择仅仅发送变化的那部分。在 monitor 上，每次 osdmap 有变化，我们不仅仅保存了最新完整版本的 osdmap，也会保存它的增量部分 -- 我们用专门的对象保存这个部分，即 `OSDMap::Incremental`，有时候干脆叫它 inc map。所以当客户端找 monitor 要 osdmap 的时候，也会告诉对方自己手里面 osdmap 的版本 `m`，如果 monitor 的最新版 osdmap 的版本是 `n`，那么它就会把 `m..n` 的所有 inc map 都发给客户端。
+
+但是有时候也会适得其反，因为积少成多，要是有很多的 inc map，为了发送这些 inc map，对 monitor 甚至客户端，累加起来的开销和发送一个完整 osdmap 比起来可能会更高。而且，需要注意的是，`Monitor::ms_dispatch()` 是在一个全局大锁里面执行的。很多其他操作也需要这个锁。所以我们应该尽量避免长时间地持有它，否则会造成很高的延迟。
+
+要解决这个问题，有下面几个思路：
+
+* 在 monitor 一侧
+ ** 减少 monitor 对 osdmap 的更新频次。primary osd 会根据情况要求产生 pgtemp，但是 monitor 也可以主动地批次生成 pgtemp。
+ ** 分期分批地发送 inc map。这样可以缓解因为长时间占用全局锁造成的延迟。
+* 在 osd 一侧
+ ** 减少 osd 对 osdmap 的请求。如果 osd 发现自己落后太多，就直接找 monitor 要完整的最新版 osdmap。而不是要求获得增量版本。减轻 monitor 的负担。
+
+但是 `n` 版的 osdmap 是不是真的能替代 `m` 版 osdmap 加上中间的 `m..n` 的 inc map 呢?
