@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.2.6
+    Copyright 2016-2020 Sylhare
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- Canonical -->
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2021/05/10/metrics.html"
+    />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+
+    <!-- KaTeX 0.12.0 -->
+    <!-- if you have any issue check https://github.com/KaTeX/KaTeX -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+    <title>
+      ceph::common::PerfCounter 和 seastar::metrics | some random rants
+    </title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta
+      property="og:title"
+      content="ceph::common::PerfCounter 和 seastar::metrics"
+    />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta name="description" content="成年人还是得做选择。" />
+    <meta property="og:description" content="成年人还是得做选择。" />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2021/05/10/metrics.html"
+    />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2021/05/10/metrics.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2021-05-10T00:00:00+00:00"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      property="twitter:title"
+      content="ceph::common::PerfCounter 和 seastar::metrics"
+    />
+    <script type="application/ld+json">
+      {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "成年人还是得做选择。",
+        "url": "https://blog.k3fu.xyz/2021/05/10/metrics.html",
+        "@type": "BlogPosting",
+        "headline": "ceph::common::PerfCounter 和 seastar::metrics",
+        "dateModified": "2021-05-10T00:00:00+00:00",
+        "datePublished": "2021-05-10T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2021/05/10/metrics.html"
+        },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta
+      name="twitter:title"
+      content="ceph::common::PerfCounter 和 seastar::metrics"
+    />
+    <meta
+      name="twitter:description"
+      content="成年人还是得做选择。seastar::metricsseastar::metrics 是 seastar 提供的一套机制，用来监控系统的动态指标。label在 seastar::metrics 里面，每个指标都有自己的标签。举个例子吧，假设 seastore 能够管理多个存储设备，每个设备都有自己的 IO 队列。..."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <h1 class="site-title">
+          <a aria-label="some random rants" href="/"> some random rants </a>
+        </h1>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fa fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fa fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fa fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1
+              id="ceph%3A%3Acommon%3A%3APerfCounter+%E5%92%8C+seastar%3A%3Ametrics"
+              class="title"
+            >
+              ceph::common::PerfCounter 和 seastar::metrics
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">May 10, 2021</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>成年人还是得做选择。</p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="seastarmetrics">seastar::metrics</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  <a href="http://docs.seastar.io/master/group__metrics.html"
+                    >seastar::metrics</a
+                  >
+                  是 seastar 提供的一套机制，用来监控系统的动态指标。
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="label">label</h3>
+                <div class="paragraph">
+                  <p>
+                    在
+                    <code>seastar::metrics</code>
+                    里面，每个指标都有自己的标签。举个例子吧，假设 seastore
+                    能够管理多个存储设备，每个设备都有自己的 IO
+                    队列。而作为一个存储系统，我们可能会关心好多指数
+                  </p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>total_bytes: 写入设备的数据量</p>
+                    </li>
+                    <li>
+                      <p>total_operations: 读写请求的总个数</p>
+                    </li>
+                    <li>
+                      <p>queue_length: 当前的读写队列长度</p>
+                    </li>
+                    <li>
+                      <p>delay: 总的延迟</p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    问题在于，每个设备我们都需要监控这同一组数据。如果按照面向对象的思路，那么就是每个对象都有一组属性，而且每个对象都有自己的名字或者索引。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    另外对于 seastar 应用来说，每个 shard
+                    都是一个相对独立处理的单元，独立结算，自负盈亏。如果我们希望监控一个
+                    sharded service，那么这个服务在每个 shard
+                    都有一组自己的数据。Sesastar 甚至为每一个
+                    <a
+                      href="http://docs.seastar.io/master/structseastar_1_1metrics_1_1impl_1_1metric__definition__impl.html"
+                      >metric_definition_impl</a
+                    >
+                    都强制加上了 <code>shard_label</code>，所以每个 metric
+                    从一出生，它标签上的"shard"就是当时 reactor 的 shard
+                    id，如果当时 reactor 还没有运行，那么 shard 就是
+                    "0"。但是如果要自己设置
+                    <code>shard_label</code> 的话，也可以用 seastar 提供的
+                    <code>shard_label</code>。
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="c++"><span class="n">label</span> <span class="nf">shard_label</span><span class="p">(</span><span class="s">"shard"</span><span class="p">);</span></code></pre>
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    其中 <code>label</code> 是一个 functor 类，它可以用来构造
+                    <code>label_instance</code> 实例。后者才是真的 label。
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="c++"><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
+<span class="n">instance</span> <span class="nf">operator</span><span class="p">()(</span><span class="n">T</span> <span class="n">value</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">label_instance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">));</span>
+<span class="err">}</span></code></pre>
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    通过为 metrics
+                    贴上多个标签，我们可以更方便地管理和查询这些指数。而且不用因为把数据聚合起来而丢失重要的信息。seastar
+                    在把 metrics 导出到监控系统的时候，也把 label 一起导出了。它
+                  </p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        使用 prometheus
+                        <a
+                          href="https://prometheus.io/docs/practices/naming/#labels"
+                          >labels</a
+                        >
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        把 label 编码成 collected 的
+                        <a
+                          href="https://collectd.org/wiki/index.php/Naming_schema#Plugin_instance_and_type_instance"
+                          >type instance</a
+                        >
+                        字段里面。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="名字">名字</h3>
+                <div class="paragraph">
+                  <p>
+                    metric 的名字由 group 和 name 构成。一组逻辑上相关的 metric
+                    组成一个 group，比如说 seastore 的所有指数的 group 可能就是
+                    "seastore"。加上一个名字空间方便管理。内存方面的监控则用
+                    "memory" 作为 group 的名字。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="数据的类型">数据的类型</h3>
+                <div class="paragraph">
+                  <p>
+                    seastar::metrics 大体是按照
+                    <a href="https://prometheus.io/docs/concepts/metric_types/"
+                      >Prometheus 的几种指标的类型</a
+                    >
+                    和
+                    <a
+                      href="https://collectd.org/wiki/index.php/Data_source#Data_source_types"
+                      >collectd 的数据类型</a
+                    >
+                    来实现的。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>它定义了下面几类指标：</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        counter: 单调递增的整数。要是发现某个 counter
+                        变小了，唯一的解释就是它溢出了。比如说，从启动到现在
+                        cache miss 的请求数量。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        gauge: 测量值。和 <code>counter</code> 不同，<code
+                          >guage</code
+                        >
+                        支持浮点，它的值允许减小。比如说
+                      </p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>系统的音量</p>
+                          </li>
+                          <li>
+                            <p>某个队列的总延迟</p>
+                          </li>
+                          <li>
+                            <p>当前 onode 的缓存大小</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li>
+                      <p>
+                        derive: 和 <code>gauge</code> 相比，<code>derive</code>
+                        更像
+                        <code>counter</code>
+                        一些。它仅仅支持整型，但是它允许读数减小。它叫 "derive"
+                        的原因并不是这个指标是由其他指标导出 (derive)
+                        的，而是因为，很多时候我们关心的是这个数值的变化量
+                        (derivative)，或者说读数对时间的导数。
+                      </p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>当前正在处理的请求个数</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li>
+                      <p>histogram: 一个指标的直方图。比如说，</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>请求的延迟的分布</p>
+                          </li>
+                          <li>
+                            <p>请求大小的分布</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    为了和
+                    <a
+                      href="https://collectd.org/documentation/manpages/types.db.5.shtml"
+                      >collectd 的类型</a
+                    >
+                    对应上，<code>seastar::metrics</code>
+                    还定义了一些方便的函数，用来设置基于这些类型。比如，<code>make_total_bytes()</code>，它的功用就是在为
+                    collectd 导出监控数据的时候，为对应的指标设置
+                    <code>total_bytes</code> 的数据类型。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="数据的来源">数据的来源</h3>
+                <div class="paragraph">
+                  <p>
+                    <code>make_gauge()</code>
+                    这些函数让我们提供一个变量的引用，或者给出一个函数返回要监控的数据。事实上前者也是通过包装一个
+                    lambda 来实现的。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="cephcommonperfcounters">ceph::common::PerfCounters</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  <code>ceph::common:PerfCounters</code> 使用
+                  <code>PerfCounters</code> 来管理一组 perf counter，
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="名字-2">名字</h3>
+                <div class="paragraph">
+                  <p>
+                    因为
+                    <code>ceph::common::PerfCounters</code> 不是统一管理的，每个
+                    perfcounter
+                    在构造的时候都设定了一个字符串，作为它的名字。在导出
+                    perfcounter 的时候，把所有的 perfcounter 被放在以
+                    <code>PerfCounters::get_name()</code> 为名的大对象里面。每个
+                    perfcounter 分别打印自己的信息。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="数据的类型-2">数据的类型</h3>
+                <table class="tableblock frame-all grid-all stretch">
+                  <colgroup>
+                    <col style="width: 25%" />
+                    <col style="width: 25%" />
+                    <col style="width: 25%" />
+                    <col style="width: 25%" />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">none</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">u64</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">time</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">longrunavg</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top"></td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">histogram</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top"></td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">time</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top"></td>
+                      <td class="tableblock halign-left valign-top"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="sect2">
+                <h3 id="数据的来源-2">数据的来源</h3>
+                <div class="paragraph">
+                  <p>
+                    每个 <code>PerfCounters</code> 都有一个
+                    <code>std::vector&lt;&gt;</code> ，用于保存对应的 perf
+                    counter，通过预先定义好的索引来更新和访问 vector
+                    里面对应的值。
+                  </p>
+                </div>
+                <table class="tableblock frame-all grid-all stretch">
+                  <colgroup>
+                    <col style="width: 50%" />
+                    <col style="width: 50%" />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">ceph</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">seastar</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">PerfCountersCollection</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">metric group</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top" rowspan="3">
+                        <p class="tableblock">add_u64_counter()</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">make_counter()</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">make_derive()</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">make_gauge()</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">PerfCountersBuilder</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">metric_groups</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">PerfCounters</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">None</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">idx</p>
+                      </td>
+                      <td class="tableblock halign-left valign-top">
+                        <p class="tableblock">metric_id?</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="paragraph">
+                  <p>
+                    总体上 <code>PerfCounters</code> 和
+                    <code>metrics</code> 两个功能相当，而且前者内置了一些功能
+                  </p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        对 counter 加上优先级。优先级有点像 Python 的 logging
+                        level。它决定了不同情况下，输出 perfcounter
+                        的详尽程度。如果是 <code>CRITICAL</code> 的 perfcounter
+                        的话，一般来说都会打印出来，或者发给 prometheus,
+                        influxdb 这些 mgr module。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        支持设置自定义的字符串作为监控指标的单位，在打印
+                        perfcounter 的时候，可以打印自定义的单位。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        如果一个 perfcounter 有
+                        <code>LONGRUNAVG</code> 属性，那么还会统计平均值。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    但是 <code>PerfCounters</code> 缺少 label
+                    的支持，而且其实现是基于
+                    <code>std::atomic&lt;&gt;</code> 的，在读写 perfcounter
+                    的时候对性能也有负面的影响。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <footer>
+          <div class="tag-list">
+            <div class="meta">Tag</div>
+
+            <a class="button" href="/tags#ceph">
+              <p><i class="fa fa-tag fa-fw"></i> ceph</p>
+            </a>
+          </div>
+        </footer>
+      </article>
+
+      <!-- Disqus -->
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="QoS 和 dmClock" href="/2021/04/24/dmclock.html">
+            <p>Next post</p>
+            QoS 和 dmClock
+          </a>
+        </div>
+      </div>
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-repeat: no-repeat;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>
