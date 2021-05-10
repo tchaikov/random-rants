@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-05-01T01:56:27+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">QoS 和 dmClock</title><link href="https://blog.k3fu.xyz/2021/04/24/dmclock.html" rel="alternate" type="text/html" title="QoS 和 dmClock" /><published>2021-04-24T00:00:00+00:00</published><updated>2021-04-24T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/04/24/dmclock</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/04/24/dmclock.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-05-10T04:43:21+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">QoS 和 dmClock</title><link href="https://blog.k3fu.xyz/2021/04/24/dmclock.html" rel="alternate" type="text/html" title="QoS 和 dmClock" /><published>2021-04-24T00:00:00+00:00</published><updated>2021-04-24T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/04/24/dmclock</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/04/24/dmclock.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;QoS，而且是分布式的。&lt;/p&gt;
@@ -9,7 +9,7 @@
 &lt;h2 id=&quot;qos&quot;&gt;QoS&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;如果一个服务有多个服务对象，那么就得分轻重缓急。但是也不能因为有些服务对象不重要，就完全不顾他们。举个例子，就算平时工作再忙，也别忘了上个月的报销单填了。那么怎么实现 QoS 呢？还是用报销单的例子，那么我们定个规矩吧：每天至少用半小时时间填报销，要是做不完的话，那么就明天继续做。在执行之前，我们需要先引入几个概念:&lt;/p&gt;
+&lt;p&gt;如果一个服务有多个服务对象，那么就得分轻重缓急。但是也不能因为有些服务对象不重要，就完全不顾它们。举个例子，就算平时工作再忙，上个月的报销单也应该及时填啊。那么怎么实现 QoS 呢？还是用报销单的例子，那么我们定个规矩吧：每天至少用半小时时间填报销，要是做不完的话，那么就明天继续做。在执行之前，我们需要先引入几个概念:&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
@@ -17,13 +17,13 @@
 &lt;p&gt;任务：也就是要做的事情。每件事情都有它的优先级，还有它要花费的时间。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;任务列表：要是任何时候，手里面只有一件事情，我们可能就不用操心 QoS 了。但是现实是，很多时候，别说不同优先级的，就是同一优先级的任务都可能同时有好几件。我们一般按照先到先服务的原则，把它们放到队列里面，挨个处理。&lt;/p&gt;
+&lt;p&gt;任务列表：要是任何时候，手里面只有一件事情，我们可能就不用操心 QoS 了。但是现实是，很多时候别说不同优先级的，就是同一优先级的任务都可能同时有好几件。我们一般按照先到先服务的原则，把它们放到队列里面，挨个处理。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;分类：把要做的事情按照优先级分成了几种。&lt;/p&gt;
+&lt;p&gt;分类：把要做的事情按照优先级分成几种。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;计量：每个任务需要的时间都不一样，如果只是处理会议的邀请，那么可能只需要几秒钟就能做出回应。但是如果是调查一个新编译错误， 可能就得花半个小时。&lt;/p&gt;
+&lt;p&gt;计量：每个任务需要的时间都不一样，如果只是处理会议的邀请，那么可能只需要几秒钟就能做出回应。但是如果是分析一个新的编译错误，可能就得花半个小时。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;调度：接下来该从哪个队列里做哪个任务呢？&lt;/p&gt;
@@ -42,7 +42,7 @@
 &lt;p&gt;任务列表：每件工作按照先后顺序记到小本本上。做完一件就划掉一件。有新的工作就记在最后面。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;分类：工作分成两类：一类是平时的工作，另一类是低优先级的维护工作，比如说报销这种事情。&lt;/p&gt;
+&lt;p&gt;分类：工作分成两类：一类是平时的工作，另一类是低优先级的维护工作，比如说报销。&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;计量：对列表里的工作根据工作量一一进行评估。&lt;/p&gt;
@@ -199,7 +199,7 @@
 &lt;p&gt;为什么对 \(\mathit{P_i}^{r}\) 特殊处理呢？我们假设直接使用当前的时间作为新人或者刚开始 active 的客户端的  \(\mathit{P_i}^r\)。那么对其他客户端来说，它们发出第一个请求的时候，\(\mathit{P_i}^{r}\) 也是当前的系统时刻，但是当客户端持续地发出请求，随着时间推移，根据各自的权重不同，你我的时间开始差得越来越多，贫富差距慢慢显现。但是新来的客户端横空出现打破了这个均衡，它的 \(\mathit{P_i}^{r}\) 不是根据之前的 \(\mathit{P_i}^{r-1}\) 推算出来的，而是直接使用的当前时间。虽然它的优先级可能并不高，但是它在一段时间之内凭借它的暂时的“后发优势“，无缘无故地打败了很多甚至优先级比他更高的老前辈，直到它的权重慢慢地把一开始的 P 慢慢抵消，一切恢复正常。mClock 算法为了解决这个问题，转而以最新的系统时钟调整其他老革命的 P，让所有的 P 按照时间轴平移，令最小的 P 等于系统时间。这样新加入的 P 就不会干扰现有的秩序了。因为 P 标签有累计的效应，所以这里仅仅调整它。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;有了三个 tag，那么到底以谁为准呢？调度器有两种决策模式，并根据当前情况在两者中间切换：&lt;/p&gt;
+&lt;p&gt;有了三个 tag，那么到底以谁为准呢？调度器有两种决策模式，并根据当前情况在两者之间切换：&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot;&gt;
@@ -346,7 +346,7 @@
 &lt;/ul&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;以 &lt;code&gt;bg&lt;/code&gt; 开头的请求都是后台的请求，它们保证系统的正常运行，但是优先级相对于前面两类请求就要低一些。而且，每个 &lt;code&gt;OpSchedulerItem&lt;/code&gt; 都有自己的 priority 和 cost。所以调度器调度的对象就是 &lt;code&gt;OpSchedulerItem&lt;/code&gt; 了。但是可能和大家猜测的不同，OSD 用来实现 QoS 的调度器却不是全局唯一的。它是 &lt;code&gt;OSDShard&lt;/code&gt; 的成员变量。而 &lt;code&gt;OSDShard&lt;/code&gt; 则是 OSD 的执行单位，它维护着一个队列。队列里面的元素就是被安排执行的请求。每个 shard 都负责一个或者多个 PG，每当有请求到达，都会用请求对应的 PG 作为 key 找到对应的 shard，让 shard 决定什么时候执行它。而这个决定就是由调度器做出的。&lt;/p&gt;
+&lt;p&gt;以 &lt;code&gt;bg&lt;/code&gt; 开头的请求都是后台的请求，它们保证系统的正常运行，但是优先级相对于前面两类请求就要低一些。而且，每个 &lt;code&gt;OpSchedulerItem&lt;/code&gt; 都有自己的 priority 和 cost。所以调度器调度的对象就是 &lt;code&gt;OpSchedulerItem&lt;/code&gt; 了。但是可能和大家猜测的不同，OSD 用来实现 QoS 的调度器却不是全局唯一的。它是 &lt;code&gt;OSDShard&lt;/code&gt; 的成员变量。而 &lt;code&gt;OSDShard&lt;/code&gt; 则是 OSD 的执行单位，它维护着一个队列。队列里面的元素就是被安排执行的请求。每个 shard 都负责一个或者多个 PG，每当有请求到达，都会用请求对应的 PG 作为 key 找到对应的 shard，让 shard 决定什么时候执行它。而这个决定就是由调度器做出的。所以有多少个 &lt;code&gt;OSDShard&lt;/code&gt; 就有多少个调度器，它们分别为各自负责的一组 PG 调度请求。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我们有两个调度器&lt;/p&gt;
