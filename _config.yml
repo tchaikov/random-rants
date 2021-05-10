@@ -4,7 +4,8 @@ description: 我的学习记录
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://blog.k3fu.xyz"
 github_username:  tchaikov
-
+color_theme: auto
+cusdis_app_id: 12e099bc-c554-4827-aeb8-e425c83d8176
 lang: "en"
 
 author:
