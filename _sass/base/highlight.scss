@@ -3,8 +3,8 @@
 // ==========================================================================
 
 div.highlighter-rouge,
-figure.highlight,
-.highlight code {
+div.listingblock,
+figure.highlight {
   position: relative;
   background: var(--base00);
   color: var(--base05);
@@ -17,7 +17,7 @@ figure.highlight,
   > pre,
   pre.highlight {
     margin: 0;
-    padding: 1em;
+    padding: 0.6em;
   }
 }
 
@@ -41,6 +41,7 @@ li div.highlighter-rouge {
 }
 
 div.highlighter-rouge,
+div.listingblock,
 figure.highlight {
   margin-bottom: 1em;
 }
