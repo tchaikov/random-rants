@@ -10,7 +10,7 @@ GEM
       asciidoctor-diagram-plantuml (~> 1.2021)
       rexml
     asciidoctor-diagram-ditaamini (1.0.0)
-    asciidoctor-diagram-plantuml (1.2021.2)
+    asciidoctor-diagram-plantuml (1.2021.5)
     asciidoctor_cjk_breaks (0.0.2)
       asciidoctor (~> 2)
       east_asian_width (~> 0)
