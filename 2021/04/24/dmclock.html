@@ -16,8 +16,11 @@
     <!-- Theme Mode-->
 
     <script>
-      const isAutoTheme = false;
-      document.documentElement.setAttribute("data-theme", "light");
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
     </script>
 
     <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
@@ -164,6 +167,16 @@
             <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
               <i class="fas fa-tags" aria-hidden="true"></i>
             </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="QoS 和 dmClock "
+              aria-label="QoS 和 dmClock"
+              onclick="themeToggle()"
+            ></a>
           </li>
         </ul>
       </nav>
@@ -1064,6 +1077,17 @@
       </article>
 
       <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2021-04-24-dmclock.adoc"
+        data-page-url="/2021/04/24/dmclock.html"
+        data-page-title="QoS 和 dmClock"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
 
       <!-- Disqus -->
 

@@ -16,8 +16,11 @@
     <!-- Theme Mode-->
 
     <script>
-      const isAutoTheme = false;
-      document.documentElement.setAttribute("data-theme", "light");
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
     </script>
 
     <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
@@ -145,6 +148,16 @@
             <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
               <i class="fas fa-tags" aria-hidden="true"></i>
             </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title=" "
+              aria-label=""
+              onclick="themeToggle()"
+            ></a>
           </li>
         </ul>
       </nav>

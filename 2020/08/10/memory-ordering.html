@@ -16,8 +16,11 @@
     <!-- Theme Mode-->
 
     <script>
-      const isAutoTheme = false;
-      document.documentElement.setAttribute("data-theme", "light");
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
     </script>
 
     <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
@@ -164,6 +167,16 @@
             <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
               <i class="fas fa-tags" aria-hidden="true"></i>
             </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="多核和顺序 "
+              aria-label="多核和顺序"
+              onclick="themeToggle()"
+            ></a>
           </li>
         </ul>
       </nav>
@@ -1985,6 +1998,17 @@ movb store_buffer[mem], reg  ; 读操作也会查看一下 store_buffer，看看
       </article>
 
       <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2020-08-10-memory-ordering.adoc"
+        data-page-url="/2020/08/10/memory-ordering.html"
+        data-page-title="多核和顺序"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
 
       <!-- Disqus -->
 
