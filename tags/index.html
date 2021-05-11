@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.2.6
-    Copyright 2016-2020 Sylhare
+    Type on Strap jekyll theme v2.3.5
+    Copyright 2016-2021 Sylhare
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -10,8 +10,15 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1"
+      content="width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5"
     />
+
+    <!-- Theme Mode-->
+
+    <script>
+      const isAutoTheme = false;
+      document.documentElement.setAttribute("data-theme", "light");
+    </script>
 
     <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
     <script defer src="/assets/js/main.min.js"></script>
@@ -22,9 +29,6 @@
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
 
-    <!-- Canonical -->
-    <link rel="canonical" href="https://blog.k3fu.xyz/tags/" />
-
     <!-- RSS -->
     <link
       rel="alternate"
@@ -34,13 +38,20 @@
     />
 
     <!-- KaTeX 0.12.0 -->
-    <!-- if you have any issue check https://github.com/KaTeX/KaTeX -->
 
     <script defer src="/assets/js/vendor/katex.min.js"></script>
     <script
       defer
       src="/assets/js/vendor/auto-render.min.js"
       onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Mermaid 8.9.2 -->
+
+    <!-- Simple Jekyll Search 1.9.1 -->
+    <script
+      src="/assets/js/vendor/simple-jekyll-search.min.js"
+      type="text/javascript"
     ></script>
 
     <!-- Google Analytics / Cookie Consent -->
@@ -52,6 +63,9 @@
 
     <!-- seo tags -->
     <meta property="og:image" content="https://blog.k3fu.xyz/" />
+
+    <meta property="og:type" content="website" />
+
     <!-- Begin Jekyll SEO tag v2.7.1 -->
     <title>Tags | some random rants</title>
     <meta name="generator" content="Jekyll v4.1.1" />
@@ -67,11 +81,11 @@
     <meta property="twitter:title" content="Tags" />
     <script type="application/ld+json">
       {
-        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "headline": "Tags",
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/tags/",
         "@type": "WebPage",
-        "headline": "Tags",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
@@ -92,21 +106,22 @@
 
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+    <meta name="twitter:image:alt" content="Tags" />
   </head>
 
   <body>
     <header class="site-header">
       <!-- Logo and title -->
       <div class="branding">
-        <h1 class="site-title">
-          <a aria-label="some random rants" href="/"> some random rants </a>
-        </h1>
+        <a class="site-title" aria-label="some random rants" href="/">
+          some random rants
+        </a>
       </div>
 
       <!-- Toggle menu -->
       <nav class="clear">
         <a aria-label="pull" id="pull" class="toggle" href="#">
-          <i class="fa fa-bars fa-lg"></i>
+          <i class="fas fa-bars fa-lg"></i>
         </a>
 
         <!-- Menu -->
@@ -121,14 +136,14 @@
           <li class="separator">|</li>
           <li>
             <a class="clear" aria-label="搜索" title="搜索" href="/search/">
-              <i class="fa fa-search" aria-hidden="true"></i>
+              <i class="fas fa-search" aria-hidden="true"></i>
             </a>
           </li>
 
           <li class="separator">|</li>
           <li>
             <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
-              <i class="fa fa-tags" aria-hidden="true"></i>
+              <i class="fas fa-tags" aria-hidden="true"></i>
             </a>
           </li>
         </ul>
@@ -153,50 +168,66 @@
 
             <!-- Displays the list of tags-->
 
-            <footer>
-              <div class="tag-list">
-                <div class="meta">Tags</div>
+            <div class="tag-list">
+              <ul>
+                <li class="meta">Tags</li>
 
-                <a class="button" href="/tags#arch">
-                  <p><i class="fa fa-tag fa-fw"></i> arch</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#arch">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> arch</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#c%2B%2B">
-                  <p><i class="fa fa-tag fa-fw"></i> c++</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#c%2B%2B">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> c++</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#ceph">
-                  <p><i class="fa fa-tag fa-fw"></i> ceph</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#ceph">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> ceph</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#ci">
-                  <p><i class="fa fa-tag fa-fw"></i> ci</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#ci">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> ci</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#jekyll">
-                  <p><i class="fa fa-tag fa-fw"></i> jekyll</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#jekyll">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> jekyll</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#networking">
-                  <p><i class="fa fa-tag fa-fw"></i> networking</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#networking">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> networking</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#seastar">
-                  <p><i class="fa fa-tag fa-fw"></i> seastar</p>
-                </a>
+                <li>
+                  <a class="button" href="/tags#seastar">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> seastar</p>
+                  </a>
+                </li>
 
-                <a class="button" href="/tags#x86">
-                  <p><i class="fa fa-tag fa-fw"></i> x86</p>
-                </a>
-              </div>
-            </footer>
+                <li>
+                  <a class="button" href="/tags#x86">
+                    <p><i class="fas fa-tag fa-fw fa-sm"></i> x86</p>
+                  </a>
+                </li>
+              </ul>
+            </div>
 
             <!-- Displays the posts and pages that contains the tag-->
             <div class="posts">
               <h3 id="arch" class="tag-anchor">
-                <a href="#arch"><i class="fa fa-tag fa-fw"></i> arch</a>
+                <a href="#arch"><i class="fas fa-tag fa-fw fa-sm"></i> arch</a>
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -208,29 +239,35 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/08/10/memory-ordering.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     多核和顺序
                   </a>
 
-                  <div class="meta">August 10, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">August 10, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/08/09/setjmp-setcontext.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     longjmp 和 setcontext
                   </a>
 
-                  <div class="meta">August 9, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">August 09, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
               </div>
 
               <h3 id="c%2B%2B" class="tag-anchor">
-                <a href="#c%2B%2B"><i class="fa fa-tag fa-fw"></i> c++</a>
+                <a href="#c%2B%2B"
+                  ><i class="fas fa-tag fa-fw fa-sm"></i> c++</a
+                >
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -242,38 +279,44 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/10/16/ownership-in-seastar.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     seastar::future 中的 ownership
                   </a>
 
-                  <div class="meta">October 16, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">October 16, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/10/12/order-of-evaluation.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     求值的顺序
                   </a>
 
-                  <div class="meta">October 12, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">October 12, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/09/30/error-code.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     std::error_code
                   </a>
 
-                  <div class="meta">September 30, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">September 30, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
               </div>
 
               <h3 id="ceph" class="tag-anchor">
-                <a href="#ceph"><i class="fa fa-tag fa-fw"></i> ceph</a>
+                <a href="#ceph"><i class="fas fa-tag fa-fw fa-sm"></i> ceph</a>
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -285,83 +328,99 @@
 
                 <h5 class="tag-title">
                   <a href="/2021/05/10/metrics.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     ceph::common::PerfCounter 和 seastar::metrics
                   </a>
 
-                  <div class="meta">May 10, 2021</div>
+                  <div class="post-info">
+                    <p class="meta">May 10, 2021</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2021/04/24/dmclock.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     QoS 和 dmClock
                   </a>
 
-                  <div class="meta">April 24, 2021</div>
+                  <div class="post-info">
+                    <p class="meta">April 24, 2021</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2021/03/29/flatten-osdmaps.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     大批量发送增量 osdmap 对性能的影响
                   </a>
 
-                  <div class="meta">March 29, 2021</div>
+                  <div class="post-info">
+                    <p class="meta">March 29, 2021</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2021/03/14/lap-n-race.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     方程式赛车和读写请求
                   </a>
 
-                  <div class="meta">March 14, 2021</div>
+                  <div class="post-info">
+                    <p class="meta">March 14, 2021</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2021/03/11/failure-reports.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     永不消逝的 failure 报告
                   </a>
 
-                  <div class="meta">March 11, 2021</div>
+                  <div class="post-info">
+                    <p class="meta">March 11, 2021</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/11/17/pipeline-ceph.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     Crimson 里面的流水线
                   </a>
 
-                  <div class="meta">November 17, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">November 17, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/10/02/road-to-rtd.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     Read the Docs 之路
                   </a>
 
-                  <div class="meta">October 2, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">October 02, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/09/20/out-of-order-in-ceph.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     RADOS 里的顺序
                   </a>
 
-                  <div class="meta">September 20, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">September 20, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
               </div>
 
               <h3 id="ci" class="tag-anchor">
-                <a href="#ci"><i class="fa fa-tag fa-fw"></i> ci</a>
+                <a href="#ci"><i class="fas fa-tag fa-fw fa-sm"></i> ci</a>
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -373,20 +432,24 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/10/02/road-to-rtd.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     Read the Docs 之路
                   </a>
 
-                  <div class="meta">October 2, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">October 02, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
               </div>
 
               <h3 id="jekyll" class="tag-anchor">
-                <a href="#jekyll"><i class="fa fa-tag fa-fw"></i> jekyll</a>
+                <a href="#jekyll"
+                  ><i class="fas fa-tag fa-fw fa-sm"></i> jekyll</a
+                >
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -398,11 +461,13 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/09/05/my-blog.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     博客维护指南
                   </a>
 
-                  <div class="meta">September 5, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">September 05, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
@@ -410,10 +475,10 @@
 
               <h3 id="networking" class="tag-anchor">
                 <a href="#networking"
-                  ><i class="fa fa-tag fa-fw"></i> networking</a
+                  ><i class="fas fa-tag fa-fw fa-sm"></i> networking</a
                 >
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -425,20 +490,24 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/08/23/tcp-connections.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     TCP 长连接的最大个数
                   </a>
 
-                  <div class="meta">August 23, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">August 23, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
               </div>
 
               <h3 id="seastar" class="tag-anchor">
-                <a href="#seastar"><i class="fa fa-tag fa-fw"></i> seastar</a>
+                <a href="#seastar"
+                  ><i class="fas fa-tag fa-fw fa-sm"></i> seastar</a
+                >
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -450,29 +519,33 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/10/16/ownership-in-seastar.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     seastar::future 中的 ownership
                   </a>
 
-                  <div class="meta">October 16, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">October 16, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/10/12/order-of-evaluation.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     求值的顺序
                   </a>
 
-                  <div class="meta">October 12, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">October 12, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
               </div>
 
               <h3 id="x86" class="tag-anchor">
-                <a href="#x86"><i class="fa fa-tag fa-fw"></i> x86</a>
+                <a href="#x86"><i class="fas fa-tag fa-fw fa-sm"></i> x86</a>
                 <a href="#Tags" style="float: right"
-                  ><i class="fa fa-chevron-up" aria-hidden="true"> </i>
+                  ><i class="fas fa-chevron-up fa-lg" aria-hidden="true"> </i>
                 </a>
               </h3>
 
@@ -484,20 +557,24 @@
 
                 <h5 class="tag-title">
                   <a href="/2020/08/10/memory-ordering.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     多核和顺序
                   </a>
 
-                  <div class="meta">August 10, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">August 10, 2020</p>
+                  </div>
                 </h5>
 
                 <h5 class="tag-title">
                   <a href="/2020/08/09/setjmp-setcontext.html">
-                    <i class="fa fa-file-text-o" aria-hidden="true"></i>
+                    <i class="far fa-file-alt" aria-hidden="true"></i>
                     longjmp 和 setcontext
                   </a>
 
-                  <div class="meta">August 9, 2020</div>
+                  <div class="post-info">
+                    <p class="meta">August 09, 2020</p>
+                  </div>
                 </h5>
 
                 <!-- Portfolio -->
@@ -508,9 +585,7 @@
 
         <!-- Tag list for portfolio -->
 
-        <footer>
-          <div class="tag-list"></div>
-        </footer>
+        <div class="tag-list"></div>
       </article>
     </div>
     <footer class="site-footer">
