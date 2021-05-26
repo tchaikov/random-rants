@@ -192,6 +192,10 @@ dl,
   margin-bottom: 0.3em;
 }
 
+.paragraph p {
+  text-indent: 1em;
+}
+
 // KaTeX math display
 .math-display {
   display: inline-block;
