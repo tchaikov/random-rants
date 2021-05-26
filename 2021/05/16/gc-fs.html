@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.3.5
+    Copyright 2016-2021 Sylhare
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5"
+    />
+
+    <!-- Theme Mode-->
+
+    <script>
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
+    </script>
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+
+    <!-- KaTeX 0.12.0 -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Mermaid 8.9.2 -->
+
+    <!-- Simple Jekyll Search 1.9.1 -->
+    <script
+      src="/assets/js/vendor/simple-jekyll-search.min.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+
+    <meta property="og:type" content="website" />
+
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+    <title>Log-strucutured Filesystem 和垃圾收集 | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="Log-strucutured Filesystem 和垃圾收集" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta name="description" content="此 GC 非彼 GC。" />
+    <meta property="og:description" content="此 GC 非彼 GC。" />
+    <link rel="canonical" href="https://blog.k3fu.xyz/2021/05/16/gc-fs.html" />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2021/05/16/gc-fs.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2021-05-16T00:00:00+00:00"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      property="twitter:title"
+      content="Log-strucutured Filesystem 和垃圾收集"
+    />
+    <script type="application/ld+json">
+      {
+        "headline": "Log-strucutured Filesystem 和垃圾收集",
+        "dateModified": "2021-05-16T00:00:00+00:00",
+        "datePublished": "2021-05-16T00:00:00+00:00",
+        "description": "此 GC 非彼 GC。",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2021/05/16/gc-fs.html"
+        },
+        "url": "https://blog.k3fu.xyz/2021/05/16/gc-fs.html",
+        "@type": "BlogPosting",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta
+      name="twitter:title"
+      content="Log-strucutured Filesystem 和垃圾收集"
+    />
+    <meta
+      name="twitter:description"
+      content="此 GC 非彼 GC。SeaStore 是 Crimson 使用的存储引擎。它的目标是高性能全异步支持 ZNS 和高性能的存储介质比如 PMEM支持异构存储兼容 Ceph 现有的 object store 的语义可以看出来，SeaStore 很像一个文件系统。文件名就是 object store 里面 objec..."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+    <meta
+      name="twitter:image:alt"
+      content="Log-strucutured Filesystem 和垃圾收集"
+    />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <a class="site-title" aria-label="some random rants" href="/">
+          some random rants
+        </a>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fas fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fas fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="Log-strucutured Filesystem 和垃圾收集 "
+              aria-label="Log-strucutured Filesystem 和垃圾收集"
+              onclick="themeToggle()"
+            ></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1
+              id="Log-strucutured+Filesystem+%E5%92%8C%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86"
+              class="title"
+            >
+              Log-strucutured Filesystem 和垃圾收集
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">May 16, 2021</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>此 GC 非彼 GC。</p>
+              </div>
+              <div class="paragraph">
+                <p>SeaStore 是 Crimson 使用的存储引擎。它的目标是</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>高性能</p>
+                  </li>
+                  <li>
+                    <p>全异步</p>
+                  </li>
+                  <li>
+                    <p>支持 ZNS 和高性能的存储介质比如 PMEM</p>
+                  </li>
+                  <li>
+                    <p>支持异构存储</p>
+                  </li>
+                  <li>
+                    <p>兼容 Ceph 现有的 object store 的语义</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>可以看出来，SeaStore 很像一个文件系统。</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>文件名就是 object store 里面 object 的 object id</p>
+                  </li>
+                  <li>
+                    <p>文件的内容就是 object 对应的数据</p>
+                  </li>
+                  <li>
+                    <p>
+                      文件的 xattr 和各种属性，就类似 object 的 omap 和 xattr
+                    </p>
+                  </li>
+                  <li>
+                    <p>当然文件还支持快照，这个和 object 的快照也很相似</p>
+                  </li>
+                  <li>
+                    <p>类似的还有 mount、umount 和 fsck 这类操作</p>
+                  </li>
+                  <li>
+                    <p>
+                      和文件系统一样，SeaStore 也有碎片的问题，所以我们也需要
+                      defrag
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>文件系统的设计可能有好多方面</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      它像数据库:
+                      需要高效地执行查询和修改的操作。对不同性质的访问模式也可以有不同的优化策略。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      它像 allocator:
+                      需要有效地管理空间。比如说，分配空闲空间，跟踪使用的空间，释放不用了的区域。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      它也有 cache:
+                      需要利用不同性质的存储介质，比如说利用低延迟的存储作为缓存，而用大容量的存储保存冷数据。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      它像调度器:
+                      需要在服务前台请求的同时，也能兼顾后台的任务。所谓磨刀不误砍柴工。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  所以一篇文章很难讨论到所有的问题。我们先从垃圾收集说起。为什么？因为笔者正好有一本
+                  <a href="https://book.douban.com/subject/1157908/"
+                    >《垃圾收集》</a
+                  >。有点拿着榔头找钉子的意思吧。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="zoned-storage-和-degragmentation">
+              Zoned Storage 和 degragmentation
+            </h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  先说说“钉子”。目前 SeaStore 主要针对的存储介质叫
+                  <a href="https://zonedstorage.io/introduction/zns/"
+                    >Zoned Namespaces SSD</a
+                  >。ZNS flash 和
+                  <a href="https://zonedstorage.io/introduction/smr/"
+                    >叠瓦盘(SMR)</a
+                  >
+                  都属于 Zoned
+                  Storage。后者因为读写性能不彰，消费级市场上大家避之不及。但是如果作为冷存储，性价比还是很高的。要是能在应用层结合性能更好的存储介质一起使用，综合下来性价比可能还会更好。但是它最大的问题在于，不支持原地
+                  (in-place) 修改的，所有的修改操作都通过 copy-on-write
+                  实现。整个磁盘被分成好几个区域
+                  (zone)，每个区域都只能添加数据，不能重写已经写入的数据。但要是已经写入的数据被删除了，我们就要回收它们占用的空间。要是需要修改的话，就得复制一份新的。同样，也需要在复制完毕后，回收原来数据占据的磁盘空间。回收的时候，最少必须清除整个
+                  zone。就像用活页笔记本记笔记，每页纸都从头写到尾，如果写坏了，想改一下呢？只能把那一页撕掉，换一张纸重新誊一遍。小块儿的橡皮擦在这里是不能使用的。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  为了帮助理解问题，还需要提一下 SSD 的访问模式。一块 SSD
+                  板卡上一般有多块 NAND 存储芯片，这些芯片通过一定数量的 channel
+                  连接到控制器芯片。所以 SSD 最小的并发单元就是就是单块 NAND
+                  芯片，最大的并发数就是 NAND 芯片的数量。因为无法向一块 NAND
+                  芯片同时发送多个请求。存储领域我们喜欢说 LUN (logical unit
+                  number)，在这里我们也把特定的 NAND 用 LUN 来表示。一个 channel
+                  由多个 LUN 共享。而每个 NAND flash LUN 由高到低分成不同的层级
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>channel. channel 之间不共享资源，可以充分并发。</p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>
+                            LUN. 连接到相同 channel 的不同 LUN
+                            之间可能会有数据依赖的问题，这一定程度上影响并发。
+                          </p>
+                          <div class="ulist">
+                            <ul>
+                              <li>
+                                <p>
+                                  plane: 一个芯片有 2 个 或者 4 个 plane。对某个
+                                  page 进行写操作的时候，需要对挂在不同 plane
+                                  的相同地址的 page 同时写。换句话说，一个 4k 的
+                                  page 事实上是映射到不同 plane 的 page 的。
+                                </p>
+                                <div class="ulist">
+                                  <ul>
+                                    <li>
+                                      <p>
+                                        block: 一般是 512 page。它是 flash
+                                        擦除操作的最小单位。
+                                      </p>
+                                      <div class="ulist">
+                                        <ul>
+                                          <li>
+                                            <p>
+                                              page: 由四个 sector 构成，加上额外
+                                              (out-of-band)
+                                              的空间，用来保存映射本身的信息。sector
+                                              的大小一般是 4
+                                              KB。写操作的的时候，必须按照 page
+                                              在 block 里的顺序写。 每个 sector
+                                              由多个 cell 构成。而每个 cell
+                                              按照芯片的不同存储的比特数量也不一样。比如说
+                                              SLC 芯片是一个比特，MLC
+                                              是两个比特，TLC 三个，QLC
+                                              四个。这里需要解释一下 page
+                                              pairing 的设计。根据 cell
+                                              保存比特的数量，由对应个数的 page
+                                              瓜分。换句话说，一个 QLC cell
+                                              对应着四个 paired page。只有所有的
+                                              page
+                                              都写好了，这次写操作才能算完成。所以对于一块有
+                                              4 个 plane 的 QLC
+                                              来说，每次写操作都必须同时写 4 个
+                                              plane，每个 plane 都因为 QLC cell
+                                              写操作的单位就是
+                                            </p>
+                                          </li>
+                                        </ul>
+                                      </div>
+                                    </li>
+                                  </ul>
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="n">min_bytes_per_write</span> <span class="o">=</span> <span class="mi">4</span> <span class="cm">/* 4 planes, 1 page per plan */</span> <span class="o">*</span>
+                      <span class="mi">4</span> <span class="cm">/* 4 paired page for each cell */</span> <span class="o">*</span>
+                      <span class="mi">4</span> <span class="cm">/* 4 sectors per page */</span> <span class="o">*</span>
+                      <span class="mi">4</span><span class="n">_KB</span> <span class="cm">/* 4KB per sector */</span>
+                    <span class="o">=</span> <span class="mi">256</span><span class="n">_KB</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  因此，flash 上的物理地址就由 channel, LUN, plane, block, page
+                  和 sector 构成。读的单位是 sector，而写的单位则是 page。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  顺便说一下，PMEM 的组织就相对扁平，它直接由多个 sector 构成。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  早在 Zoned Storage
+                  出现之前，因为磁盘的机械特性，大家就已经开始思考怎么把随机写转化为顺序写了，以期提高存储系统的性能。很自然的想法就是把
+                  metadata 和 data 作为 log 顺序地写入磁盘。这也是
+                  log-structured filesystem 中 log 的由来。虽然 LSF
+                  解决了随机写的问题，它也带来了随机读的问题。举个例子，我们在磁盘上保存了一个很大的文件，一开始的时候，文件在磁盘上是顺序写入的，所以它的物理地址是连续的。磁盘在顺序读取整个文件的时候不需要很多次寻道，所以
+                  IO
+                  会很快，带宽仅仅受限于磁盘的转速和磁盘接口的传输速度。但是随着时间流逝，用户先后在文件的不同位置作了一些修改。因为这些修改一样，也是作为
+                  log
+                  顺序写入磁盘的，它们的位置和文件原来的位置差得很远了。所以如果要顺序读取文件的话，
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      这个读请求就可能会在逻辑地址翻译成物理地址的时候被拆分成为很多小的读请求，这极大影响了顺序访问的性能。
+                    </p>
+                  </li>
+                  <li>
+                    <p>更不用说因为地址映射表大小增长带来的额外开销。</p>
+                  </li>
+                  <li>
+                    <p>
+                      如果寻址是按照块对齐的，那么大量的数据片也会造成内部碎片。比如说，如果有的数据只有
+                      7k，要是磁盘的块大小是 4k，那么最后那 3k
+                      很可能就浪费掉了。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      损害了读写的局部性。让系统没有办法根据局部性进行优化。通常文件的读写都有一些局部性，文件系统可能会在应用要求读取某个文件开始的
+                      4k 的时候，就把开始的 4M
+                      都读进来了。它估计你很可能接下来也会读这
+                      4M，索性我都读进来好了。反正
+                    </p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>闲着也是闲着</p>
+                        </li>
+                        <li>
+                          <p>这 4M 的物理地址是连续的，所以干脆一起读了</p>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  记得小时候一个乐趣就是看 MSDOS 下面
+                  <code>defrag</code> 程序不断移动的游标和闪动的小砖块。到现在
+                  youtube
+                  甚至还能找到一些怀旧的视频。它的作用差不多就是把同一文件保存在磁盘相邻的块。以减少磁头磁盘寻道的时间，同时通过把数据排列得更紧凑，把内部碎片挤掉，腾出来一些空闲空间来。可以说<a
+                    href="https://en.wikipedia.org/wiki/Defragmentation"
+                    >碎片整理</a
+                  >是一种特定的<a
+                    href="https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)"
+                    >垃圾收集</a
+                  >。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="seastore">SeaStore</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  因为 SeaStore 当前的目标是支持
+                  ZNS。对它来说，每一张活页纸就是一个 segment。为了理解 SeaStore
+                  怎么做垃圾收集，首先需要知道 SeaStore 里面的 journal 是什么。
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="cache">Cache</h3>
+              </div>
+              <div class="sect2">
+                <h3 id="journal">Journal</h3>
+                <div class="paragraph">
+                  <p>
+                    Journal 就是日志，也就是 log-structured filesystem 里面的
+                    log。在任意时刻，SeaStore 总是指定一个特定的 segment
+                    作为当时写 journal 的专用 segment。
+                  </p>
+                </div>
+                <div class="admonitionblock note">
+                  <table>
+                    <tr>
+                      <td class="icon">
+                        <i class="fa icon-note" title="Note"></i>
+                      </td>
+                      <td class="content">
+                        ZNS 是支持同时打开多个 zone
+                        的。这样让我们可以按照写入数据的不同特性，选择不同的
+                        zone，这样可以避免因为不同生命周期的数据相互交错，导致在
+                        GC 的时候投鼠忌器，难以权衡。但是 SeaStore
+                        现在为了简单起见，还没有利用这个特性。
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <div class="imageblock">
+                  <div class="content">
+                    <img
+                      src="/images/diag-4e9d1326f4d4a43cd7d2a9da5bd8184b.png"
+                      alt="Diagram"
+                      width="40"
+                      height="70"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="segmentcleaner">SegmentCleaner</h3>
+                <div class="paragraph">
+                  <p>GC 的时机</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        mount 的时候，会扫描 journal
+                        映射的地址空间。这确定了空闲空间的大小，借这个机会，就会看看是不是应该运行
+                        GC。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>GC 的条件，只要满足下面的条件之一，就触发 GC</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        空闲空间不够了。需要同时满足下面的条件，才能称为空间不够
+                      </p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>
+                              空闲空间的比例 &lt;
+                              <code>available_ratio_gc_max</code>
+                            </p>
+                          </li>
+                          <li>
+                            <p>
+                              可回收的空间 / 非空闲空间 &gt;
+                              <code>reclaim_ratio_gc_threshhold</code>
+                            </p>
+                            <div class="literalblock">
+                              <div class="content">
+                                <pre>
+error: 1954 Forbidden search
+absolutely fatal: operation lost in the dodecahedron of doom
+Would you like to try again? y/n</pre
+                                >
+                              </div>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="f2fs">F2FS</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  f2fs 的 GC 算法解决的问题就是找出一个牺牲的
+                  segment，把里面的有效块保存下来，然后回收它。f2fs 的 GC
+                  分为前台和后台。只有当空闲空间不够了，才会执行前台 GC。前台 GC
+                  要求短平快，这样能最小限度地减少用户应用的卡顿。后台 GC
+                  则更关注总体的效能，它是内核线程定期唤醒的时候执行的。请注意，f2fs
+                  其实并不会手动迁移有效块，它在选出要回收的 segment
+                  之后，把其中所有的有效块都读取到内存的 page cache
+                  里面，然后把它们标记成 dirty。这样，内核在清 cache
+                  的时候，就会顺便把这些需要保存的有效块也一并写入新的 segment
+                  了。这样不仅能减轻对前台的压力，也可以把小的写请求合并起来。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  它的思路就是让牺牲 segment
+                  的代价最小，同时受益最高。评价策略有下面几种。其中 greedy 和
+                  cost-benefit 是很经典的算法。
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="greedy">Greedy</h3>
+                <div class="paragraph">
+                  <p>
+                    有效块的个数。所以有效块最少的 segment 就是牺牲品。当 GC
+                    在前台运行时，f2fs 就使用 greedy 策略来选择回收的
+                    segment，这样需要读写的有效块数量最小，所以对用户请求的影响也最小。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="cost-benefit">Cost-Benefit</h3>
+                <div class="paragraph">
+                  <p>
+                    cost-benefit 算法最早是
+                    <a
+                      href="https://people.eecs.berkeley.edu/~brewer/cs262/LFS.pdf"
+                      >The Design and Implementation of a Log-Structured File
+                      System</a
+                    >
+                    一文中提出的。论文中设计的 Sprite LFS 文件系统当空闲 segment
+                    的数量低于给定阈值(一般是几十)的时候就会开始 GC，直到空闲
+                    segment
+                    的总数超过另外一个阈值(一般取50到100)。理想情况下的分布应该双峰形的，两个大头分别是有效数据很少的
+                    segment 和有效数据很多的
+                    segment。前者是热数据，后者是冷数据。有效数据比例靠近 50% 的
+                    segment 很少。这种分布对于 GC
+                    来说是比较省心的。因为在回收的时候不需要迁移很多数据。但是使用
+                    greedy
+                    算法的模拟实验结果出乎意料，和局部性更低的测试相比，局部性高的测试产生的分布更差：大量的
+                    segment 都聚集在中间。论文里面分析，使用 greedy
+                    算法的话，只有在一个 segment 的有效数据比例在所有 segment
+                    中最低的时候，它才会被选中回收。这样几轮 GC 之后，所有
+                    segment
+                    的有效数据比例都会降到回收阈值以下，甚至用来保存冷数据的
+                    segment 的有效数据比例也是如此。但是冷数据 segment
+                    使用率是比较坚挺的，它下降得比较慢。可以类比一个收藏家用来保存藏品的储藏室，除非收藏家突然改变了喜好，否则藏品是很少变化的。而冷数据本身也是有惯性的。所以，含有冷数据的
+                    segment
+                    即使大量保有无效数据，但是因为其稳定的使用率，不会被选中回收。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    根据这个观察，论文认为，cold segment 里面的空闲空间其实比
+                    hot segment
+                    里面的空闲空间更有价值。为什么呢？我们可以反过来看，因为和那些很快被修改得体无完肤的
+                    hot segment 相比，cold segment
+                    中的无效数据很难迅速增长。它在系统里面会保持相对较高的使用率更长的时间，我们不得已只能去不停地回收那些
+                    hot
+                    segment。它们就像离村庄很近的耕地，因为比较近，所以大家都会更喜欢耕种它们。而埋藏在
+                    cold segment 里面的空闲空间，就更难回收。这导致 cold segment
+                    的使用率慢慢地降低，但是无法回收。这些顽固的 cold segment
+                    的比例在一个访问局部性比较强的系统中可能会很高。因为在那种访问模式下，cold
+                    segment
+                    中的冷数据的地位更难以撼动。请注意，这里说的局部性强指的是，重复修改的数据只占硬盘中所有数据的一小部分，绝大部分数据是不变的。如果局部性差的话，所有数据被修改的概率基本上是均等的。如果
+                    GC 很积极地回收使用率低的 hot segment
+                    的话，这样虽然当时迁移的成本很低，但是迁移之后当时被迁移的有效数据很快就被修改了，成为了新的无效数据。所以与其不断地迁移这种
+                    hot segment，不如把它放一会儿，等养“肥”了，再 GC
+                    不迟。这样反而效果更好，效率更高。那时候的有效数据的比例会更低。打个比方，就像一条运动裤已经有点脏了，另外一件衣服上面只有一个墨点，如果明天还要踢一场球，那么你说今天是洗裤子还是洗衣服呢？要不今天还是先洗衣服，明天就穿这条裤子踢球，等踢完球再洗裤子吧。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    为了能让 GC 更积极地回收这些 cold
+                    segment，我们必须在政策上倾斜，让 GC 觉得回收 cold segment
+                    是更有利可图的。所以论文里面把 segment
+                    里面的最新的数据的年龄也作为参数一起计算，segment
+                    越老，那么它里面的的空闲空间至少也经历了那么长的时间。我们把它们解放出来的收益就是两者之积。用公式表达就是：
+                  </p>
+                </div>
+                <div class="stemblock">
+                  <div class="content">
+                    \[\frac{benefit}{cost} = \frac{(1-u) \times age}{1 + u}\]
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>其中</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>u 表示有效块在 section 中所占比例</p>
+                    </li>
+                    <li>
+                      <p>
+                        age 表示 section 中所有 segment
+                        中，最近一次修改的时间。这个数字越大，意味着这个 segment
+                        越 "cold"。用这个时间来估计
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        1 - u 表示回收该 section
+                        获得的收益，因为通过这次回收，能得到的空闲空间是 1 - u。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        1 + u 表示开销。1 表示我们需要读取整个被回收的
+                        segment，u 表示我们需要往另外一个 segment 写入其中 u
+                        那么多的数据。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    论文中的模拟实验表示，这样的策略可以使 segment
+                    在使用率上呈现双峰分布或者哑铃状分布。即低使用率的 segment
+                    和高使用率的 segment 都比较多，中间 segement
+                    很少。这样的分布比较适合
+                    GC。如果再能根据冷热数据进行聚类那么 GC 就会更高效。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="cat">CAT</h3>
+                <div class="paragraph">
+                  <p>
+                    Cost Age Times，这个算法基于 cost-benefit，它同时关注 flash
+                    block 的 wear leveling 问题。但是 ZNS SSD controller
+                    已经帮我们处理了，所以这里不考虑这类算法。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="atgc">ATGC</h3>
+                <div class="paragraph">
+                  <p>
+                    <a href="https://lwn.net/Articles/828027/">ATGC</a> (Age
+                    Threshold based Garbage Collection)
+                    是华为的开发者提出的算法，用来改进 f2fs 的 GC 效果 (effect)
+                    和性能 (efficiency)。
+                  </p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        如果 segment
+                        的年龄小于预设定的阈值，那么就不再考虑把它回收。因此可以避免回收太年轻的
+                        segement，这种 segment 往往更新更频繁。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        使用 SSR (slack space recycling)
+                        写日志的时候，尽量选择那些年龄相近的作为源 segment
+                        和目标
+                        segment。这样他们的更新频率可能更相近，有助于保持冷热数据的分离和聚类。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="admonitionblock note">
+                  <table>
+                    <tr>
+                      <td class="icon">
+                        <i class="fa icon-note" title="Note"></i>
+                      </td>
+                      <td class="content">
+                        f2fs 除了顺序写日志 (normal
+                        logging)之外，还能在空间不够的时候往无效的空间直接写
+                        (threaded
+                        logging)，写进去的日志串起来一样用。这样虽然把顺序写变成了随机写，但是可以避免
+                        GC 带来的卡顿，要是选择的 segment
+                        有很大的空闲空间，也能顺序写一阵。这种随机写的做法就叫做
+                        SSR。
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="zonefs">ZoneFS</h2>
+            <div class="sectionbody"></div>
+          </div>
+          <div class="sect1">
+            <h2 id="btrfs">Btrfs</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  因为我们的目标是支持 flash，而 flash 本质上是不支持原地
+                  (in-place) 修改的，所以所有的修改操作都通过 copy-on-write
+                  实现。这也正是 SeaStore 的设计很大程度上受到了 Btrfs
+                  影响的原因。而且最近 Btrfs 也开始加入对 zoned 设备的<a
+                    href="https://lwn.net/Articles/853308/"
+                    >支持</a
+                  >。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p><mark>TODO</mark></p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="spdk-ftl">SPDK FTL</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p><mark>TODO</mark></p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="lsm_zgc">LSM_ZGC</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  比较原始的 GC 算法可能仅仅关注 zone
+                  里面有效数据的比例，如果一个 zone
+                  里面的有效数据超过一定比例，我们可能就希望保留它，而回收那些充斥着垃圾数据的
+                  zone。<a
+                    href="https://www.usenix.org/system/files/hotstorage20_paper_choi_0.pdf"
+                    >LSM_ZGC 一文</a
+                  >
+                  提出的 GC 算法希望解决下面几个
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="问题">问题</h3>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        冷热数据分离。因为将来在进行另一次 GC
+                        的时候，也会根据数据的性质进行选择 zone。如果一个 zone
+                        里面的冷数据或者热数据的比例是压倒性的多数，那么就可以更容易地决定这个
+                        zone
+                        的处理方式。比如说，如果是绝大多数是冷数据，那么可以放心地把数据搬到冷存储上。要是绝大多数是无效数据，那么这个
+                        zone 就是很好的回收对象。反之，如果 zone 的使用率是
+                        50%，那么做 GC 的时候就难以取舍了。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        GC 的时候，如果被选中回收的 zone
+                        使用率很高，那么保存有效数据的开销会很大。因为典型的
+                        zone 的大小是 256MB 或者 512MB，所以即使允许用户 IO
+                        抢占后台的 GC 任务，GC 对总体性能产生的影响也会很明显。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        大量 4k
+                        大小读请求和相对大的读请求相比，后者的性能要比前者要好很多。我们假设后者是
+                        8K 到 128K 的IO。原因是，连续地址的读请求可以充分利用
+                        ZNS SSD 内部的并发能力。因为文中说，一个 zone
+                        里面的数据会被分散到不同 channel 连接的 LUN
+                        上，所以读取更大的读操作就能更好地利用同时使用多个
+                        channel
+                        带来的并发性。但是我认为，使用更大的读操作是一种利用
+                        inter-channel
+                        并发的简便的方式。但是这并不等于说，发送多个分散的小的读操作的并发就不好了。这样做的缺点应该是请求的个数更多了。因为处理多个请求产生的开销也因而增加。但是要得到比较好的性能也需要权衡，如果
+                        64MB 的区间里面，有效的数据只有
+                        4K，那么就没有必要坚持读取所有 64MB 的数据了。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="方案">方案</h3>
+                <div class="paragraph">
+                  <p>
+                    按照在文中的设置，一个 zone 大小为 1GB，一个 segment 为
+                    2MB，一个 block 为 4KB。这些设定很大程度上借用了 f2fs
+                    的磁盘布局。为了提高读操作的效率，如果一个 segment
+                    里面有效的 block 个数小于
+                    16，那么就仅仅读取有效数据，否则就读取整个的 segment。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    我把这个思路叫做“大浪淘沙”。每个 zone
+                    都处于下面四种状态中的一个。刚落盘的数据在 C0，以 segment
+                    为单位统计，如果某一个 segment
+                    的数据使用次数超过事先设定的阈值
+                    threshold<sub>cold</sub>，所有保存在这种 segment
+                    中的有效数据都被收集到 C1C_zone，其他 segment
+                    中的有效数据则悉数放到 C1H_zone 中。等到下一次 GC
+                    的时候，无论是 C1H_zone 还是 C1C_zone
+                    中，只要数据仍然有效，我们就把它们当作冷数据，一起放到
+                    C2_zone。因为他们都经历了两次 GC
+                    试炼，并且存活了下来。论文的作者期望通过这样的筛选机制，能够有效地区分不同生命周期的数据。其中，请注意，在这里，“冷数据”并不是指访问频次很低的数据，而是很少被修改或者删除的数据。它们经得起时间的考验，历久而弥坚。我们常说的
+                    WORM (write once read many)
+                    设备保存的就是冷数据。就是而热数据则是那种很快失效的数据，这种数据经常修改，它们生命周期很短，转瞬即逝，如同朝露一般。可以说，CPU
+                    寄存器里面的数据就是热数据。所以我们在第一次 GC
+                    的时候会借助保存数据的机会，先把冷热数据初步分开。这样如果要找热数据富集的牺牲品
+                    zone 的时候，可以更容易地找到这样的 zone。但是第二次 GC
+                    的时候就不再关注它们的使用频次了，而只是单纯地把第一代的幸存者都收集在一起。它们都被搬运过一次，而且顺利地活到了第二次
+                    GC。所以它们完全有资格升级成“二级冷数据”。论文认为，第一代幸存者的生存周期相似，所以它们的空间局部性很可能也更好。比如说
+                    leveldb 里面，同一个 SSTable
+                    里面数据的访问频次可能不同，但是它们的生命周期是相同的，读写模式也一致。
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre>
+Failed to generate image: Could not find the 'dot' executable in PATH; add it to the PATH or specify its location using the 'graphvizdot' document attribute
+digraph g {
+    rankdir=LR
+    C0_zone -&gt; C1C_zone [ label = "冷数据"];
+    C0_zone -&gt; C1H_zone [ label = "其他数据"];
+    C0_zone -&gt; black_hole [ label = "无效数据"];
+    black_hole [ shape = doublecircle, label = "黑洞" ];
+    C1C_zone -&gt; C2_zone [ label = "有效数据"];
+    C1C_zone -&gt; black_hole [ label = "无效数据"];
+    C1H_zone -&gt; C2_zone [ label = "有效数据"];
+    C1H_zone -&gt; black_hole [ label = "无效数据"];
+    C2_zone -&gt; C2_zone [ label = "有效数据"];
+    C2_zone -&gt; black_hole [ label = "无效数据"];
+    C2_zone [ style = filled ];
+}</pre
+                    >
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    我们还可以更进一步。让经过冷热数据区分后活下来的 C2_zone
+                    数据，升级进入 C3_zone。
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre>
+Failed to generate image: no implicit conversion of nil into String
+digraph g {
+    rankdir=LR
+    C0_zone -&gt; C1_zone [ label = "第一次试炼"]
+    C1_zone [ style = filled, fillcolor = lightgray ]
+    C1_zone -&gt; C2_zone [ label = "第二次试炼"]
+    C2_zone [ style = filled, fillcolor = darkgray ]
+    C2_zone -&gt; C3_zone [ label = "第三次试炼"]
+    C3_zone [ style = filled, fillcolor = dimgray ]
+}</pre
+                    >
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    这样通过多次淘汰，我们就可以把数据分出三六九等，有的数据经历了很多次
+                    GC 都巍然不动，有的数据最多只能到 C1H_zone
+                    状态就黯然退场。前者都保存在同一个 zone 里面，所以 GC
+                    的时候就不会因为它们和其他热数据挤在一起，而在腾地方的时候被迫迁移它们，因此就减少了不必要的开销。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <div class="tag-list">
+          <ul>
+            <li class="meta">Tag</li>
+
+            <li>
+              <a class="button" href="/tags#ceph">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> ceph</p>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2021-05-16-gc-fs.adoc"
+        data-page-url="/2021/05/16/gc-fs.html"
+        data-page-title="Log-strucutured Filesystem 和垃圾收集"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
+
+      <!-- Disqus -->
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a
+            alt="ceph::common::PerfCounter 和 seastar::metrics"
+            href="/2021/05/10/metrics.html"
+          >
+            <p>Next post</p>
+            ceph::common::PerfCounter 和 seastar::metrics
+          </a>
+        </div>
+      </div>
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>
