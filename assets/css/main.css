@@ -5935,6 +5935,9 @@ dl,
   line-height: 1.5;
   margin-bottom: 0.3em; }
 
+p {
+  text-indent: 2em; }
+
 .math-display {
   display: inline-block;
   width: 100%; }

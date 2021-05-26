@@ -494,111 +494,6 @@
             </div>
           </div>
           <div class="sect1">
-            <h2 id="seastore">SeaStore</h2>
-            <div class="sectionbody">
-              <div class="paragraph">
-                <p>
-                  因为 SeaStore 当前的目标是支持
-                  ZNS。对它来说，每一张活页纸就是一个 segment。为了理解 SeaStore
-                  怎么做垃圾收集，首先需要知道 SeaStore 里面的 journal 是什么。
-                </p>
-              </div>
-              <div class="sect2">
-                <h3 id="cache">Cache</h3>
-              </div>
-              <div class="sect2">
-                <h3 id="journal">Journal</h3>
-                <div class="paragraph">
-                  <p>
-                    Journal 就是日志，也就是 log-structured filesystem 里面的
-                    log。在任意时刻，SeaStore 总是指定一个特定的 segment
-                    作为当时写 journal 的专用 segment。
-                  </p>
-                </div>
-                <div class="admonitionblock note">
-                  <table>
-                    <tr>
-                      <td class="icon">
-                        <i class="fa icon-note" title="Note"></i>
-                      </td>
-                      <td class="content">
-                        ZNS 是支持同时打开多个 zone
-                        的。这样让我们可以按照写入数据的不同特性，选择不同的
-                        zone，这样可以避免因为不同生命周期的数据相互交错，导致在
-                        GC 的时候投鼠忌器，难以权衡。但是 SeaStore
-                        现在为了简单起见，还没有利用这个特性。
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-                <div class="imageblock">
-                  <div class="content">
-                    <img
-                      src="/images/diag-4e9d1326f4d4a43cd7d2a9da5bd8184b.png"
-                      alt="Diagram"
-                      width="40"
-                      height="70"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div class="sect2">
-                <h3 id="segmentcleaner">SegmentCleaner</h3>
-                <div class="paragraph">
-                  <p>GC 的时机</p>
-                </div>
-                <div class="ulist">
-                  <ul>
-                    <li>
-                      <p>
-                        mount 的时候，会扫描 journal
-                        映射的地址空间。这确定了空闲空间的大小，借这个机会，就会看看是不是应该运行
-                        GC。
-                      </p>
-                    </li>
-                  </ul>
-                </div>
-                <div class="paragraph">
-                  <p>GC 的条件，只要满足下面的条件之一，就触发 GC</p>
-                </div>
-                <div class="ulist">
-                  <ul>
-                    <li>
-                      <p>
-                        空闲空间不够了。需要同时满足下面的条件，才能称为空间不够
-                      </p>
-                      <div class="ulist">
-                        <ul>
-                          <li>
-                            <p>
-                              空闲空间的比例 &lt;
-                              <code>available_ratio_gc_max</code>
-                            </p>
-                          </li>
-                          <li>
-                            <p>
-                              可回收的空间 / 非空闲空间 &gt;
-                              <code>reclaim_ratio_gc_threshhold</code>
-                            </p>
-                            <div class="literalblock">
-                              <div class="content">
-                                <pre>
-error: 1954 Forbidden search
-absolutely fatal: operation lost in the dodecahedron of doom
-Would you like to try again? y/n</pre
-                                >
-                              </div>
-                            </div>
-                          </li>
-                        </ul>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="sect1">
             <h2 id="f2fs">F2FS</h2>
             <div class="sectionbody">
               <div class="paragraph">
@@ -970,6 +865,104 @@ digraph g {
                     状态就黯然退场。前者都保存在同一个 zone 里面，所以 GC
                     的时候就不会因为它们和其他热数据挤在一起，而在腾地方的时候被迫迁移它们，因此就减少了不必要的开销。
                   </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="seastore">SeaStore</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  因为 SeaStore 当前的目标是支持
+                  ZNS。对它来说，每一张活页纸就是一个 segment。为了理解 SeaStore
+                  怎么做垃圾收集，首先需要知道 SeaStore 里面的 journal 是什么。
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="cache">Cache</h3>
+              </div>
+              <div class="sect2">
+                <h3 id="journal">Journal</h3>
+                <div class="paragraph">
+                  <p>
+                    Journal 就是日志，也就是 log-structured filesystem 里面的
+                    log。在任意时刻，SeaStore 总是指定一个特定的 segment
+                    作为当时写 journal 的专用 segment。
+                  </p>
+                </div>
+                <div class="admonitionblock note">
+                  <table>
+                    <tr>
+                      <td class="icon">
+                        <i class="fa icon-note" title="Note"></i>
+                      </td>
+                      <td class="content">
+                        ZNS 是支持同时打开多个 zone
+                        的。这样让我们可以按照写入数据的不同特性，选择不同的
+                        zone，这样可以避免因为不同生命周期的数据相互交错，导致在
+                        GC 的时候投鼠忌器，难以权衡。但是 SeaStore
+                        现在为了简单起见，还没有利用这个特性。
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="segmentcleaner">SegmentCleaner</h3>
+                <div class="paragraph">
+                  <p>GC 的时机</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        mount 的时候，会扫描 journal
+                        映射的地址空间。这确定了空闲空间的大小，借这个机会，就会看看是不是应该运行
+                        GC。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>GC 的条件，只要满足下面的条件之一，就触发 GC</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        空闲空间不够了。需要同时满足下面的条件，才能称为空间不够
+                      </p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>
+                              空闲空间的比例 &lt;
+                              <code>available_ratio_gc_max</code>
+                            </p>
+                          </li>
+                          <li>
+                            <p>
+                              可回收的空间 / 非空闲空间 &gt;
+                              <code>reclaim_ratio_gc_threshhold</code>
+                            </p>
+                            <div class="literalblock">
+                              <div class="content">
+                                <pre>
+error: 1954 Forbidden search
+absolutely fatal: operation lost in the dodecahedron of doom
+Would you like to try again? y/n</pre
+                                >
+                              </div>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p><mark>TODO</mark></p>
                 </div>
               </div>
             </div>
