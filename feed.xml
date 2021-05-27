@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-05-26T16:15:33+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Log-strucutured Filesystem 和垃圾收集</title><link href="https://blog.k3fu.xyz/2021/05/16/gc-fs.html" rel="alternate" type="text/html" title="Log-strucutured Filesystem 和垃圾收集" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/16/gc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/16/gc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-05-27T01:25:35+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Log-strucutured Filesystem 和垃圾收集</title><link href="https://blog.k3fu.xyz/2021/05/16/gc-fs.html" rel="alternate" type="text/html" title="Log-strucutured Filesystem 和垃圾收集" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/16/gc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/16/gc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;此 GC 非彼 GC。&lt;/p&gt;
@@ -312,40 +312,17 @@ f2fs 除了顺序写日志 (normal logging)之外，还能在空间不够的时�
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我把这个思路叫做“大浪淘沙”。每个 zone 都处于下面四种状态中的一个。刚落盘的数据在 C0，以 segment 为单位统计，如果某一个 segment 的数据使用次数超过事先设定的阈值 threshold&lt;sub&gt;cold&lt;/sub&gt;，所有保存在这种 segment 中的有效数据都被收集到 C1C_zone，其他 segment 中的有效数据则悉数放到 C1H_zone 中。等到下一次 GC 的时候，无论是 C1H_zone 还是 C1C_zone 中，只要数据仍然有效，我们就把它们当作冷数据，一起放到 C2_zone。因为他们都经历了两次 GC 试炼，并且存活了下来。论文的作者期望通过这样的筛选机制，能够有效地区分不同生命周期的数据。其中，请注意，在这里，“冷数据”并不是指访问频次很低的数据，而是很少被修改或者删除的数据。它们经得起时间的考验，历久而弥坚。我们常说的 WORM (write once read many) 设备保存的就是冷数据。就是而热数据则是那种很快失效的数据，这种数据经常修改，它们生命周期很短，转瞬即逝，如同朝露一般。可以说，CPU 寄存器里面的数据就是热数据。所以我们在第一次 GC 的时候会借助保存数据的机会，先把冷热数据初步分开。这样如果要找热数据富集的牺牲品 zone 的时候，可以更容易地找到这样的 zone。但是第二次 GC 的时候就不再关注它们的使用频次了，而只是单纯地把第一代的幸存者都收集在一起。它们都被搬运过一次，而且顺利地活到了第二次 GC。所以它们完全有资格升级成“二级冷数据”。论文认为，第一代幸存者的生存周期相似，所以它们的空间局部性很可能也更好。比如说 leveldb 里面，同一个 SSTable 里面数据的访问频次可能不同，但是它们的生命周期是相同的，读写模式也一致。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre&gt;Failed to generate image: Could not find the 'dot' executable in PATH; add it to the PATH or specify its location using the 'graphvizdot' document attribute
-digraph g {
-    rankdir=LR
-    C0_zone -&amp;gt; C1C_zone [ label = &quot;冷数据&quot;];
-    C0_zone -&amp;gt; C1H_zone [ label = &quot;其他数据&quot;];
-    C0_zone -&amp;gt; black_hole [ label = &quot;无效数据&quot;];
-    black_hole [ shape = doublecircle, label = &quot;黑洞&quot; ];
-    C1C_zone -&amp;gt; C2_zone [ label = &quot;有效数据&quot;];
-    C1C_zone -&amp;gt; black_hole [ label = &quot;无效数据&quot;];
-    C1H_zone -&amp;gt; C2_zone [ label = &quot;有效数据&quot;];
-    C1H_zone -&amp;gt; black_hole [ label = &quot;无效数据&quot;];
-    C2_zone -&amp;gt; C2_zone [ label = &quot;有效数据&quot;];
-    C2_zone -&amp;gt; black_hole [ label = &quot;无效数据&quot;];
-    C2_zone [ style = filled ];
-}&lt;/pre&gt;
+&lt;img src=&quot;/images/diag-343ff8e14b856607729459310a0d2e38.png&quot; alt=&quot;Diagram&quot; width=&quot;891&quot; height=&quot;227&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;我们还可以更进一步。让经过冷热数据区分后活下来的 C2_zone 数据，升级进入 C3_zone。&lt;/p&gt;
 &lt;/div&gt;
-&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;pre&gt;Failed to generate image: no implicit conversion of nil into String
-digraph g {
-    rankdir=LR
-    C0_zone -&amp;gt; C1_zone [ label = &quot;第一次试炼&quot;]
-    C1_zone [ style = filled, fillcolor = lightgray ]
-    C1_zone -&amp;gt; C2_zone [ label = &quot;第二次试炼&quot;]
-    C2_zone [ style = filled, fillcolor = darkgray ]
-    C2_zone -&amp;gt; C3_zone [ label = &quot;第三次试炼&quot;]
-    C3_zone [ style = filled, fillcolor = dimgray ]
-}&lt;/pre&gt;
+&lt;img src=&quot;/images/diag-d5075e66f858410865728e2106b8cf61.png&quot; alt=&quot;Diagram&quot; width=&quot;970&quot; height=&quot;59&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;

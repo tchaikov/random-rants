@@ -815,25 +815,14 @@
                     里面数据的访问频次可能不同，但是它们的生命周期是相同的，读写模式也一致。
                   </p>
                 </div>
-                <div class="listingblock">
+                <div class="imageblock">
                   <div class="content">
-                    <pre>
-Failed to generate image: Could not find the 'dot' executable in PATH; add it to the PATH or specify its location using the 'graphvizdot' document attribute
-digraph g {
-    rankdir=LR
-    C0_zone -&gt; C1C_zone [ label = "冷数据"];
-    C0_zone -&gt; C1H_zone [ label = "其他数据"];
-    C0_zone -&gt; black_hole [ label = "无效数据"];
-    black_hole [ shape = doublecircle, label = "黑洞" ];
-    C1C_zone -&gt; C2_zone [ label = "有效数据"];
-    C1C_zone -&gt; black_hole [ label = "无效数据"];
-    C1H_zone -&gt; C2_zone [ label = "有效数据"];
-    C1H_zone -&gt; black_hole [ label = "无效数据"];
-    C2_zone -&gt; C2_zone [ label = "有效数据"];
-    C2_zone -&gt; black_hole [ label = "无效数据"];
-    C2_zone [ style = filled ];
-}</pre
-                    >
+                    <img
+                      src="/images/diag-343ff8e14b856607729459310a0d2e38.png"
+                      alt="Diagram"
+                      width="891"
+                      height="227"
+                    />
                   </div>
                 </div>
                 <div class="paragraph">
@@ -842,20 +831,14 @@ digraph g {
                     数据，升级进入 C3_zone。
                   </p>
                 </div>
-                <div class="listingblock">
+                <div class="imageblock">
                   <div class="content">
-                    <pre>
-Failed to generate image: no implicit conversion of nil into String
-digraph g {
-    rankdir=LR
-    C0_zone -&gt; C1_zone [ label = "第一次试炼"]
-    C1_zone [ style = filled, fillcolor = lightgray ]
-    C1_zone -&gt; C2_zone [ label = "第二次试炼"]
-    C2_zone [ style = filled, fillcolor = darkgray ]
-    C2_zone -&gt; C3_zone [ label = "第三次试炼"]
-    C3_zone [ style = filled, fillcolor = dimgray ]
-}</pre
-                    >
+                    <img
+                      src="/images/diag-d5075e66f858410865728e2106b8cf61.png"
+                      alt="Diagram"
+                      width="970"
+                      height="59"
+                    />
                   </div>
                 </div>
                 <div class="paragraph">
