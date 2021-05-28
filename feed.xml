@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-05-28T07:34:56+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Log-strucutured Filesystem 和垃圾收集</title><link href="https://blog.k3fu.xyz/2021/05/16/gc-fs.html" rel="alternate" type="text/html" title="Log-strucutured Filesystem 和垃圾收集" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/16/gc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/16/gc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-05-28T07:42:06+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Log-strucutured Filesystem 和垃圾收集</title><link href="https://blog.k3fu.xyz/2021/05/16/gc-fs.html" rel="alternate" type="text/html" title="Log-strucutured Filesystem 和垃圾收集" /><published>2021-05-16T00:00:00+00:00</published><updated>2021-05-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/16/gc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/16/gc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;垃圾需要分类处理，有用的东西更应该分类。&lt;/p&gt;
@@ -469,7 +469,7 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 &lt;div class=&quot;sect3&quot;&gt;
 &lt;h4 id=&quot;gc-的手段&quot;&gt;GC 的手段&lt;/h4&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;&lt;code&gt;Segment::gc_reclaim_space()&lt;/code&gt; 通过分段地扫描 journal 分离其中的有效数据，把它们作为 transaction 写到新的 journal 中去。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Segment::gc_reclaim_space()&lt;/code&gt; 通过分段地扫描以往 journal 分离其中的有效数据，把它们作为 transaction 写到新的 journal 中去。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
