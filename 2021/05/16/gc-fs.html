@@ -132,7 +132,7 @@
     />
     <meta
       name="twitter:description"
-      content="垃圾需要分类处理，有用的东西更应该分类。SeaStore 是 Crimson 使用的存储引擎。它的目标是高性能全异步支持 ZNS 和高性能的存储介质比如 PMEM支持异构存储兼容 Ceph 现有的 object store 的语义可以看出来，SeaStore 很像一个文件系统。文件名就是 object store..."
+      content="垃圾需要分类处理，有用的东西更应该分类。引子Zoned Storage 和 degragmentationF2FSGreedyCost-BenefitCATATGCZoneFSBtrfsSPDK FTLLSM_ZGC问题方案SeaStoreCacheJournalSegmentCleaner引子SeaStore ..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -217,6 +217,49 @@
               <div class="paragraph">
                 <p>垃圾需要分类处理，有用的东西更应该分类。</p>
               </div>
+              <div id="toc" class="toc">
+                <div id="toctitle" class="title"></div>
+                <ul class="sectlevel1">
+                  <li><a href="#引子">引子</a></li>
+                  <li>
+                    <a href="#zoned-storage-和-degragmentation"
+                      >Zoned Storage 和 degragmentation</a
+                    >
+                  </li>
+                  <li>
+                    <a href="#f2fs">F2FS</a>
+                    <ul class="sectlevel2">
+                      <li><a href="#greedy">Greedy</a></li>
+                      <li><a href="#cost-benefit">Cost-Benefit</a></li>
+                      <li><a href="#cat">CAT</a></li>
+                      <li><a href="#atgc">ATGC</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="#zonefs">ZoneFS</a></li>
+                  <li><a href="#btrfs">Btrfs</a></li>
+                  <li><a href="#spdk-ftl">SPDK FTL</a></li>
+                  <li>
+                    <a href="#lsm_zgc">LSM_ZGC</a>
+                    <ul class="sectlevel2">
+                      <li><a href="#问题">问题</a></li>
+                      <li><a href="#方案">方案</a></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <a href="#seastore">SeaStore</a>
+                    <ul class="sectlevel2">
+                      <li><a href="#cache">Cache</a></li>
+                      <li><a href="#journal">Journal</a></li>
+                      <li><a href="#segmentcleaner">SegmentCleaner</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="引子">引子</h2>
+            <div class="sectionbody">
               <div class="paragraph">
                 <p>SeaStore 是 Crimson 使用的存储引擎。它的目标是</p>
               </div>
@@ -519,7 +562,7 @@
               <div class="paragraph">
                 <p>
                   它的思路就是让牺牲 segment
-                  的代价最小，同时受益最高。评价策略有下面几种。其中 greedy 和
+                  的代价最小，同时收益最高。评价策略有下面几种。其中 greedy 和
                   cost-benefit 是很经典的算法。
                 </p>
               </div>
@@ -899,59 +942,137 @@
               </div>
               <div class="sect2">
                 <h3 id="segmentcleaner">SegmentCleaner</h3>
-                <div class="paragraph">
-                  <p>GC 的时机</p>
+                <div class="sect3">
+                  <h4 id="gc-的时机">GC 的时机</h4>
+                  <div class="ulist">
+                    <ul>
+                      <li>
+                        <p>
+                          mount 的时候，会扫描 journal
+                          映射的地址空间。这确定了空闲空间的大小，借这个机会，就会看看是不是应该运行
+                          GC。
+                        </p>
+                      </li>
+                      <li>
+                        <p>
+                          在 IO 事务提交完成时。这时，事务产生的 journal
+                          会减少可用空间。所以也可能需要进行 GC。
+                        </p>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="paragraph">
+                    <p>先定义几个 ratio:</p>
+                  </div>
+                  <div class="ulist">
+                    <ul>
+                      <li>
+                        <p>reclaimable ratio: 可回收空间和无效空间之比。</p>
+                        <div class="ulist">
+                          <ul>
+                            <li>
+                              <p>
+                                可回收空间指的是非可用空间除去被有效数据占用的，剩下的那部分。
+                              </p>
+                            </li>
+                            <li>
+                              <p>非可用空间就是总空间减去可用空间。</p>
+                            </li>
+                          </ul>
+                        </div>
+                      </li>
+                      <li>
+                        <p>
+                          available ratio:
+                          即可用空间和总空间的比例。可用空间是下面几项之和
+                        </p>
+                        <div class="ulist">
+                          <ul>
+                            <li>
+                              <p>
+                                空闲 segment 的总大小。也就是空闲 segment 的个数
+                                * segment 的大小
+                              </p>
+                            </li>
+                            <li>
+                              <p>
+                                当前 segment 的剩余空间。正在用来记 journal 的
+                                segment 就是所谓的“当前” segment。
+                              </p>
+                            </li>
+                            <li>
+                              <p>
+                                GC 扫描的进度。SegmentCleaner 在 GC
+                                时候会逐一扫描 journal
+                                的所有记录块，它认为扫描过的块都是恢复“自由身”了的可用空间。
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                <div class="ulist">
-                  <ul>
-                    <li>
-                      <p>
-                        mount 的时候，会扫描 journal
-                        映射的地址空间。这确定了空闲空间的大小，借这个机会，就会看看是不是应该运行
-                        GC。
-                      </p>
-                    </li>
-                  </ul>
+                <div class="sect3">
+                  <h4 id="gc-的条件只要满足下面的条件之一就触发-gc">
+                    GC 的条件，只要满足下面的条件之一，就触发 GC
+                  </h4>
+                  <div class="ulist">
+                    <ul>
+                      <li>
+                        <p>
+                          空闲空间不够了。需要同时满足下面的条件，才能称为空间不够
+                        </p>
+                        <div class="ulist">
+                          <ul>
+                            <li>
+                              <p>
+                                <code>available_ratio</code> &lt;
+                                <code>available_ratio_gc_max</code>
+                              </p>
+                            </li>
+                            <li>
+                              <p>
+                                <code>reclaimable_ratio</code> &gt;
+                                <code>reclaim_ratio_gc_threshhold</code>
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-                <div class="paragraph">
-                  <p>GC 的条件，只要满足下面的条件之一，就触发 GC</p>
-                </div>
-                <div class="ulist">
-                  <ul>
-                    <li>
-                      <p>
-                        空闲空间不够了。需要同时满足下面的条件，才能称为空间不够
-                      </p>
-                      <div class="ulist">
-                        <ul>
-                          <li>
-                            <p>
-                              空闲空间的比例 &lt;
-                              <code>available_ratio_gc_max</code>
-                            </p>
-                          </li>
-                          <li>
-                            <p>
-                              可回收的空间 / 非空闲空间 &gt;
-                              <code>reclaim_ratio_gc_threshhold</code>
-                            </p>
-                            <div class="literalblock">
-                              <div class="content">
-                                <pre>
-error: 1954 Forbidden search
-absolutely fatal: operation lost in the dodecahedron of doom
-Would you like to try again? y/n</pre
-                                >
-                              </div>
-                            </div>
-                          </li>
-                        </ul>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-                <div class="paragraph">
-                  <p><mark>TODO</mark></p>
+                <div class="sect3">
+                  <h4 id="gc-的手段">GC 的手段</h4>
+                  <div class="paragraph">
+                    <p>
+                      <code>Segment::gc_reclaim_space()</code> 通过分段地扫描
+                      journal 分离其中的有效数据，把它们作为 transaction
+                      写到新的 journal 中去。
+                    </p>
+                  </div>
+                  <div class="listingblock">
+                    <div class="content">
+                      <pre
+                        class="rouge highlight"
+                      ><code data-lang="python"><span class="n">extents</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">scan_cursor</span> <span class="o">=</span>
+    <span class="n">journal</span><span class="p">.</span><span class="n">scan_extents</span><span class="p">(</span><span class="n">victim_segment</span><span class="p">.</span><span class="n">body</span><span class="p">,</span>
+                         <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">scan_cursor</span><span class="p">,</span>
+                         <span class="n">step</span><span class="o">=</span><span class="bp">self</span><span class="p">.</span><span class="n">config</span><span class="p">.</span><span class="n">reclaim_bytes_stride</span><span class="p">)</span>
+<span class="n">txn</span> <span class="o">=</span> <span class="n">Transaction</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">extent</span> <span class="ow">in</span> <span class="n">extents</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">extent</span><span class="p">.</span><span class="n">alive</span><span class="p">:</span>
+        <span class="k">continue</span>
+    <span class="n">txn</span><span class="p">.</span><span class="n">rewrite_extent</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span>
+<span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">scan_cursor</span><span class="p">.</span><span class="n">is_complete</span><span class="p">:</span>
+    <span class="n">txn</span><span class="p">.</span><span class="n">release_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">scan_cursor</span><span class="p">.</span><span class="n">segment</span><span class="p">)</span>
+<span class="bp">self</span><span class="p">.</span><span class="n">txn_mgr</span><span class="p">.</span><span class="n">submit_transaction</span><span class="p">(</span><span class="n">txn</span><span class="p">)</span></code></pre>
+                    </div>
+                  </div>
+                  <div class="paragraph">
+                    <p><mark>TODO</mark></p>
+                  </div>
                 </div>
               </div>
             </div>
