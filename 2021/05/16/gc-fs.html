@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.5
+    Type on Strap jekyll theme v2.3.6
     Copyright 2016-2021 Sylhare
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
@@ -40,7 +40,7 @@
       href="https://blog.k3fu.xyz/feed.xml"
     />
 
-    <!-- KaTeX 0.12.0 -->
+    <!-- KaTeX 0.13.9 -->
 
     <script defer src="/assets/js/vendor/katex.min.js"></script>
     <script
@@ -556,12 +556,41 @@
                   之后，把其中所有的有效块都读取到内存的 page cache
                   里面，然后把它们标记成 dirty。这样，内核在清 cache
                   的时候，就会顺便把这些需要保存的有效块也一并写入新的 segment
-                  了。这样不仅能减轻对前台的压力，也可以把小的写请求合并起来。
+                  了。这样不仅能减轻对前台的压力，也可以把小的写请求合并起来。另外，值得注意的是，f2fs
+                  同时使用六个 log
+                  区域，分别用来保存冷热程度不同的数据。它甚至把数据分为 cold,
+                  warn 和 hot 数据。它由三种 block
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>inode block</p>
+                  </li>
+                  <li>
+                    <p>
+                      direct node: 用来保存数据块的地址。它的温度就比 indirect
+                      node 高。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      indirect node: 用来保存 node 本身的 id。这个 id
+                      用来定位另外一个 node。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  f2fs 修改数据会更新数据块的地址，为了能让 inode
+                  找到新的数据，它需要更新索引数据块的 direct node，因此 direct
+                  node 就是温度更高的 block。它的修改更频繁。
                 </p>
               </div>
               <div class="paragraph">
                 <p>
-                  它的思路就是让牺牲 segment
+                  f2fs 设计 GC 思路是让牺牲 segment
                   的代价最小，同时收益最高。评价策略有下面几种。其中 greedy 和
                   cost-benefit 是很经典的算法。
                 </p>
@@ -678,6 +707,13 @@
                     和高使用率的 segment 都比较多，中间 segement
                     很少。这样的分布比较适合
                     GC。如果再能根据冷热数据进行聚类那么 GC 就会更高效。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    f2fs 在最初的 cost-benefit 上稍加改进，它用来计算
+                    \(\frac{benefit}{cost}\) 的 age 并不是 segment 里面 section
+                    最大的那个，而是里面所有 section age 的平均值。
                   </p>
                 </div>
               </div>
@@ -1047,9 +1083,15 @@
                   <h4 id="gc-的手段">GC 的手段</h4>
                   <div class="paragraph">
                     <p>
-                      <code>Segment::gc_reclaim_space()</code>
-                      通过分段地扫描以往 journal 分离其中的有效数据，把它们作为
-                      transaction 写到新的 journal 中去。
+                      在上面提到的 GC 时机，seastore 会判断是否满足 GC
+                      的条件，当条件满足的时候，就触发 GC，这时
+                      <code>Segment::gc_reclaim_space()</code> 会扫描以往
+                      journal 分离其中的有效数据，把它们作为 transaction
+                      写到新的 journal
+                      中去。为了避免长时间地阻塞客户端请求，每次扫描的空间大小由
+                      <code>reclaim_bytes_stride</code> 限制，而且我们维护着一个
+                      cursor
+                      记录着上次扫描结束的位置。每次扫描都从上次结束的地方继续。
                     </p>
                   </div>
                   <div class="listingblock">
@@ -1070,8 +1112,36 @@
 <span class="bp">self</span><span class="p">.</span><span class="n">txn_mgr</span><span class="p">.</span><span class="n">submit_transaction</span><span class="p">(</span><span class="n">txn</span><span class="p">)</span></code></pre>
                     </div>
                   </div>
+                </div>
+                <div class="sect3">
+                  <h4 id="gc-的问题">GC 的问题</h4>
                   <div class="paragraph">
-                    <p><mark>TODO</mark></p>
+                    <p>
+                      从改进 GC 效率和性能的角度出发，可以从这么几个方面改进
+                    </p>
+                  </div>
+                  <div class="olist arabic">
+                    <ol class="arabic">
+                      <li>
+                        <p>区分冷热数据: 这要求我们</p>
+                        <div class="ulist">
+                          <ul>
+                            <li>
+                              <p>能同时写多个 journal</p>
+                            </li>
+                          </ul>
+                        </div>
+                      </li>
+                      <li>
+                        <p>区分</p>
+                      </li>
+                      <li>
+                        <p>一个是怎么写</p>
+                      </li>
+                    </ol>
+                  </div>
+                  <div class="paragraph">
+                    <p>关于“读”是如何搜集</p>
                   </div>
                 </div>
               </div>
@@ -1096,21 +1166,6 @@
         </div>
       </article>
 
-      <!-- Cusdis -->
-      <div
-        class="comments"
-        id="cusdis"
-        data-host="https://cusdis.com"
-        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
-        data-page-id="_posts/2021-05-16-gc-fs.adoc"
-        data-page-url="/2021/05/16/gc-fs.html"
-        data-page-title="Log-strucutured Filesystem 和垃圾收集"
-      ></div>
-
-      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
-
-      <!-- Disqus -->
-
       <!-- Post navigation -->
 
       <div id="post-nav">
@@ -1124,6 +1179,22 @@
           </a>
         </div>
       </div>
+
+      <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2021-05-16-gc-fs.adoc"
+        data-page-url="/2021/05/16/gc-fs.html"
+        data-page-title="Log-strucutured Filesystem 和垃圾收集"
+        data-theme="auto"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
+
+      <!-- Disqus -->
 
       <!-- To change color of links in the page -->
       <style>
