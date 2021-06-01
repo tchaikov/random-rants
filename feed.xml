@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-06-01T11:39:55+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 metaslabs allocator 说起</title><link href="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html" rel="alternate" type="text/html" title="从 metaslabs allocator 说起" /><published>2021-05-27T00:00:00+00:00</published><updated>2021-05-27T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/27/alloc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-06-01T13:17:56+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 metaslabs allocator 说起</title><link href="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html" rel="alternate" type="text/html" title="从 metaslabs allocator 说起" /><published>2021-05-27T00:00:00+00:00</published><updated>2021-05-27T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/27/alloc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;系统设计里面有很多开放问题。解决问题的策略是基于经验不断演进的。&lt;/p&gt;
@@ -729,15 +729,12 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 &lt;/div&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;区分&lt;/p&gt;
+&lt;p&gt;跟踪有效数据和无效数据&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;一个是怎么写&lt;/p&gt;
+&lt;p&gt;如何更有效地迁移有效数据&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;关于“读”是如何搜集&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
