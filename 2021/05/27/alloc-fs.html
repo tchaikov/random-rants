@@ -666,7 +666,11 @@
                   AvlAllocator 基本上是 ZFS 的 DF Allocator 较早版本的 C++
                   移植。它继续用 AVL tree 来保存 space
                   map。但是不同之处在于，bluestore 里面的 AvlAllocator 并没有
-                  gang 的机制。所以 AvlAllocator 必须自己实现 gang 的机制。
+                  <a
+                    href="https://utcc.utoronto.ca/~cks/space/blog/solaris/ZFSGangBlocks"
+                    >gang</a
+                  >
+                  的机制。所以 AvlAllocator 必须自己实现它。
                 </p>
               </div>
             </div>
