@@ -895,7 +895,47 @@
             <h2 id="spdk-ftl">SPDK FTL</h2>
             <div class="sectionbody">
               <div class="paragraph">
-                <p><mark>TODO</mark></p>
+                <p>
+                  SPDK 的 FTL 中每个 band 相当于 相当于 f2fs 里的 segment，在 GC
+                  的时候，也需要进行评估
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="python"><span class="k">class</span> <span class="nc">Band</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">prep_write</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># ...
+</span>        <span class="bp">self</span><span class="p">.</span><span class="n">dev</span><span class="p">.</span><span class="n">seq</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">seq</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">dev</span><span class="p">.</span><span class="n">seq</span>
+
+    <span class="o">@</span><span class="nb">property</span>
+    <span class="k">def</span> <span class="nf">age</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">dev</span><span class="p">.</span><span class="n">seq</span> <span class="o">-</span> <span class="bp">self</span><span class="p">.</span><span class="n">seq</span>
+
+    <span class="k">def</span> <span class="nf">calc_merit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_valid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">usable_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">usable_blockslocks</span>
+        <span class="k">if</span> <span class="n">usable_blocks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span><span class="n">n</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">threshold_valid</span><span class="p">:</span>
+            <span class="n">valid_blocks</span> <span class="o">=</span> <span class="n">usable_blocks</span> <span class="o">-</span> <span class="n">threshold_valid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">valid_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">lba_map</span><span class="p">.</span><span class="n">num_valid</span>
+        <span class="n">invalid_blocks</span> <span class="o">=</span> <span class="n">usable_blocks</span> <span class="o">-</span> <span class="n">valid_blocks</span>
+        <span class="n">valid_ratio</span> <span class="o">=</span> <span class="n">invalid_blocks</span> <span class="o">/</span> <span class="p">(</span><span class="n">valid_blocks</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">valid_ratio</span> <span class="o">*</span> <span class="bp">self</span><span class="p">.</span><span class="n">age</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>用公式表示</p>
+              </div>
+              <div class="stemblock">
+                <div class="content">
+                  \[\begin{align} age_{i} &amp;= \max_{\forall j \in
+                  bands}age_{j} - age_{i} \\ merit_{i} &amp;= \frac{(1-u_{i})
+                  \times age_{i}}{u} \end{align}\]
+                </div>
               </div>
             </div>
           </div>
