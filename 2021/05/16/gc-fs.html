@@ -915,14 +915,13 @@
         <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">dev</span><span class="p">.</span><span class="n">seq</span> <span class="o">-</span> <span class="bp">self</span><span class="p">.</span><span class="n">seq</span>
 
     <span class="k">def</span> <span class="nf">calc_merit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_valid</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="n">usable_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">usable_blockslocks</span>
-        <span class="k">if</span> <span class="n">usable_blocks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="p">.</span><span class="n">usable_blocks</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span>
         <span class="k">if</span> <span class="n">threshold_valid</span><span class="p">:</span>
-            <span class="n">valid_blocks</span> <span class="o">=</span> <span class="n">usable_blocks</span> <span class="o">-</span> <span class="n">threshold_valid</span>
+            <span class="n">valid_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">usable_blocks</span> <span class="o">-</span> <span class="n">threshold_valid</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">valid_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">lba_map</span><span class="p">.</span><span class="n">num_valid</span>
-        <span class="n">invalid_blocks</span> <span class="o">=</span> <span class="n">usable_blocks</span> <span class="o">-</span> <span class="n">valid_blocks</span>
+        <span class="n">invalid_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">usable_blocks</span> <span class="o">-</span> <span class="n">valid_blocks</span>
         <span class="n">valid_ratio</span> <span class="o">=</span> <span class="n">invalid_blocks</span> <span class="o">/</span> <span class="p">(</span><span class="n">valid_blocks</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">valid_ratio</span> <span class="o">*</span> <span class="bp">self</span><span class="p">.</span><span class="n">age</span></code></pre>
                 </div>
