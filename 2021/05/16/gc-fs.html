@@ -716,6 +716,55 @@
                     最大的那个，而是里面所有 section age 的平均值。
                   </p>
                 </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="python"><span class="k">def</span> <span class="nf">get_cost_benefit_cost</span><span class="p">(</span><span class="n">superblock</span><span class="p">,</span> <span class="n">segment_index</span><span class="p">):</span>
+    <span class="n">usable_segs_per_section</span> <span class="o">=</span> <span class="n">superblock</span><span class="p">.</span><span class="n">get_usable_segs</span><span class="p">(</span><span class="n">segment_index</span><span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">superblock</span><span class="p">.</span><span class="n">seg_per_sec</span> <span class="o">*</span> <span class="n">segment_index</span>
+    <span class="n">mtime</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">superblock</span><span class="p">.</span><span class="n">seg_entries</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">mtime</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">start</span><span class="p">,</span> <span class="n">usable_segs_per_section</span><span class="p">))</span>
+    <span class="n">mtime</span> <span class="o">/=</span> <span class="n">usable_segs_per_section</span>
+    <span class="n">valid_blocks</span> <span class="o">=</span> <span class="n">superblock</span><span class="p">.</span><span class="n">seg_entries</span><span class="p">[</span><span class="n">segment_index</span><span class="p">].</span><span class="n">valid_blocks</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">valid_blocks</span> <span class="o">/</span> <span class="n">log2</span><span class="p">(</span><span class="n">super_block</span><span class="p">.</span><span class="n">blocks_per_segment</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">-</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">mtime</span> <span class="o">-</span> <span class="n">superblock</span><span class="p">.</span><span class="n">min_mtime</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">superblock</span><span class="p">.</span><span class="n">max_mtime</span> <span class="o">-</span> <span class="n">superblock</span><span class="p">.</span><span class="n">min_mtime</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">UINT_MAX</span> <span class="o">-</span> <span class="p">((</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="mi">100</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">age</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">100</span> <span class="o">+</span> <span class="n">u</span><span class="p">))</span></code></pre>
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>用公式表示，</p>
+                </div>
+                <div class="stemblock">
+                  <div class="content">
+                    \[\begin{align} age &amp;= 100 \times (1 - \frac{mtime_j -
+                    \min_{\forall i \in segs}mtime_i}{\max_{\forall i \in
+                    segs}mtime_{i} - \min_{\forall i \in segs}mtime_{i}}) \\
+                    cost &amp;= UINT\_MAX - \frac{(1-u) \times age}{1 + u}
+                    \end{align}\]
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>其中</p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>
+                        age 表示候选的 segment 在所有 segment
+                        中最老的和最年轻的中的位置，按照百分比计算。如果 segment
+                        很久没有修改，是很冷的那个，那么它的值接近 100。
+                      </p>
+                    </li>
+                    <li>
+                      <p>
+                        cost 表示回收 segment
+                        的收益。如果有效数据的比例越高，那么 cost
+                        的值就越大；mtime 越age 越小，cost 越大。
+                      </p>
+                    </li>
+                  </ul>
+                </div>
               </div>
               <div class="sect2">
                 <h3 id="cat">CAT</h3>
@@ -734,27 +783,69 @@
                     <a href="https://lwn.net/Articles/828027/">ATGC</a> (Age
                     Threshold based Garbage Collection)
                     是华为的开发者提出的算法，用来改进 f2fs 的 GC 效果 (effect)
-                    和性能 (efficiency)。
+                    和性能 (efficiency)。分成三步：
                   </p>
                 </div>
-                <div class="ulist">
-                  <ul>
+                <div class="olist arabic">
+                  <ol class="arabic">
                     <li>
-                      <p>
-                        如果 segment
-                        的年龄小于预设定的阈值，那么就不再考虑把它回收。因此可以避免回收太年轻的
-                        segement，这种 segment 往往更新更频繁。
-                      </p>
+                      <p>先选希望回收的 segment，即 source victim:</p>
+                      <div class="olist loweralpha">
+                        <ol class="loweralpha" type="a">
+                          <li>
+                            <p>
+                              先根据候选 segment 来确定一个阈值，如果 0
+                              表示最年轻的 segment 的年龄，100
+                              表示最老的。如果阈值是 80
+                              的话，那么就候选者就进一步限制在 [80, 100]
+                              这个区间里面。
+                            </p>
+                          </li>
+                          <li>
+                            <p>
+                              如果 segment
+                              的年龄小于预设定的阈值，那么就不再考虑把它回收。因此可以避免回收太年轻的
+                              segement，这种 segment 往往更新更频繁。
+                            </p>
+                          </li>
+                          <li>
+                            <p>
+                              在这个更小的范围里面选择有效块最少的
+                              segment。这样可以减少迁移数据，降低迁移的成本。
+                            </p>
+                          </li>
+                        </ol>
+                      </div>
+                    </li>
+                    <li>
+                      <p>再选要写入的 segment，即 destination victim:</p>
+                      <div class="olist loweralpha">
+                        <ol class="loweralpha" type="a">
+                          <li>
+                            <p>
+                              以源 segment
+                              的年龄为中心，以设置的值为半径，划定一个区间。尽量选择那些年龄和
+                              source 相近的 segment
+                              作为目标。这样他们的更新频率可能更相近，有助于保持冷热数据的分离和聚类。
+                            </p>
+                          </li>
+                          <li>
+                            <p>
+                              在划定的区域里面，选择有效块最多的
+                              segment。倘若选择有效块最少的
+                              segment，那么最合适的 segment 就是源 segment 了。
+                            </p>
+                          </li>
+                        </ol>
+                      </div>
                     </li>
                     <li>
                       <p>
-                        使用 SSR (slack space recycling)
-                        写日志的时候，尽量选择那些年龄相近的作为源 segment
-                        和目标
-                        segment。这样他们的更新频率可能更相近，有助于保持冷热数据的分离和聚类。
+                        使用 SSR (slack space recycling) 把有效块从从源 segment
+                        迁移到目标 segment。
                       </p>
                     </li>
-                  </ul>
+                  </ol>
                 </div>
                 <div class="admonitionblock note">
                   <table>
@@ -1150,10 +1241,33 @@
                         </div>
                       </li>
                       <li>
-                        <p>按照数据的特性分开保存。即能同时写多个 journal。</p>
+                        <p>按照数据的特性分开保存</p>
+                        <div class="ulist">
+                          <ul>
+                            <li>
+                              <p>前提是能同时写多个 journal。</p>
+                            </li>
+                            <li>
+                              <p>
+                                在选择目标 segment 的时候，LSM_ZGC 和 f2fs 的
+                                ATGC 都主张把类似的数据通过一定的特征进行聚类。
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
                       </li>
                       <li>
-                        <p>如何更有效地迁移有效数据。</p>
+                        <p>更有效地迁移有效数据。</p>
+                        <div class="ulist">
+                          <ul>
+                            <li>
+                              <p>
+                                读的模式：LSM_ZGC
+                                提供了一个思路，让我们有选择地大批量地顺序读，而不总是仅仅读取有效数据。
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
                       </li>
                     </ol>
                   </div>
