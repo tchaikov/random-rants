@@ -870,7 +870,28 @@
           </div>
           <div class="sect1">
             <h2 id="zonefs">ZoneFS</h2>
-            <div class="sectionbody"></div>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  ZoneFS 没有 GC 一说。它里面每个 zone 对应一个文件。如果是
+                  conventional zone，那么目录名字就是 <code>cnv</code>，如果是
+                  sequential zone 的话，目录名字就是
+                  <code>seq</code>。sequential zone
+                  因为需要确保发射的顺序性，所以只支持 DIO。如果 DIO
+                  写的位置不是 wptr 的位置，它干脆返回 <code>EINVAL</code>。
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-094e47049fe295ce106612dcceb22069.png"
+                    alt="Diagram"
+                    width="140"
+                    height="182"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           <div class="sect1">
             <h2 id="btrfs">Btrfs</h2>

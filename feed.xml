@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-06-08T15:41:52+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 metaslabs allocator 说起</title><link href="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html" rel="alternate" type="text/html" title="从 metaslabs allocator 说起" /><published>2021-05-27T00:00:00+00:00</published><updated>2021-05-27T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/27/alloc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-06-09T14:28:49+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 metaslabs allocator 说起</title><link href="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html" rel="alternate" type="text/html" title="从 metaslabs allocator 说起" /><published>2021-05-27T00:00:00+00:00</published><updated>2021-05-27T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/05/27/alloc-fs</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/05/27/alloc-fs.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;系统设计里面有很多开放问题。解决问题的策略是基于经验不断演进的。&lt;/p&gt;
@@ -583,7 +583,14 @@ f2fs 除了顺序写日志 (normal logging)之外，还能在空间不够的时�
 &lt;div class=&quot;sect1&quot;&gt;
 &lt;h2 id=&quot;zonefs&quot;&gt;ZoneFS&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
-
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;ZoneFS 没有 GC 一说。它里面每个 zone 对应一个文件。如果是 conventional zone，那么目录名字就是 &lt;code&gt;cnv&lt;/code&gt;，如果是 sequential zone 的话，目录名字就是 &lt;code&gt;seq&lt;/code&gt;。sequential zone 因为需要确保发射的顺序性，所以只支持 DIO。如果 DIO 写的位置不是 wptr 的位置，它干脆返回 &lt;code&gt;EINVAL&lt;/code&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;imageblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;img src=&quot;/images/diag-094e47049fe295ce106612dcceb22069.png&quot; alt=&quot;Diagram&quot; width=&quot;140&quot; height=&quot;182&quot;&gt;
+&lt;/div&gt;
+&lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect1&quot;&gt;
