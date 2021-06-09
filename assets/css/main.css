@@ -6775,6 +6775,9 @@ table.dataframe {
   border: 0 solid var(--border);
   border-collapse: collapse; }
 
+img {
+  padding: 0 0% !important; }
+
 .pagination, #post-nav {
   padding: 4% 23%; }
   @media (max-width: 2000px) {
