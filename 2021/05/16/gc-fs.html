@@ -132,7 +132,7 @@
     />
     <meta
       name="twitter:description"
-      content="垃圾需要分类处理，有用的东西更应该分类。引子Zoned Storage 和 degragmentationF2FSGreedyCost-BenefitCATATGCZoneFSBtrfsSPDK FTLLSM_ZGC问题方案SeaStoreCacheJournalSegmentCleaner引子SeaStore ..."
+      content="垃圾需要分类处理，有用的东西更应该分类。引子Zoned Storage 和 degragmentationF2FSGreedyCost-BenefitCATATGCZoneFSBtrfsSPDK FTLLSM_ZGC问题方案GC 的评估SeaStoreCacheJournalSegmentCleaner引子Sea..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -245,6 +245,7 @@
                       <li><a href="#方案">方案</a></li>
                     </ul>
                   </li>
+                  <li><a href="#gc-的评估">GC 的评估</a></li>
                   <li>
                     <a href="#seastore">SeaStore</a>
                     <ul class="sectlevel2">
@@ -1085,6 +1086,75 @@
                     的时候就不会因为它们和其他热数据挤在一起，而在腾地方的时候被迫迁移它们，因此就减少了不必要的开销。
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="gc-的评估">GC 的评估</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  看过这几个算法。试图总结一下怎么评估一个 GC
+                  算法。我们常说，“多快好省”。这里面蕴含着好几个指标。
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      多和好。这里说的是“效用”，即 effectiveness。有时我们也说
+                      efficacy，在这里不区分它们两个。即一个过程的产出情况。
+                    </p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>多：GC 的一个产出就是释放出来的空间。</p>
+                        </li>
+                        <li>
+                          <p>
+                            好：另一个产出，可能是迁移出来数据对数据访问的友好性。比如说，如果迁移出来的数据能根据访问特性很好地聚类，那么局部性可能就会更好。如果把并发性考虑进去，适当地条带
+                            (striping) 化，也能提高大规模顺序读的性能。
+                          </p>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li>
+                    <p>
+                      快和省。这里说的是“效率”，即
+                      efficiency。就是说投入怎么样。如果让系统长时间停顿，等待
+                      GC，那么这个投入就比没有卡顿的系统高了。所以说迁移数据的时机和迁移的数据量都和效率息息相关。之前“洗裤子”的例子就是在短期的多和好和长期的快和省之间取得一个平衡。如果只关注短期收益，而忽视长期的总体效益，那么这个算法的总体性能也很难提高。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果只是考虑“多”和“省”，如果把 GC
+                  看成一个下金蛋的鸡，我们可以用下面的公式计算养鸡的长期利润
+                </p>
+              </div>
+              <div class="stemblock">
+                <div class="content">\[profit = revenue - cost\]</div>
+              </div>
+              <div class="paragraph">
+                <p>对应到 GC，就是</p>
+              </div>
+              <div class="stemblock">
+                <div class="content">\[profit = reclaimed - migrated\]</div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果让 GC 从一个老化的 (aged)
+                  的存储系统开始，能让系统完成大量的读写删访问，其中写入的数据大大超过系统的空闲空间，那么这个过程中的产生的收益，应该能表征
+                  GC 的性能了。当然，为了理解 GC
+                  的行为产生的效果，也应该佐以数据分布和留存空闲空间大小的统计来评估某一时刻存储系统的健康情况。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  整个系统的性能可能还是得看系统在特定负载下的延迟和吞吐量。
+                </p>
               </div>
             </div>
           </div>
