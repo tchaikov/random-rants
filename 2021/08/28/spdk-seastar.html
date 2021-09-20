@@ -875,12 +875,12 @@
                   回调函数是 C
                   语言实现异步编程一个很简单直接的方式，但是它似乎和 Seastar 的
                   <code>future&lt;&gt;</code>
-                  格格不入。因为 SPDK 和 DPDK
+                  格格不入。SPDK 和 DPDK
                   一脉相承，有着深层的血缘关系，我们是不是可以照着
                   <code>seastar::net::qp&lt;&gt;</code> 实现 SPDK
                   支持呢？看上去这种基于成对的 submission 和 completion queue
                   的抽象也适用于很多 SPDK
-                  的场景。让我们来比较一下基于流的操作和基于块的操作有什么异同：
+                  的场景。先比较一下基于流的操作和基于块的操作有什么异同：
                 </p>
               </div>
               <table class="tableblock frame-all grid-all stretch">
@@ -962,7 +962,8 @@
               </div>
               <div class="paragraph">
                 <p>
-                  还有个问题，SPDK 是一个有丰富接口的工具集，它有多个模块。光
+                  还有个问题，SPDK
+                  是一个有丰富接口的工具集，它有多个模块。每个模块都有自己的一组回调函数。光
                   <code>bdev</code> 就有 11 种回调函数：
                 </p>
               </div>
@@ -1514,6 +1515,42 @@
   <span class="p">});</span>
 <span class="p">}</span></code></pre>
                   </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    其中，<code>spdk::app::run()</code> 会为 SPDK
+                    初始化一节提到的设置。比如说
+                  </p>
+                </div>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>调用 <code>rte_eal_init()</code></p>
+                    </li>
+                    <li>
+                      <p>启动 RPC 服务</p>
+                    </li>
+                    <li>
+                      <p>加载各个子系统</p>
+                    </li>
+                  </ol>
+                </div>
+                <div class="paragraph">
+                  <p>它还会负责 SPDK 的清理工作。</p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    <code>spdk::bdev</code> 将会是一个
+                    <code>seastar::sharded&lt;&gt;</code> 服务。<code
+                      >spdk::do_with_bdev()</code
+                    >
+                    则是 <code>spdk</code> 提供的一个 helper，它负责初始化
+                    <code>bdev</code> 实例，在合适的时机调用
+                    <code>bdev::start()</code> 和
+                    <code>bdev::stop()</code>，把根据第一个参数初始化完成好的
+                    <code>bdev</code> 实例传给自己的另外一个参数，由后者使用
+                    <code>bdev</code>。
+                  </p>
                 </div>
               </div>
             </div>
