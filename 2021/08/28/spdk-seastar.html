@@ -1296,6 +1296,46 @@
                 </ol>
               </div>
               <div class="paragraph">
+                <p>当然，我们也可以从简处理</p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      不用 <code>smp_pollfn</code>。即不支持跨 shard 发送 IO
+                      请求，每个 shard 都用自己的 io channel。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      不用第一个
+                      <code>reap_spdk_completions_pollfn</code
+                      >。因为我们觉得这是个优化，以后慢慢加。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      不用 <code>io_queue_submission_pollfn</code>，因为 SPDK
+                      bdev 层有自己基于 token bucket 的 QoS。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      不用 <code>spdk_submit_work_pollfn</code>，既然不用
+                      Seastar 的 fair queue，那么也不用从 io_queue， 里捞 I/O
+                      请求了。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      只保留
+                      <code>reap_spdk_completions_pollfn</code>。把一切都交给
+                      SPDK。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
                 <p>现在我们应该能回答刚才的问题了：</p>
               </div>
               <div class="quoteblock">
