@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.3.6
+    Copyright 2016-2021 Sylhare
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5"
+    />
+
+    <!-- Theme Mode-->
+
+    <script>
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
+    </script>
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+
+    <!-- KaTeX 0.13.9 -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Mermaid 8.9.2 -->
+
+    <!-- Simple Jekyll Search 1.9.1 -->
+    <script
+      src="/assets/js/vendor/simple-jekyll-search.min.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+
+    <meta property="og:type" content="website" />
+
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+    <title>Seastar 和 SPDK | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="Seastar 和 SPDK" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta name="description" content="当 C++ 遇上 SPDK。" />
+    <meta property="og:description" content="当 C++ 遇上 SPDK。" />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html"
+    />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2021-08-28T00:00:00+00:00"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta property="twitter:title" content="Seastar 和 SPDK" />
+    <script type="application/ld+json">
+      {
+        "headline": "Seastar 和 SPDK",
+        "dateModified": "2021-08-28T00:00:00+00:00",
+        "datePublished": "2021-08-28T00:00:00+00:00",
+        "description": "当 C++ 遇上 SPDK。",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html"
+        },
+        "url": "https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html",
+        "@type": "BlogPosting",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="Seastar 和 SPDK" />
+    <meta
+      name="twitter:description"
+      content="当 C++ 遇上 SPDK。Seasetar 中的 DPDKSPDK初始化reactor_runSeastar 框架下 SPDK 的线程SPDK 的 then()SPDK 在 Seastar 中的形态另外一个 reactor？典型的用例这两天在学习 SPDK。对于存储软件的开发者来说，它是很好的基础设施。但是这种..."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+    <meta name="twitter:image:alt" content="Seastar 和 SPDK" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <a class="site-title" aria-label="some random rants" href="/">
+          some random rants
+        </a>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fas fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fas fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="Seastar 和 SPDK "
+              aria-label="Seastar 和 SPDK"
+              onclick="themeToggle()"
+            ></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1 id="Seastar+%E5%92%8C+SPDK" class="title">Seastar 和 SPDK</h1>
+
+            <div class="post-info">
+              <p class="meta">August 28, 2021</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>当 C++ 遇上 SPDK。</p>
+              </div>
+              <div id="toc" class="toc">
+                <div id="toctitle" class="title"></div>
+                <ul class="sectlevel1">
+                  <li><a href="#seasetar-中的-dpdk">Seasetar 中的 DPDK</a></li>
+                  <li>
+                    <a href="#spdk">SPDK</a>
+                    <ul class="sectlevel2">
+                      <li><a href="#初始化">初始化</a></li>
+                      <li><a href="#reactor_run">reactor_run</a></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <a href="#seastar-框架下-spdk-的线程"
+                      >Seastar 框架下 SPDK 的线程</a
+                    >
+                  </li>
+                  <li>
+                    <a href="#spdk-的-then">SPDK 的 <code>then()</code></a>
+                  </li>
+                  <li>
+                    <a href="#spdk-在-seastar-中的形态"
+                      >SPDK 在 Seastar 中的形态</a
+                    >
+                    <ul class="sectlevel2">
+                      <li>
+                        <a href="#另外一个-reactor">另外一个 reactor？</a>
+                      </li>
+                      <li><a href="#典型的用例">典型的用例</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  这两天在学习
+                  SPDK。对于存储软件的开发者来说，它是很好的基础设施。但是这种把回调函数和
+                  context
+                  作为参数，传给异步调用的模式让我有一朝返回解放前的感觉。联想到
+                  Rust 和 Python 语言中的 async/await 语法，再加上两年 seastar
+                  的开发者加入的
+                  <a
+                    href="https://github.com/scylladb/seastar/commit/de56cd1dfe8eab6a2718d62b950c912574c4b27d"
+                    >coroutine 支持</a
+                  >，作为 C&#43;&#43;
+                  程序员不得不重新审视一下，我们是不是也能用新的语法，把异步的
+                  SPDK C&#43;&#43; 程序写得更赏心悦目，易于维护呢？Seastar 作为
+                  C&#43;&#43; 异步编程框架中不可忽视的一员，同时提供了
+                  future/promise 和 C++20 的异步编程模型，如果加上 SPDK
+                  肯定会如虎添翼，成为一个更好的平台。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="seasetar-中的-dpdk">Seasetar 中的 DPDK</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>先看看 Seastar 是怎么集成 DPDK 的吧。</p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在 <code>smp::get_options_description()</code> 里面，为 DPDK
+                  的 <code>--huge-dir</code> 注册了 "hugepages" 的命令行选项。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在 <code>smp::configure()</code> 里面，CPU 核的设置
+                  <code>allocation</code> 经过几次转换，还是作为命令行，传给了
+                  <code>rte_eal_init()</code>:
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p><code>dpdk::eal::init()</code></p>
+                    <div class="olist loweralpha">
+                      <ol class="loweralpha" type="a">
+                        <li>
+                          <p><code>rte_eal_init()</code></p>
+                        </li>
+                        <li>
+                          <p>
+                            在每个 RTE 核上运行之前交给
+                            <code>create_thread()</code> 的 lambda。这个 lambda
+                            暂且叫做 <code>reactor_run</code> 吧。
+                          </p>
+                        </li>
+                      </ol>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  其中，<code>reactor_run</code> 负责初始化 reactor
+                  线程，和执行调度到的任务：
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>设置线程名字</p>
+                  </li>
+                  <li>
+                    <p>分配自己的 hugepage</p>
+                  </li>
+                  <li>
+                    <p>分配 io queue</p>
+                  </li>
+                  <li>
+                    <p>设置 smp message queue</p>
+                  </li>
+                  <li>
+                    <p><code>reactor::do_run()</code></p>
+                    <div class="olist loweralpha">
+                      <ol class="loweralpha" type="a">
+                        <li>
+                          <p>
+                            注册所有的 poller。请注意，poller
+                            在各自的构造函数里面，新建一个 task。它们用 task
+                            来把自己加到
+                            <code>reactor._pollers</code> 里面去。poller
+                            可以用来定期等待消息，并处理消息。比如：
+                          </p>
+                          <div class="ulist">
+                            <ul>
+                              <li>
+                                <p>
+                                  <code>smp_poller</code> 用来接收其他 reactor
+                                  发来的消息
+                                </p>
+                              </li>
+                              <li>
+                                <p>aio 或者 epoll 等到的消息</p>
+                              </li>
+                              <li>
+                                <p>
+                                  <code>reactor::signals</code> 检查 POSIX
+                                  signal，并调用 signal handler
+                                </p>
+                              </li>
+                              <li>
+                                <p>低精度的 timer</p>
+                              </li>
+                            </ul>
+                          </div>
+                        </li>
+                        <li>
+                          <p>
+                            成批执行 task。Seastar 允许开发者把一组任务
+                            <a
+                              href="http://docs.seastar.io/master/group__execution-stages.html"
+                              >一起执行</a
+                            >。
+                          </p>
+                        </li>
+                        <li>
+                          <p>轮询所有的 poller</p>
+                        </li>
+                        <li>
+                          <p>根据是否有遗存的工作决定是否进入休眠模式</p>
+                        </li>
+                      </ol>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="spdk">SPDK</h2>
+            <div class="sectionbody">
+              <div class="sect2">
+                <h3 id="初始化">初始化</h3>
+                <div class="paragraph">
+                  <p>
+                    这里通过分析 SPDK
+                    的初始化过程，关注它的设置，以及调度方式，希望更好地设计
+                    Seastar 和 SPDK 沟通的方式，比如如何初始化，如何和 SPDK
+                    传递消息。SPDK 关心的设置是 DPDK
+                    <code>rte_eal_init()</code> 的超集，除了 DPDK
+                    的相关设置，它还有很多 SPDK 特有的设置
+                    <code>spdk_env_opts</code> ，比如
+                  </p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p><code>no_pci</code></p>
+                    </li>
+                    <li>
+                      <p><code>num_pci_addr</code></p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    每个 SPDK app 都需要执行 <code>spdk_app_start()</code>：
+                  </p>
+                </div>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p><code>app_setup_env(spdk_app_opts)</code></p>
+                      <div class="olist loweralpha">
+                        <ol class="loweralpha" type="a">
+                          <li>
+                            <p><code>spdk_env_init(spdk_env_opts)</code></p>
+                            <div class="olist lowerroman">
+                              <ol class="lowerroman" type="i">
+                                <li>
+                                  <p>
+                                    <code>rte_eal_init(argc, argv)</code>:
+                                    参数是根据
+                                    <code>spdk_env_opts</code> 构造的。
+                                  </p>
+                                </li>
+                                <li>
+                                  <p>PCI 相关的初始化</p>
+                                </li>
+                              </ol>
+                            </div>
+                          </li>
+                        </ol>
+                      </div>
+                    </li>
+                    <li>
+                      <p><code>spdk_reactors_init()</code></p>
+                      <div class="olist loweralpha">
+                        <ol class="loweralpha" type="a">
+                          <li>
+                            <p>
+                              <code>spdk_mempool_create()</code>: 分配内存池
+                            </p>
+                          </li>
+                          <li>
+                            <p>为每个核初始化 reactor，设置下面的设施</p>
+                            <div class="ulist">
+                              <ul>
+                                <li>
+                                  <p>event ring buffer</p>
+                                </li>
+                                <li>
+                                  <p>event fd</p>
+                                </li>
+                              </ul>
+                            </div>
+                          </li>
+                        </ol>
+                      </div>
+                    </li>
+                    <li>
+                      <p>
+                        新建一个 <code>app_thread</code>，并把
+                        <code>bootstrap_fn</code> 调度到该 thread 上执行
+                      </p>
+                      <div class="olist loweralpha">
+                        <ol class="loweralpha" type="a">
+                          <li>
+                            <p><code>bootstrap_fn()</code></p>
+                            <div class="olist lowerroman">
+                              <ol class="lowerroman" type="i">
+                                <li>
+                                  <p>
+                                    解析给出的 json
+                                    文件，里面包含一系列子系统的配置
+                                  </p>
+                                </li>
+                                <li>
+                                  <p>初始化 RPC 服务</p>
+                                </li>
+                                <li>
+                                  <p>连接 RPC 服务，挨个加载子系统</p>
+                                </li>
+                              </ol>
+                            </div>
+                          </li>
+                        </ol>
+                      </div>
+                    </li>
+                    <li>
+                      <p>
+                        <code>spdk_reactors_start()</code>: 在每个 reactor
+                        上执行 <code>reactor_run</code>
+                      </p>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="reactor_run">reactor_run</h3>
+                <div class="paragraph">
+                  <p>在 <code>reactor_run</code> 中：</p>
+                </div>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>批量地处理 <code>reactor&#8594;events</code></p>
+                    </li>
+                    <li>
+                      <p>调用所有 spdk_thread 的 poller</p>
+                      <div class="olist loweralpha">
+                        <ol class="loweralpha" type="a">
+                          <li>
+                            <p>批量处理 <code>thread&#8594;messages</code></p>
+                          </li>
+                          <li>
+                            <p>
+                              依次调用 <code>thread&#8594;active_pollers</code>
+                            </p>
+                          </li>
+                          <li>
+                            <p>
+                              依次调用 <code>thread&#8594;timed_pollers</code>
+                            </p>
+                          </li>
+                        </ol>
+                      </div>
+                    </li>
+                  </ol>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    请注意，spdk 会利用 poller
+                    实现定时器和定期执行执行操作的功能。后者把 reactor 作为
+                    worker thread，执行非阻塞的常规任务。比如
+                    <code>vdev_worker</code> 和
+                    <code>vdev_mgmt_worker</code>。这个用法和 Seastar 的
+                    <code>reactor::io_queue_submission_pollfn</code> 相似。但是
+                    Seastar 目前没有把注册 poller 的功能作为公开的 API
+                    提供出来。如果把这个 poll 的任务定义成
+                    task，在退出之前再次调度它自己，那么这种实现可能会降低
+                    Seastar 任务调度的性能。因为在这个 poller
+                    注销之前，它重复地新建和销毁任务，并把任务加入和移出 reactor
+                    的任务列表。这会浪费很多 CPU cycle。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="seastar-框架下-spdk-的线程">Seastar 框架下 SPDK 的线程</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  这里结合 Seastar
+                  框架，通过对比两者的线程模型。进一步探索一些可能的实现方式，我们可能会需要回答下面的问题，然后分别解决。
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>如何管理多个用户层面的任务</p>
+                  </li>
+                  <li>
+                    <p>如何发起一个异步调用</p>
+                  </li>
+                  <li>
+                    <p>如何知道一个异步调用完成了</p>
+                  </li>
+                  <li>
+                    <p>如何传递消息</p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>不同 core 是直接如何通信的。</p>
+                        </li>
+                        <li>
+                          <p>不同任务之间是直接如何通信的。</p>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  每个 core 都有自己的 MPSC (multiple producer single consumer)
+                  消息队列，用于接收发给自己的消息。和 Seastar smp
+                  调用对应的逻辑对应着看，可以发现
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      <code>spdk_event_call()</code> 等价于
+                      <code>seastar::smp::submit_to()</code>
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>event_queue_run_batch()</code> 等价于
+                      <code>smp::poll_queues()</code>
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  前面解释 <code>reactor_run</code> 的逻辑的时候提到一个概念叫做
+                  <code>spdk_thread</code>。它是 SPDK 中的用户线程。不同的
+                  <code>spdk_thread</code>
+                  之间通过接受方线程的消息队列来互相通信。用户线程消息队列的类型和
+                  core 的消息队列类型和大小相同。<code
+                    >spdk_thread_send_msg()</code
+                  >
+                  是用来往特定线程发送消息的。值得注意的是，SPDK
+                  内部很多地方都使用了 <code>spdk_thread</code>，比如 bdev
+                  模块就把 <code>spdk_bdev_io</code> 和一个
+                  <code>spdk_thread</code> 相对应，实现 IO
+                  的序列化。所以我们如果要让 Seastar 能更好的支持 SPDK
+                  的话，就必须实现这个机制。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  对于 SPDK 来说，<code>spdk_thread</code>
+                  是一个工作协程，用来承载不同的业务。很多时候被用来并序列化并执行各种操作，它属于一个特定的
+                  core。不过它可以根据调度算法动态地迁移到另一个 core。除去
+                  <code>spdk_thread</code> 作为调度对象的设计，它和
+                  <code>seastar::sharded&lt;&gt;</code>
+                  很像。不过后者只能提供一个实现的框架，具体还有很多功能需要基于这个框架实现:
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      <code>seastar::sharded&lt;&gt;</code> 既可以在单个 core
+                      上启动，也可以同时在所有 core 上一起 启动。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>spdk_thread</code> 可以根据调度算法动态迁移。<code
+                        >spdk_thread</code
+                      >
+                      一般来说属于 <strong>一个</strong> core 的，但是根据它的
+                      <code>cpumask</code>，一个 <code>spdk_thread</code>
+                      <strong>可以</strong> 根据 CPU 的负载 迁移到
+                      <code>cpumask</code> 包含的的任意一个 core。这一点 Seastar
+                      尚无支持。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      因为 <code>spdk_thread</code> 自己有消息队列、poller
+                      等基础设施，我们可以把它视为一个逻辑的 reactor。这个特性在
+                      Seastar 目前还没有与之对应的实现。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      每个 core 都维护着一组 <code>spdk_thread</code>。SPDK
+                      甚至用 thread local storage 跟踪
+                      其中一个。这个很像进程中的一组线程。<code
+                        >spdk_get_thread()</code
+                      >
+                      返回的就是被跟踪的 那个 <code>spdk_thread</code>。目前
+                      Seastar 的 reactor 并没有对应的概念，但是我们可以用 一个
+                      <code>seastar::sharded&lt;&gt;</code> 服务来保存对应 core
+                      上的所有 <code>spdk_thread</code>。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      允许动态地注册和注销 poller。SPDK 中有两种
+                      poller。一种是系统级的，负责 保证 SPDK 事件系统和 reactor
+                      的基本运作。另一种是用户级的，它允许实现具体功能
+                      的模块自己定期轮询业务相关的事件。这些用户级的 poller
+                      就是注册在前面提到的
+                      <code>spdk_get_thread()</code> 返回的线程中的。参见
+                      <code>spdk_poller_register()</code> 和
+                      <code>spdk_poller_unregister()</code>
+                      的实现。如果继续沿着刚才的思路往前，我们可以把
+                      一组`spdk_thread`保存在，比如说，<code
+                        >seastar::sharded&lt;spdk::ThreadGroup&gt;</code
+                      >
+                      里面， 让 <code>spdk::ThreadGroup</code> 来为它管理的
+                      <code>spdk_thread</code> 服务。它会用
+                      <code>reactor::poller::simple()</code> 来注册自己的
+                      <code>do_complete()</code> 函数，后者遍历 所有的
+                      <code>spdk_thread</code> 的
+                      poller。也允许应用程序在任意时刻为指定的
+                      <code>spdk_thread</code> 添加 poller。这个做法和 virtio 中
+                      <code>vring&lt;&gt;</code> 的实现相同。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      同时支持中断模式和轮询模式。这是 SPDK
+                      最近加入的一个新特性，甚至允许应用的 poller
+                      工作在可定制的中断模式。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  节能、提高 CPU
+                  的使用率和负载均衡，这些作为一个总体的设计目标，SPDK
+                  做得相对比较深入。它根据线程的统计数据，比如说闲忙的时间比
+                  (<code>spdk_thread_stats</code>)，来决定如何调度，Seastar 仅在
+                  reactor 的实现里面通过调用
+                  <code>pure_check_for_work()</code> 来判断 CPU
+                  当下是否有工作要做，如果没有的话，就进入浅层的睡眠模式。笔者认为，这也许不仅仅是工程量多少的问题。也可能是因为
+                  Seastar
+                  对自身的定位，它提供了基础的异步编程模型，异步调用，以及基本的
+                  IO 调度，但是它并不希望干涉用户业务在不同 shard
+                  上的分布，而是把这个问题留给应用的开发者。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  要在 Seastar 的框架下实现
+                  <code>spdk_thread</code> 的这些高级特性是完全有可能的：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      根据负载动态调度工作协程：不仅仅
+                      <code>spdk_thread</code> 需要统计自己的关于调度的统计
+                      信息，每个 <code>spdk::ThreadGroup</code> 也需要统计各自的
+                      <code>idle_tsc</code> 和 <code>busy_tsc</code>。
+                      并提供接口供调度器查询，作为负载均衡的依据，然后在 shard
+                      间调度任务。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      和 SPDK 的 reactor 类似，<code>spdk::ThreadGroup</code>
+                      也要保存一个 "leader" thread， 后者负责常规的 poller
+                      注册和注销工作。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>spdk::ThreadGroup</code> 启动的时候需要向 reactor
+                      注册自己的总 poller，负责调用非 定时的 poller。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      在新注册 poller 的时候，需要按照 poller
+                      是否有周期区别处理。
+                    </p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>
+                            如果 poller 指定了周期，那么需要新建
+                            <code>seastar::timer</code>，并在
+                            <code>spdk::ThreadGroup</code> 中维护一个
+                            map，方便在运行的时候根据
+                            <code>spdk_poller*</code> 找到
+                            <code>seastar::timer</code> 暂停 或者注销。
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            如果是没有周期的 poller，那么直接加入当前
+                            <code>spdk::ThreadGroup</code> 的 leader thread。
+                            让后者的 poller 来调用新注册的
+                            poller。这种分层的设计也方便管理对象的生命周期和统计
+                            运行时指标。
+                          </p>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在 SPDK 里面，要发起一个异步调用最典型的方式，类似下面的代码:
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c"><span class="n">rc</span> <span class="o">=</span> <span class="n">spdk_bdev_write</span><span class="p">(</span><span class="n">hello_context</span><span class="o">-&gt;</span><span class="n">bdev_desc</span><span class="p">,</span>
+                     <span class="n">hello_context</span><span class="o">-&gt;</span><span class="n">bdev_io_channel</span><span class="p">,</span>
+                     <span class="n">hello_context</span><span class="o">-&gt;</span><span class="n">buff</span><span class="p">,</span>
+                     <span class="mi">0</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span>
+                     <span class="n">write_complete</span><span class="p">,</span> <span class="n">hello_context</span><span class="p">);</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  这段代码摘自
+                  <code>examples/bdev/hello_world/hello_bdev.c</code>。这里以
+                  bdev 的 NVMe 后端为例：
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      从 <code>hello_context&#8594;bdev_io_channel</code> 的
+                      cache 或者 bdev 的内存池分配一个 <code>spdk_bdev_io</code>
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      用给定的参数设置这个 <code>spdk_bdev_io</code>，这样这个
+                      I/O 就知道需要写的数据位置，长度，甚至
+                      回调函数的函数指针和参数也保存在这个 I/O 里面了。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      往 <code>nvme_qpair</code> 的提交列表的末尾添加新的 I/O。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      通过修改提交队列末尾的 door bell，告诉
+                      <code>nvme_qpair</code>，提交列表里多了一个新的 I/O。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  那么我们怎么知道 NVMe
+                  设备完成了这个写操作呢？下面的函数处理指定的 queue pair
+                  上所有完成了的 I/O 请求。
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c"><span class="kt">int32_t</span> <span class="nf">spdk_nvme_qpair_process_completions</span><span class="p">(</span><span class="k">struct</span> <span class="n">spdk_nvme_qpair</span> <span class="o">*</span><span class="n">qpair</span><span class="p">,</span>
+                                            <span class="kt">uint32_t</span> <span class="n">max_completions</span><span class="p">);</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  这个做法很像
+                  <a
+                    href="https://man7.org/linux/man-pages/man2/io_getevents.2.html"
+                    >io_getevents()</a
+                  >，都是从完成列表收割完成了的 I/O
+                  请求。这个过程很像播种和收割。提交请求就是播种，检查完成了的请求就像是收割。让作物成熟的魔法师就是轮询模式的驱动
+                  (polling mode driver)。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  既然 SPDK 用
+                  <code>spdk_thread</code>
+                  实现用户协程，那么协程之间要协作的话，该怎么做呢？就是前面提到的"发送消息"。消息保存在大小为
+                  65535 的一个 ring buffer 里面。顺便提一下，其实 Seastar
+                  也有类似的数据结构，称为
+                  <code>seastar::circular_buffer_fixed_capacity</code
+                  >。如果有必要的话，我们甚至可以把 SPDK 的 event 和 thread
+                  子系统完全换成 Seastar 的实现。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="spdk-的-then">SPDK 的 <code>then()</code></h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  回调函数是 C
+                  语言实现异步编程一个很简单直接的方式，但是它似乎和 Seastar 的
+                  <code>future&lt;&gt;</code>
+                  格格不入。因为 SPDK 和 DPDK
+                  一脉相承，有着深层的血缘关系，我们是不是可以照着
+                  <code>seastar::net::qp&lt;&gt;</code> 实现 SPDK
+                  支持呢？看上去这种基于成对的 submission 和 completion queue
+                  的抽象也适用于很多 SPDK
+                  的场景。让我们来比较一下基于流的操作和基于块的操作有什么异同：
+                </p>
+              </div>
+              <table class="tableblock frame-all grid-all stretch">
+                <colgroup>
+                  <col style="width: 33.3333%" />
+                  <col style="width: 33.3333%" />
+                  <col style="width: 33.3334%" />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <td class="tableblock halign-left valign-top"></td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">bdev</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock"><code>net::qp</code></p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">发送</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">读写指令</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">发给对方的包</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">接收</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">设备状态</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">对方发来的包</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">等待</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">特定写指令的完成</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">发送的进度</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">等待</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">特定读指令返回的数据</p>
+                    </td>
+                    <td class="tableblock halign-left valign-top">
+                      <p class="tableblock">下一个接收的报文</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="paragraph">
+                <p>
+                  因为 bdev 需要跟踪特定请求的状态而不是一个
+                  <strong>进度</strong>，所以我们无法使用
+                  <code>seastar::stream</code> 定义 bdev
+                  的读写接口。更好的榜样应该是 <code>seastar::file</code>。每个
+                  <code>posix_file_impl</code> 都有一个
+                  <code>_io_queue</code> 的引用，同一 <code>devid</code> 的所有
+                  <code>_io_queue</code> 指向 reactor 统一维护的同一个
+                  queue。这些 queue 用 <code>devid</code> 来索引。SPDK
+                  作为专业的底层设施自然也有对应的设计。需要理解的是
+                  <code>io_sink</code>、<code>io_request</code> 和
+                  <code>io_completion</code> 这些组件是如何互相协作的。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  还有个问题，SPDK 是一个有丰富接口的工具集，它有多个模块。光
+                  <code>bdev</code> 就有 11 种回调函数：
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c"><span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_remove_cb_t</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">remove_ctx</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_event_cb_t</span><span class="p">)(</span><span class="k">enum</span> <span class="n">spdk_bdev_event_type</span> <span class="n">type</span><span class="p">,</span>
+                                     <span class="k">struct</span> <span class="n">spdk_bdev</span> <span class="o">*</span><span class="n">bdev</span><span class="p">,</span>
+                                     <span class="kt">void</span> <span class="o">*</span><span class="n">event_ctx</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_io_completion_cb</span><span class="p">)(</span><span class="k">struct</span> <span class="n">spdk_bdev_io</span> <span class="o">*</span><span class="n">bdev_io</span><span class="p">,</span>
+                                           <span class="n">bool</span> <span class="n">success</span><span class="p">,</span>
+                                           <span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_wait_for_examine_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_init_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">,</span> <span class="kt">int</span> <span class="n">rc</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_fini_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_get_device_stat_cb</span><span class="p">)(</span><span class="k">struct</span> <span class="n">spdk_bdev</span> <span class="o">*</span><span class="n">bdev</span><span class="p">,</span>
+                                             <span class="k">struct</span> <span class="n">spdk_bdev_io_stat</span> <span class="o">*</span><span class="n">stat</span><span class="p">,</span>
+                                             <span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">,</span> <span class="kt">int</span> <span class="n">rc</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_io_timeout_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">,</span> <span class="k">struct</span> <span class="n">spdk_bdev_io</span> <span class="o">*</span><span class="n">bdev_io</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_io_wait_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_histogram_status_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_histogram_data_cb</span><span class="p">)(</span><span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span>
+                                            <span class="k">struct</span> <span class="n">spdk_histogram_data</span> <span class="o">*</span><span class="n">histogram</span><span class="p">);</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>不过其中常用的可能只有:</p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c"><span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_io_completion_cb</span><span class="p">)(</span><span class="k">struct</span> <span class="n">spdk_bdev_io</span> <span class="o">*</span><span class="n">bdev_io</span><span class="p">,</span>
+                                           <span class="n">bool</span> <span class="n">success</span><span class="p">,</span>
+                                           <span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">);</span>
+<span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">spdk_bdev_get_device_stat_cb</span><span class="p">)(</span><span class="k">struct</span> <span class="n">spdk_bdev</span> <span class="o">*</span><span class="n">bdev</span><span class="p">,</span>
+                                             <span class="k">struct</span> <span class="n">spdk_bdev_io_stat</span> <span class="o">*</span><span class="n">stat</span><span class="p">,</span>
+                                             <span class="kt">void</span> <span class="o">*</span><span class="n">cb_arg</span><span class="p">,</span> <span class="kt">int</span> <span class="n">rc</span><span class="p">);</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  前者用来处理一个完成了的
+                  I/O，后者用来获取块设备的统计信息。回到刚才提到的
+                  <code>spdk_bdev_write()</code>。对应的 Seastar 风格的一个
+                  <code>bdev</code> 定义可能像这样:
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="k">class</span> <span class="nc">bdev</span> <span class="p">{</span>
+  <span class="k">explicit</span> <span class="n">bdev</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">);</span>
+  <span class="o">~</span><span class="n">bdev</span><span class="p">();</span>
+  <span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">write</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">pos</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span><span class="o">*</span> <span class="n">buffer</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">len</span><span class="p">);</span>
+  <span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">read</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">pos</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="n">buffer</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">len</span><span class="p">);</span>
+  <span class="n">future</span><span class="o">&lt;</span><span class="n">io_state</span><span class="o">&gt;</span> <span class="n">stat</span><span class="p">();</span>
+<span class="p">};</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  这个接口和 <code>seastar::file</code> 对应，忽略了 io channel
+                  这些 SPDK 独有的机制。问题是
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>是不是需要使用 SPDK 的回调函数实现异步调用呢？</p>
+                  </li>
+                  <li>
+                    <p>是的话，如何实现？</p>
+                  </li>
+                  <li>
+                    <p>不是的话，又怎么处理？</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  对于第一个问题，笔者认为，如果没有必要，还是应当尽量使用 SPDK
+                  的方法，而不是自己开发一套机制替代它，这样的好处显而易见：因为
+                  SPDK
+                  的公开方法相对稳定，这样能减少跟踪上游带来的维护成本，把对
+                  SPDK 的改动减少到最小，同时也增加了这个改动进入 SPDK 和
+                  Seastar 上游的机会。但是新的问题出现了：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>这个回调函数是什么？</p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>
+                            我们可以把回调函数定义成为一个
+                            <code>bdev</code>
+                            的静态成员函数，便于访问它的私有成员。
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            回调函数应该能调用
+                            <code>_pr.set_value(res)</code>。其中，<code
+                              >_pr</code
+                            >
+                            是和返回的 <code>future&lt;&gt;</code> 对应的
+                            <code>promise&lt;&gt;</code>。
+                          </p>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                  <li>
+                    <p>
+                      回调函数的参数呢？这个参数至少要让我们能定位到
+                      <code>_pr</code>。在 AIO 后端的实现里面， 当它在 poller
+                      里面收集到完成了的事件之后，依次调用事件对应的
+                      <code>completion&#8594;complete_with()</code>
+                      函数。下面是从 Seastar 摘录的相关代码：
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="n">r</span> <span class="o">=</span> <span class="n">io_pgetevents</span><span class="p">(</span><span class="n">_polling_io</span><span class="p">.</span><span class="n">io_context</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">tsp</span><span class="p">,</span> <span class="n">active_sigmask</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">!=</span> <span class="kt">unsigned</span><span class="p">(</span><span class="n">r</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span><span class="o">&amp;</span> <span class="n">event</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+  <span class="k">auto</span><span class="o">*</span> <span class="n">desc</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">kernel_completion</span><span class="o">*&gt;</span><span class="p">(</span><span class="kt">uintptr_t</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">data</span><span class="p">));</span>
+  <span class="n">desc</span><span class="o">-&gt;</span><span class="n">complete_with</span><span class="p">(</span><span class="n">event</span><span class="p">.</span><span class="n">res</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  而 <code>io_completion</code> 则会调用
+                  <code>io_completion::complete(res)</code>。后者由
+                  <code>io_completion</code> 的子类各自实现。以
+                  <code>io_desc_read_write</code> 为例，它从
+                  <code>io_completion</code> 继承，并负责与 fair_queue
+                  沟通，也保存了 <code>_pr</code>。在
+                  <code>io_desc_read_write::complete()</code> 里，
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="n">_pr</span><span class="p">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">res</span><span class="p">);</span>
+<span class="k">delete</span> <span class="k">this</span><span class="p">;</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果不使用回调函数的话，我们其实也需要模仿现有 Seastar 中对
+                  aio
+                  的支持，自己实现一个基于队列的轮询机制。我们以写文件为例，看看
+                  Seastar 的 AIO 后端的实现吧。在
+                  <code>posix_file_impl::do_write_dma()</code> 中，它调用
+                  <code>engine().submit_to_write()</code>：
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p><code>io_queue::queue_request()</code></p>
+                    <div class="olist loweralpha">
+                      <ol class="loweralpha" type="a">
+                        <li>
+                          <p>
+                            构造一个
+                            <code>unique_ptr&lt;queued_io_request&gt;</code>
+                            对象
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            把 <code>queued_io_request::_fq_entry</code> 加入
+                            <code>io_queue::fair_queue</code> 队列。通过这个
+                            <code>_fq_entry</code> 是可以找到包含它的
+                            <code>queued_io_request</code>
+                            对象，并顺藤摸瓜，找到
+                            <code>kernel_completion</code>
+                          </p>
+                        </li>
+                        <li>
+                          <p>返回 <code>queued_req&#8594;get_future()</code></p>
+                        </li>
+                      </ol>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>然后开始了接力比赛，接力棒就是 I/O 请求：</p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic" start="1">
+                  <li>
+                    <p>
+                      第一棒：把 I/O 请求从 io queue
+                      取出，经由按照它们所属类型的权重分配的公平队列， 加入
+                      <code>io_sink::pending_io</code>。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-460d1ba5c270c5ae9ff19e8d1243380c.png"
+                    alt="Diagram"
+                    width="740"
+                    height="322"
+                  />
+                </div>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic" start="2">
+                  <li>
+                    <p>
+                      第二棒：从 <code>io_sink::pending_io</code> 取出 I/O
+                      请求，把这些请求加入 AIO 的
+                      <code>io_context</code> 队列，换句话说，就是把请求加入
+                      submission queue。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-67c69f3e87d29c2e406ce2e101590a16.png"
+                    alt="Diagram"
+                    width="590"
+                    height="350"
+                  />
+                </div>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic" start="3">
+                  <li>
+                    <p>
+                      第三棒: 使用 <code>io_pgetevents()</code> 系统调用，读取
+                      completion queue 里面的异步 I/O 事件。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-2665e81ec1e665e8d6e3bb14417ebc11.png"
+                    alt="Diagram"
+                    width="590"
+                    height="266"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>事实上，Seastar 的 I/O 子系统用了 5 个 poller</p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-8b9e6634f14d093843230d10ffd3822b.png"
+                    alt="Diagram"
+                    width="390"
+                    height="378"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  请注意，这五个 poller 的执行顺序影响着请求的延迟。因为后面一个
+                  poller 的输入可能就是前一个 poller
+                  的输出。这样同时也有助于减小内存子系统的压力，因为请求在 queue
+                  里面积压的数量和时间越长，就意味着有越多的内存不可用。而这些内存有相当部分是按照下面存储介质的块对齐的，可能会有更多的内部碎片。所以尽早地释放它们，也更有利于提高系统的性能。这里有两个
+                  <code>reap_kernel_completions_pollfn</code> 是希望一个 poller
+                  能及早地释放 I/O queue 里面的 I/O 占用的内存空间；而让另一个
+                  poller 能处理那些立即返回的 I/O 请求。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果 Seastar 使用 SPDK 作为其存储栈，可能也需要对应的 poller：
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      <code>smp_pollfn</code>: 处理其他 reactor 发来的
+                      I/O。它们可能也会访问当前 core 负责的 bdev。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>reap_spdk_completions_pollfn</code>:
+                      尽早地处理完成了的 I/O 请求，
+                      减轻内存子系统的压力，也减小延迟。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>io_queue_submission_pollfn</code>: 按照不同优先级把
+                      I/O 入列
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>spdk_submit_work_pollfn</code>: 把 I/O
+                      从队列里面取出，提交给 SPDK
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      <code>reap_spdk_completions_pollfn</code>: 调用
+                      <code>spdk_thread_poll()</code> 收集完成了的请求。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>现在我们应该能回答刚才的问题了：</p>
+              </div>
+              <div class="quoteblock">
+                <blockquote>
+                  <div class="paragraph">
+                    <p>回调函数的参数呢？</p>
+                  </div>
+                </blockquote>
+              </div>
+              <div class="paragraph">
+                <p>
+                  只要我们能把 I/O 请求包装成某种类似
+                  <code>io_completion</code> 的类型，让它
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      能跟踪当初调用异步操作时，返回的
+                      <code>promise&lt;&gt;</code> 以及
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      能包含在回调函数的参数 <code>cb_arg</code> 中，以便在 I/O
+                      完成的时候， 通知对应的
+                      <code>_pr</code> ，并且更新必要的统计信息。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>就可以了。这里有两个思路：</p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic" start="1">
+                  <li>
+                    <p>
+                      让 <code>spdk_bdev_io</code> 包含 SPDK 版的
+                      <code>io_completion</code>。在回调函数里 通过
+                      <code>spdk_bdev_io</code> 引用对应的
+                      <code>io_completion</code>。但是
+                      <code>spdk_bdev_io</code> 更多的是作为 SPDK
+                      开放给模块的实现者的接口，而非给应用开发者的接口。 注意到
+                      <code>bdev.h</code> 中，不管是读还是写操作，I/O
+                      的接口基本只有两类
+                    </p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>
+                            <code>void *buf</code>、<code>uint64_t offset</code>
+                            和 <code>uint64_t nbytes</code>
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            <code>iovec iov[]</code>、<code
+                              >uint64_t offset</code
+                            >
+                            和 <code>uint64_t nbytes</code>
+                          </p>
+                        </li>
+                      </ul>
+                    </div>
+                  </li>
+                </ol>
+              </div>
+              <div class="paragraph">
+                <p>
+                  上层应用在发送请求的时候是没有机会接触到
+                  <code>spdk_bdev_io`的，更遑论在它后面的 `driver_ctx</code>
+                  中夹带“私货”了。况且 <code>driver_ctx</code> 的本意是让 bdev
+                  的下层驱动加入自己
+                  context，并不是提供给上层应用的。这条路走不通。
+                </p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic" start="2">
+                  <li>
+                    <p>
+                      在发送 I/O 请求的时候单独构造 SPDK 版的
+                      <code>io_completion</code>，把它 作为
+                      <code>cb_arg</code> 交给 SPDK。在回调函数里还原
+                      <code>io_completion</code>， 再如前所述，做相应的处理。
+                    </p>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="spdk-在-seastar-中的形态">SPDK 在 Seastar 中的形态</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  这里希望讨论 SPDK 在 Seastar
+                  框架中的角色，以及呈现的接口是什么样子的。
+                </p>
+              </div>
+              <div class="sect2">
+                <h3 id="另外一个-reactor">另外一个 reactor？</h3>
+                <div class="paragraph">
+                  <p>前面关于 poller 的讨论引出了一个问题，即</p>
+                </div>
+                <div class="quoteblock">
+                  <blockquote>
+                    <div class="paragraph">
+                      <p>我们能重用 Seastar 的这几个 poller 吗？</p>
+                    </div>
+                  </blockquote>
+                </div>
+                <div class="paragraph">
+                  <p>这个问题在一定程度上等价于：</p>
+                </div>
+                <div class="quoteblock">
+                  <blockquote>
+                    <div class="paragraph">
+                      <p>我们需要实现一个基于 SPDK 的 Seastar reactor 吗？</p>
+                    </div>
+                  </blockquote>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    在阅读 Seastar reactor 实现的时候，可能会注意到，
+                    <code>reactor_backend_selector</code> 就是用来根据
+                    <code>--reactor-backend</code> 命令行选项来选择使用的
+                    reactor 后端的。请注意，虽然 SPDK 能够
+                  </p>
+                </div>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>加入 poller，并使用非阻塞的调用</p>
+                    </li>
+                    <li>
+                      <p>使用 aio 读写普通的文件</p>
+                    </li>
+                    <li>
+                      <p>使用 <code>sock</code> 模块</p>
+                    </li>
+                  </ul>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    把上面这些功能组合起来，足以实现一个功能完备的
+                    <code>reactor_backend</code>。但是我们也可以保留 Seastar 的
+                    reactor，像 DPDK 那样另外再注册
+                    <code>spdk::ThreadGroup</code> 的
+                    poller。牵涉面小，而且工作量也少些。对于两者的集成这可能是更稳妥的第一步。也许这也是
+                    SPDK 支持在 Seastar
+                    中更合适的定位&#8212;&#8203;即提供块设备的访问，而非文件系统的访问。这两者有共性，但是也有一些不一样的地方。比如说文件系统可以用
+                    <code>open_directory()</code> 和
+                    <code>list_directory()</code>
+                    来枚举一个目录下的所有文件，但是块设备的枚举方式就各有各的不同。SPDK
+                    提供 <code>spdk_nvme_probe()</code> 来列举所有的 NVMe
+                    设备，用 <code>spdk_bdev_first()</code> 和
+                    <code>spdk_bdev_next()</code>
+                    来找出所有的块设备。另外，为了提高并发，SPDK 引入了 io
+                    channel 的概念，它也很难直接映射到 Seastar 基于文件系统的 IO
+                    体系里面。所以比较好的办法还是先把 SPDK 在 Seastar
+                    下实现成相对独立的模块，而不是试图把它实现成为一种和 AIO 和
+                    epoll 并列的通用异步IO 后端。另外，在初期最大程度保留 SPDK
+                    的基础设施，最小侵入的实现可能是比较稳妥的途径。
+                  </p>
+                </div>
+              </div>
+              <div class="sect2">
+                <h3 id="典型的用例">典型的用例</h3>
+                <div class="paragraph">
+                  <p>
+                    我们用假象中的 Seastar + SPDK 重写
+                    <code>examples/bdev/hello_world</code> 试试看
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="c++"><span class="k">namespace</span> <span class="n">bpo</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">program_options</span><span class="p">;</span>
+
+<span class="n">seastar</span><span class="o">::</span><span class="n">logger</span> <span class="nf">log</span><span class="p">(</span><span class="s">"hello"</span><span class="p">);</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">ac</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">av</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">seastar</span><span class="o">::</span><span class="n">app_template</span> <span class="n">seastar_app</span><span class="p">;</span>
+  <span class="n">seastar_app</span><span class="p">.</span><span class="n">add_positional_options</span><span class="p">({</span>
+    <span class="p">{</span> <span class="s">"bdev"</span><span class="p">,</span> <span class="n">bpo</span><span class="o">::</span><span class="n">value</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(),</span> <span class="s">"bdev"</span><span class="p">,</span> <span class="mi">1</span> <span class="p">},</span>
+  <span class="p">});</span>
+  <span class="n">spdk</span><span class="o">::</span><span class="n">app</span> <span class="n">spdk_app</span><span class="p">;</span>
+  <span class="k">return</span> <span class="n">seastar_app</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">av</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+     <span class="k">auto</span> <span class="n">bdev_name</span> <span class="o">=</span> <span class="n">seastar_app</span><span class="p">.</span><span class="n">configuration</span><span class="p">()[</span><span class="s">"bdev"</span><span class="p">].</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">();</span>
+     <span class="k">return</span> <span class="n">spdk_app</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">av</span><span class="p">,</span> <span class="p">[</span><span class="n">bdev_name</span><span class="p">]</span> <span class="p">{</span>
+       <span class="k">return</span> <span class="n">spdk</span><span class="o">::</span><span class="n">do_with_bdev</span><span class="p">(</span><span class="n">bdev_name</span><span class="p">,</span> <span class="p">[](</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">bdev</span><span class="p">)</span> <span class="p">{</span>
+         <span class="kt">uint32_t</span> <span class="n">block_size</span> <span class="o">=</span> <span class="n">dev</span><span class="p">.</span><span class="n">block_size</span><span class="p">();</span>
+         <span class="kt">size_t</span> <span class="n">buf_align</span> <span class="o">=</span> <span class="n">dev</span><span class="p">.</span><span class="n">buf_align</span><span class="p">();</span>
+         <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">spdk</span><span class="o">::</span><span class="n">dma_zmalloc</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">buf_align</span><span class="p">);</span>
+         <span class="k">return</span> <span class="n">bdev</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buff</span><span class="p">,</span> <span class="n">block_size</span><span class="p">).</span><span class="n">then</span><span class="p">([</span><span class="o">=</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bdev</span><span class="p">]</span> <span class="p">{</span>
+           <span class="n">memset</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span>
+           <span class="k">return</span> <span class="n">bdev</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span>
+         <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="n">buf</span><span class="p">,</span> <span class="n">block_size</span><span class="p">]</span> <span class="p">{</span>
+           <span class="kt">char</span> <span class="o">*</span><span class="n">good</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="p">[</span><span class="n">block_size</span><span class="p">];</span>
+           <span class="n">memset</span><span class="p">(</span><span class="n">good</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span>
+           <span class="k">if</span> <span class="p">(</span><span class="kt">int</span> <span class="n">where</span> <span class="o">=</span> <span class="n">memcmp</span><span class="p">(</span><span class="n">good</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span> <span class="n">where</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+             <span class="n">log</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"buf mismatches at {}!"</span><span class="p">,</span> <span class="n">where</span><span class="p">);</span>
+           <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+             <span class="n">log</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"buf matches!"</span><span class="p">);</span>
+           <span class="p">}</span>
+           <span class="k">delete</span> <span class="n">good</span><span class="p">;</span>
+         <span class="p">}).</span><span class="n">finally</span><span class="p">([</span><span class="o">=</span><span class="p">]</span> <span class="p">{</span>
+           <span class="n">spdk</span><span class="o">::</span><span class="n">dma_free</span><span class="p">(</span><span class="n">buff</span><span class="p">);</span>
+         <span class="p">}).</span><span class="n">handle_exception_type</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="n">io_exception</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+           <span class="n">log</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"error while reading {}"</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+         <span class="p">});</span>
+       <span class="p">});</span>
+     <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">}</span></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <div class="tag-list">
+          <ul>
+            <li class="meta">Tags</li>
+
+            <li>
+              <a class="button" href="/tags#c%2B%2B">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> c++</p>
+              </a>
+            </li>
+
+            <li>
+              <a class="button" href="/tags#seastar">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> seastar</p>
+              </a>
+            </li>
+
+            <li>
+              <a class="button" href="/tags#spdk">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> spdk</p>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="从 metaslabs allocator 说起" href="/2021/05/27/alloc-fs.html">
+            <p>Next post</p>
+            从 metaslabs allocator 说起
+          </a>
+        </div>
+      </div>
+
+      <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2021-08-28-spdk-seastar.adoc"
+        data-page-url="/2021/08/28/spdk-seastar.html"
+        data-page-title="Seastar 和 SPDK"
+        data-theme="auto"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
+
+      <!-- Disqus -->
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

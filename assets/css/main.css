@@ -6775,6 +6775,9 @@ table.dataframe {
   border: 0 solid var(--border);
   border-collapse: collapse; }
 
+td > p {
+  margin-bottom: 0; }
+
 img {
   padding: 0 0% !important; }
 
