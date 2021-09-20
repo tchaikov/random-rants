@@ -1550,7 +1550,7 @@
          <span class="p">}).</span><span class="n">finally</span><span class="p">([</span><span class="o">=</span><span class="p">]</span> <span class="p">{</span>
            <span class="n">spdk</span><span class="o">::</span><span class="n">dma_free</span><span class="p">(</span><span class="n">buff</span><span class="p">);</span>
          <span class="p">}).</span><span class="n">handle_exception_type</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="n">io_exception</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
-           <span class="n">log</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"error while reading {}"</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+           <span class="n">log</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"error while writing/reading {}"</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
          <span class="p">});</span>
        <span class="p">});</span>
      <span class="p">});</span>
