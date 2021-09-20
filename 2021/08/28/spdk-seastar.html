@@ -1368,9 +1368,9 @@
               <div class="paragraph">
                 <p>
                   上层应用在发送请求的时候是没有机会接触到
-                  <code>spdk_bdev_io`的，更遑论在它后面的 `driver_ctx</code>
-                  中夹带“私货”了。况且 <code>driver_ctx</code> 的本意是让 bdev
-                  的下层驱动加入自己
+                  <code>spdk_bdev_io</code> 的，更遑论在它后面的
+                  <code>driver_ctx</code> 中夹带"私货"了。况且
+                  <code>driver_ctx</code> 的本意是让 bdev 的下层驱动加入自己
                   context，并不是提供给上层应用的。这条路走不通。
                 </p>
               </div>

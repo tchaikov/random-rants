@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-09-20T07:23:10+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Seastar 和 SPDK</title><link href="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html" rel="alternate" type="text/html" title="Seastar 和 SPDK" /><published>2021-08-28T00:00:00+00:00</published><updated>2021-08-28T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/08/28/spdk-seastar</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-09-20T07:33:00+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Seastar 和 SPDK</title><link href="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html" rel="alternate" type="text/html" title="Seastar 和 SPDK" /><published>2021-08-28T00:00:00+00:00</published><updated>2021-08-28T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/08/28/spdk-seastar</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;当 C++ 遇上 SPDK。&lt;/p&gt;
@@ -751,9 +751,8 @@ core 负责的 bdev。&lt;/p&gt;
 &lt;/ol&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;上层应用在发送请求的时候是没有机会接触到 &lt;code&gt;spdk_bdev_io`的，更遑论在它后面的
-`driver_ctx&lt;/code&gt; 中夹带“私货”了。况且 &lt;code&gt;driver_ctx&lt;/code&gt; 的本意是让 bdev
-的下层驱动加入自己 context，并不是提供给上层应用的。这条路走不通。&lt;/p&gt;
+&lt;p&gt;上层应用在发送请求的时候是没有机会接触到 &lt;code&gt;spdk_bdev_io&lt;/code&gt; 的，更遑论在它后面的 &lt;code&gt;driver_ctx&lt;/code&gt; 中夹带&quot;私货&quot;了。况且 &lt;code&gt;driver_ctx&lt;/code&gt;
+的本意是让 bdev 的下层驱动加入自己 context，并不是提供给上层应用的。这条路走不通。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;olist arabic&quot;&gt;
 &lt;ol class=&quot;arabic&quot; start=&quot;2&quot;&gt;
