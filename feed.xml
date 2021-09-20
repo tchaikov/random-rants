@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-09-20T06:51:52+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Seastar 和 SPDK</title><link href="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html" rel="alternate" type="text/html" title="Seastar 和 SPDK" /><published>2021-08-28T00:00:00+00:00</published><updated>2021-08-28T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/08/28/spdk-seastar</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2021-09-20T07:15:10+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">Seastar 和 SPDK</title><link href="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html" rel="alternate" type="text/html" title="Seastar 和 SPDK" /><published>2021-08-28T00:00:00+00:00</published><updated>2021-08-28T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/08/28/spdk-seastar</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;当 C++ 遇上 SPDK。&lt;/p&gt;
@@ -545,7 +545,7 @@ submission 和 completion queue 的抽象也适用于很多 SPDK 的场景。先
 &lt;div class=&quot;ulist&quot;&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;是不是需要使用 SPDK 的回调函数实现异步调用呢？&lt;/p&gt;
+&lt;p&gt;是否需要使用 SPDK 的回调函数实现异步调用呢？&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;是的话，如何实现？&lt;/p&gt;
@@ -820,7 +820,7 @@ Seastar 中更合适的定位&amp;#8212;&amp;#8203;即提供块设备的访问�
 来列举所有的 NVMe 设备，用 &lt;code&gt;spdk_bdev_first()&lt;/code&gt; 和 &lt;code&gt;spdk_bdev_next()&lt;/code&gt;
 来找出所有的块设备。另外，为了提高并发，SPDK 引入了 io channel 的概念，它也很难直接映射到 Seastar 基于文件系统的 IO 体系里面。所以比较好的办法还是先把 SPDK
 在 Seastar 下实现成相对独立的模块，而不是试图把它实现成为一种和 AIO 和 epoll
-并列的通用异步IO 后端。另外，在初期最大程度保留 SPDK 的基础设施，最小侵入的实现可能是比较稳妥的途径。&lt;/p&gt;
+并列的通用异步后端。另外，在初期最大程度保留 SPDK 的基础设施，最小侵入的实现可能是比较稳妥的途径。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect2&quot;&gt;
