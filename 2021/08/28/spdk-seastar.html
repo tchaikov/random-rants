@@ -1424,7 +1424,9 @@
                     在阅读 Seastar reactor 实现的时候，可能会注意到，
                     <code>reactor_backend_selector</code> 就是用来根据
                     <code>--reactor-backend</code> 命令行选项来选择使用的
-                    reactor 后端的。请注意，虽然 SPDK 能够
+                    reactor
+                    后端的。这种类似插件的框架允许我们可以实现一个新的后端。虽然我们能够在
+                    SPDK 的框架下
                   </p>
                 </div>
                 <div class="ulist">
@@ -1448,10 +1450,10 @@
                     <code>spdk::ThreadGroup</code> 的
                     poller。牵涉面小，而且工作量也少些。对于两者的集成这可能是更稳妥的第一步。也许这也是
                     SPDK 支持在 Seastar
-                    中更合适的定位&#8212;&#8203;即提供块设备的访问，而非文件系统的访问。这两者有共性，但是也有一些不一样的地方。比如说文件系统可以用
+                    中更合适的定位&#8212;&#8203;即提供块设备的访问，而非作为基础设施提供文件系统的访问。这两者有共性，但是也有一些不一样的地方。比如说文件系统可以用
                     <code>open_directory()</code> 和
                     <code>list_directory()</code>
-                    来枚举一个目录下的所有文件，但是块设备的枚举方式就各有各的不同。SPDK
+                    来枚举一个目录下的所有文件，更进一步，块设备的枚举方式根据块设备的类型各自不同。SPDK
                     提供 <code>spdk_nvme_probe()</code> 来列举所有的 NVMe
                     设备，用 <code>spdk_bdev_first()</code> 和
                     <code>spdk_bdev_next()</code>
@@ -1549,7 +1551,8 @@
                     <code>bdev::start()</code> 和
                     <code>bdev::stop()</code>，把根据第一个参数初始化完成好的
                     <code>bdev</code> 实例传给自己的另外一个参数，由后者使用
-                    <code>bdev</code>。
+                    <code>bdev</code>。这里以 bdev 模块为例，但是 Seastar 和
+                    SPDK 的集成并不会局限于 bdev 模块。
                   </p>
                 </div>
               </div>
