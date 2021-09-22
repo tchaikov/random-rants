@@ -620,10 +620,11 @@
                 <p>
                   对于 SPDK 来说，<code>spdk_thread</code>
                   是一个工作协程，用来承载不同的业务。很多时候被用来并序列化并执行各种操作，它属于一个特定的
-                  core。不过它可以根据调度算法动态地迁移到另一个 core。除去
-                  <code>spdk_thread</code> 作为调度对象的设计，它和
+                  core。不过它可以根据调度算法动态地迁移到另一个
+                  core。作为运行在所有 core 上的调度器，这个服务可以在
                   <code>seastar::sharded&lt;&gt;</code>
-                  很像。不过后者只能提供一个实现的框架，具体还有很多功能需要基于这个框架实现:
+                  的框架下实现。不过这个调度器和 Seastar
+                  的原生调度算法还有一些区别:
                 </p>
               </div>
               <div class="ulist">
@@ -676,8 +677,8 @@
                       <code>spdk_get_thread()</code> 返回的线程中的。参见
                       <code>spdk_poller_register()</code> 和
                       <code>spdk_poller_unregister()</code>
-                      的实现。如果继续沿着刚才的思路往前，我们可以把
-                      一组`spdk_thread`保存在，比如说，<code
+                      的实现。如果继续沿着刚才的思路往前，我们可以把 一组
+                      <code>spdk_thread</code> 保存在，比如说，<code
                         >seastar::sharded&lt;spdk::ThreadGroup&gt;</code
                       >
                       里面， 让 <code>spdk::ThreadGroup</code> 来为它管理的
@@ -1490,7 +1491,7 @@
                     <code>spdk::ThreadGroup</code> 的
                     poller。牵涉面小，而且工作量也少些。对于两者的集成这可能是更稳妥的第一步。也许这也是
                     SPDK 支持在 Seastar
-                    中更合适的定位&#8212;&#8203;即提供块设备的访问，而非作为基础设施提供文件系统的访问。这两者有共性，但是也有一些不一样的地方。比如说文件系统可以用
+                    中更合适的定位&#8212;&#8203;即提供块设备的访问，而非作为通用的基础设施提供文件系统的访问。这两者有共性，但是也有一些不一样的地方。比如说文件系统可以用
                     <code>open_directory()</code> 和
                     <code>list_directory()</code>
                     来枚举一个目录下的所有文件，更进一步，块设备的枚举方式根据块设备的类型各自不同。SPDK
@@ -1520,41 +1521,38 @@
                       class="rouge highlight"
                     ><code data-lang="c++"><span class="k">namespace</span> <span class="n">bpo</span> <span class="o">=</span> <span class="n">boost</span><span class="o">::</span><span class="n">program_options</span><span class="p">;</span>
 
-<span class="n">seastar</span><span class="o">::</span><span class="n">logger</span> <span class="nf">log</span><span class="p">(</span><span class="s">"hello"</span><span class="p">);</span>
+<span class="n">seastar</span><span class="o">::</span><span class="n">logger</span> <span class="nf">spdk_logger</span><span class="p">(</span><span class="s">"spdk_demo"</span><span class="p">);</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">ac</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">av</span><span class="p">)</span> <span class="p">{</span>
-  <span class="n">seastar</span><span class="o">::</span><span class="n">app_template</span> <span class="n">seastar_app</span><span class="p">;</span>
-  <span class="n">seastar_app</span><span class="p">.</span><span class="n">add_positional_options</span><span class="p">({</span>
-    <span class="p">{</span> <span class="s">"bdev"</span><span class="p">,</span> <span class="n">bpo</span><span class="o">::</span><span class="n">value</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(),</span> <span class="s">"bdev"</span><span class="p">,</span> <span class="mi">1</span> <span class="p">},</span>
-  <span class="p">});</span>
-  <span class="n">spdk</span><span class="o">::</span><span class="n">app</span> <span class="n">spdk_app</span><span class="p">;</span>
-  <span class="k">return</span> <span class="n">seastar_app</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">av</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-     <span class="k">auto</span> <span class="n">bdev_name</span> <span class="o">=</span> <span class="n">seastar_app</span><span class="p">.</span><span class="n">configuration</span><span class="p">()[</span><span class="s">"bdev"</span><span class="p">].</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">();</span>
-     <span class="k">return</span> <span class="n">spdk_app</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">av</span><span class="p">,</span> <span class="p">[</span><span class="n">bdev_name</span><span class="p">]</span> <span class="p">{</span>
-       <span class="k">return</span> <span class="n">spdk</span><span class="o">::</span><span class="n">do_with_bdev</span><span class="p">(</span><span class="n">bdev_name</span><span class="p">,</span> <span class="p">[](</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">bdev</span><span class="p">)</span> <span class="p">{</span>
-         <span class="kt">uint32_t</span> <span class="n">block_size</span> <span class="o">=</span> <span class="n">dev</span><span class="p">.</span><span class="n">block_size</span><span class="p">();</span>
-         <span class="kt">size_t</span> <span class="n">buf_align</span> <span class="o">=</span> <span class="n">dev</span><span class="p">.</span><span class="n">buf_align</span><span class="p">();</span>
-         <span class="kt">char</span> <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">spdk</span><span class="o">::</span><span class="n">dma_zmalloc</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">buf_align</span><span class="p">);</span>
-         <span class="k">return</span> <span class="n">bdev</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buff</span><span class="p">,</span> <span class="n">block_size</span><span class="p">).</span><span class="n">then</span><span class="p">([</span><span class="o">=</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bdev</span><span class="p">]</span> <span class="p">{</span>
-           <span class="n">memset</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mh">0xff</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span>
-           <span class="k">return</span> <span class="n">bdev</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span>
-         <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="n">buf</span><span class="p">,</span> <span class="n">block_size</span><span class="p">]</span> <span class="p">{</span>
-           <span class="kt">char</span> <span class="o">*</span><span class="n">good</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">char</span><span class="p">[</span><span class="n">block_size</span><span class="p">];</span>
-           <span class="n">memset</span><span class="p">(</span><span class="n">good</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span>
-           <span class="k">if</span> <span class="p">(</span><span class="kt">int</span> <span class="n">where</span> <span class="o">=</span> <span class="n">memcmp</span><span class="p">(</span><span class="n">good</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">block_size</span><span class="p">);</span> <span class="n">where</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-             <span class="n">log</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"buf mismatches at {}!"</span><span class="p">,</span> <span class="n">where</span><span class="p">);</span>
-           <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-             <span class="n">log</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"buf matches!"</span><span class="p">);</span>
-           <span class="p">}</span>
-           <span class="k">delete</span> <span class="n">good</span><span class="p">;</span>
-         <span class="p">}).</span><span class="n">finally</span><span class="p">([</span><span class="o">=</span><span class="p">]</span> <span class="p">{</span>
-           <span class="n">spdk</span><span class="o">::</span><span class="n">dma_free</span><span class="p">(</span><span class="n">buff</span><span class="p">);</span>
-         <span class="p">}).</span><span class="n">handle_exception_type</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="n">io_exception</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
-           <span class="n">log</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"error while writing/reading {}"</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
-         <span class="p">});</span>
-       <span class="p">});</span>
-     <span class="p">});</span>
-  <span class="p">});</span>
+    <span class="n">seastar</span><span class="o">::</span><span class="n">app_template</span> <span class="n">seastar_app</span><span class="p">;</span>
+    <span class="n">seastar_app</span><span class="p">.</span><span class="n">add_positional_options</span><span class="p">({</span>
+        <span class="p">{</span> <span class="s">"bdev"</span><span class="p">,</span> <span class="n">bpo</span><span class="o">::</span><span class="n">value</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">(),</span> <span class="s">"bdev"</span><span class="p">,</span> <span class="mi">1</span> <span class="p">},</span>
+    <span class="p">});</span>
+    <span class="n">spdk</span><span class="o">::</span><span class="n">app</span> <span class="n">spdk_app</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">seastar_app</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">av</span><span class="p">,</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+        <span class="k">auto</span> <span class="n">bdev_name</span> <span class="o">=</span> <span class="n">seastar_app</span><span class="p">.</span><span class="n">configuration</span><span class="p">()[</span><span class="s">"bdev"</span><span class="p">].</span><span class="n">as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="p">();</span>
+        <span class="k">return</span> <span class="n">spdk_app</span><span class="p">.</span><span class="n">run</span><span class="p">(</span><span class="n">seastar_app</span><span class="p">.</span><span class="n">configuration</span><span class="p">(),</span> <span class="p">[</span><span class="n">bdev_name</span><span class="p">]</span> <span class="p">{</span>
+            <span class="k">auto</span> <span class="n">dev</span> <span class="o">=</span> <span class="n">spdk</span><span class="o">::</span><span class="n">block_device</span><span class="o">::</span><span class="n">open</span><span class="p">(</span><span class="n">bdev_name</span><span class="p">);</span>
+            <span class="kt">uint32_t</span> <span class="n">block_size</span> <span class="o">=</span> <span class="n">dev</span><span class="p">.</span><span class="n">block_size</span><span class="p">();</span>
+            <span class="kt">size_t</span> <span class="n">buf_align</span> <span class="o">=</span> <span class="n">dev</span><span class="p">.</span><span class="n">memory_dma_alignment</span><span class="p">();</span>
+            <span class="k">auto</span> <span class="n">buf</span> <span class="o">=</span> <span class="n">spdk</span><span class="o">::</span><span class="n">dma_zmalloc</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">buf_align</span><span class="p">);</span>
+            <span class="k">return</span> <span class="n">dev</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buf</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">buf</span><span class="p">.</span><span class="n">size</span><span class="p">()).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
+                <span class="n">memset</span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">get_write</span><span class="p">(),</span> <span class="mh">0xff</span><span class="p">,</span> <span class="n">buf</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+                <span class="k">return</span> <span class="n">dev</span><span class="p">.</span><span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buf</span><span class="p">.</span><span class="n">get_write</span><span class="p">(),</span> <span class="n">buf</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+            <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="n">buf</span><span class="p">]</span> <span class="p">{</span>
+                <span class="n">temporary_buffer</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">good</span><span class="p">{</span><span class="n">buf</span><span class="p">.</span><span class="n">size</span><span class="p">()};</span>
+                <span class="n">memset</span><span class="p">(</span><span class="n">good</span><span class="p">.</span><span class="n">get_write</span><span class="p">(),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">good</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+                <span class="k">if</span> <span class="p">(</span><span class="kt">int</span> <span class="n">where</span> <span class="o">=</span> <span class="n">memcmp</span><span class="p">(</span><span class="n">good</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">buf</span><span class="p">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">buf</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+                    <span class="n">where</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">spdk_logger</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"buf mismatches at {}!"</span><span class="p">,</span> <span class="n">where</span><span class="p">);</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="n">spdk_logger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">"buf matches!"</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">}).</span><span class="n">finally</span><span class="p">([</span><span class="n">buf</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">buf</span><span class="p">)]</span> <span class="p">{</span> <span class="p">});</span>
+        <span class="p">}).</span><span class="n">handle_exception_type</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">system_error</span><span class="o">&amp;</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">spdk_logger</span><span class="p">.</span><span class="n">error</span><span class="p">(</span><span class="s">"error while writing/reading {}"</span><span class="p">,</span> <span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">());</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
 <span class="p">}</span></code></pre>
                   </div>
                 </div>
@@ -1568,6 +1566,9 @@
                   <ol class="arabic">
                     <li>
                       <p>调用 <code>rte_eal_init()</code></p>
+                    </li>
+                    <li>
+                      <p>启动 SPDK 的工作协程调度器</p>
                     </li>
                     <li>
                       <p>启动 RPC 服务</p>
@@ -1591,7 +1592,7 @@
                     <code>bdev::start()</code> 和
                     <code>bdev::stop()</code>，把根据第一个参数初始化完成好的
                     <code>bdev</code> 实例传给自己的另外一个参数，由后者使用
-                    <code>bdev</code>。这里以 bdev 模块为例，将来 Seastar 和
+                    <code>bdev</code>。虽然这里以 bdev 模块为例，将来 Seastar 和
                     SPDK 的集成并不会局限于 bdev 模块。
                   </p>
                 </div>
