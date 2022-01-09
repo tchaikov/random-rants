@@ -1,0 +1,563 @@
+= C++20 的 Coroutines
+:page-tags: [c++]
+:date: 2021-01-09 11:07:09 +0800
+:pp: {plus}{plus}
+
+关于 C++20 coroutines 的文章网上已经有不少了，这篇文章目的是笔者自己的话写下来备忘。
+
+== 说在前面
+
+现在的 coroutines 虽然已经进入了  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/n4775.pdf[C{pp}20 标准]，
+但是标准仅仅定义了一套 API。这套 API 确保 C{pp} 编译器在处理 coroutine 调用的时候，能
+生成正确的代码，也确保 coroutines 库的实现者能有规矩可循。同时，让库的使用者能有
+一个相对比较稳定的 API 可用。但是主流的 C{pp} 实现还没有包含对 coroutines 的支持。
+换句话说，如果开发者希望用标准文档里面的 coroutines 实现下面的功能：
+
+[source,c++]
+----
+co_await sleep(std::chrono::seconds{1});
+----
+
+那么 `sleep()` 仍然需要自己实现。换言之，开发者或者需要自己实现很多基础设施，或借助第三方的 coroutines 库。
+
+== C++20 coroutines 中的数据
+
+coroutine 也是函数，既然是函数就需要回答几个关键的问题
+
+交给谁:: 即返回值应该保存到哪里？
+怎么做:: 这个返回值是怎么得到的。这个信息除了一个函数体之外，可能还包含一些参数和局部变量的状态。
+什么时候做:: 如果是异步执行的话，这个“异步调用”应该在什么时候进行。
+在哪里做:: 如果是异步执行的话，这个“异步调用”应该在哪里进行。
+下一步去哪儿:: 返回值得到了，也交给了调用方。那么接下来程序应该做什么呢？
+什么时候走下一步:: 什么时候继续走下一步?
+
+如果是同步调用的话，AMD64 ABI 定义了函数调用的规范。一般来说我们不用担心同步函数调用的实现。
+但对于异步调用来说，调用函数和被调用的函数可能不会共享一个调用栈，也没有办法在被调用方执行的时候，
+从它的栈上找到返回地址和上下文。所以就得另辟蹊径，自己保存这些信息。
+
+我们先试着实现一个名为 `dump()` 的函数。从网络上读取数据，把它写进文件，然后返回写入的字节数。
+通过这个比较具体的例子来理解 C{pp}20 coroutine 的各个方面。
+
+
+[source,cpp]
+----
+class App {
+ public:
+  Task dump(size_t nbytes)
+  {
+    auto read_task = socket.read(nbytes);
+    auto buffer = co_await read_task;
+    co_return file.write(std::move(buffer));
+  }
+  Socket socket;
+  File file;
+};
+----
+
+代码里面出现了两个新的操作符：`co_await` 和 `co_return`。 如果把这里的 `co_await` 去掉，
+再把 `co_return` 换成 `return`，就成了普通的同步应用了。但是编译器看到了 `co_await` ，它应该会做什么呢？
+我们想象一下，`socket.read()` 应该有两种可能性：
+
+- socket 的读缓存里有现成的数据，直接返回缓存里的数据。
+- socket 已经空了，所以需要等网络层把数据读出来。
+
+如果我们的文件系统有写缓冲的话，`file.write()` 的情况是类似的。
+这里先看看 `socket.read()`。直接返回的情况比较简单，如果没有数据的话，
+该怎么处理呢？我们先看看这个问题的一些需求和约束，把前面说的几个“关键问题”具体化一下：
+
+. 被调用者在完成时，能返回调用方接着继续执行。
+. 如果 `socket.read()` 是在另外一个上下文执行的话，需要把 `nbytes` 以值拷贝的方式保存下来，供其引用。
+. `socket.read()` 的返回值需要能在运行时表示同步和异步这两种可能性。
+. 被调用者在完成时，能设置返回的 `buffer`。让这个 `buffer` 能被调用方访问。
+. 如果 `socket.read()` 在执行的时候抛出异常，需要让调用方能有机会处理。
+
+为了满足这些需求，C{pp}20 围绕协程设计了一系列概念：
+
+promise object::
+这里保存着返回值的状态。为什么不直接说“返回值”呢？因为对于调用方来说，它在调用
+coroutine 的时候会立即得到一个状态，它可能是“期货”也可能是“现货”。如果是前者，
+那么就需要等待之后才能知道到底它代表的值是多少。这里的 promise object 是调用方
+“可期”的一个状态。另外，被调用方也可能在求值的过程中出了些意外，所以这个状态
+还需要能表达“值”之外的语义，比如能保存当前的 exception。可以说它是调用者和被调用者
+两方联系的纽带。
+coroutine handle::
+编译器为每个正在执行的协程都维护着一个状态机。
+状态机的每个状态对应着可能进行异步调用的位置，确保它知道 coroutine
+返回的时候该在哪里继续。根据这个信息，它就能知道自己应该保存哪些参数和局部变量了。
+coroutine handle 可以用来操作这个状态机。我们可以销毁它，或者推进状态机的状态转移。
+coroutine state::
+保存一个协程的状态。和前面两类对象不同，我们无法直接操作 coroutine state。
+它保存着下面的信息：
+* promise object.
+* 协程的参数.
+* 状态机.
+* stack frame. 这里的 stack frame 和平时我们说的 stack frame 别无二致。包含了函数继续执行
+  所需要访问的局部变量和调用者传入的参数参数等等。如果读者对 C{pp} 的 lambda 很熟悉，
+  可以把它看作 capture list 里面的变量。在这个例子里面，coroutine stack frame
+  保存着 `nbytes`。因为函数恢复执行时，它的 `$rsp` 和 `$rbp` 中间的栈已经面目全非，
+  毕竟当前线程已经从原来的协程切换了出去，之后可能为多个协程服务，
+  如果每次切换协程都保存栈上的数据那么栈上的空间很可能会不够用。
+
+让我们试着用这些概念来理解上面的 `dump()` 函数。首先，因为 `dump()` 里面出现了 `co_await` 和 `co_return` 的关键字，所以它是一个协程。当程序运行到 `dump()` 的时候，
+程序会根据这个协程度身定制它的"coroutine state"，把参数保存在里面，并把它放在堆上。接着它会
+. 面这行代码：
+
+[source,cpp]
+----
+auto read_task = socket.read(nbytes);
+----
+
+`socket.read(nbytes)` 返回的时候，不论当时 socket 能提供的是“期货”还是“现货”，
+调用方都马上得到了 `socket.read()` 返回的 promise object：
+
+[ditaa]
+----
+
+   /------------------\
+   | coroutine state  |
+   +------------------+
+   | suspension point |
+   +------------------+ get_return_object() +-----------+
+   |  promise         +-------------------->| read_task |
+   +------------------+                     +-----------+
+   | stack frame      |
+   +------------------+
+
+----
+
+正常情况下，`socket.read(nbytes)` 迟早都会都会读到我们想要读的 `nbytes` 数据，
+那个时候 `socket.read()` 就会调用 `co_return` 返回：
+
+[source,cpp]
+----
+class Socket {
+ public:
+  Task read(size_t nbytes) {
+    if (m_buffer.readable)
+  }
+  void await_read(size_t nbytes, void* coro) {
+    if (m_buffer.capacity() < nbytes) {
+      m_buffer.resize(nbytes);
+    }
+    unsigned len = nbytes - m_buffer.size();
+    io_uring->read(fd, m_buffer.unused(), len, coro);
+  }
+  Buffer m_buffer;
+  int fd;
+}
+----
+
+`Task` 的实现可能是：
+
+[source,cpp]
+----
+class Awaiter;
+
+class Promise {
+ public:
+  Promise(App& app, size_t nbytes)
+   : app{app},
+     nbytes{nbytes}
+  {}
+  Task get_return_object() {
+    return {coroutine::from_promise(*this)};
+  }
+  void return_value(Buffer&& buffer) {
+    m_result.emplace(std::move(buffer));
+  }
+  std::suspend_always initial_suspend() noexcept { return {}; }
+  Awaiter final_suspend() noexcept { return {}; }
+  void unhandled_exception() {}
+
+  std::optional<T> m_result;
+
+  using CoroutineHandle = std::coroutine_handle<Promise>;
+};
+
+class Task {
+ public:
+  using promise_type = Promise;
+  explicit Task(Promise::CoroutineHandle coro) noexcept
+   : m_coro(coro)
+  {}
+ private:
+  Promise::CoroutineHandle m_coro;
+}
+----
+
+这里有很多细节，而且也不太完整，不过我们先关注数据的传递，之后再细究流程。
+看下面两个函数：
+
+- `Promise::get_return_object()`
+- `Promise::return_value(Buffer&&)`
+
+编译器会把 `socket.read()` 里面的
+[source,cpp]
+----
+co_return std::move(buffer);
+----
+翻译成
+[source,cpp]
+----
+p.return_value(std::move(buffer))
+----
+
+这样返回值就传递到了 promise 这里。
+
+[ditaa]
+----
+
+                                       /------------------\
+                                       | coroutine state  |
+ /---------------\                     +------------------+
+ | socket.read() |                     | suspension point |
+ +---------------+ p.return_value(buf) +------------------+      +-----------+
+ | co_return buf;+-------------------->|  promise         +----->| read_task |
+ +---------------+                     +------------------+      +-----------+
+                                       | stack frame      |
+                                       +------------------+
+----
+
+我们回到 `dump()`，这里面有个新的操作符 `co_await`:
+
+[source,cpp]
+----
+auto buffer = co_await read_task;
+----
+
+正如它的字面意思，`co_await` 暂停当前的协程，等待 `co_await` 操作数表达式完成。
+编译器按照一系列规则，试图把操作数转换成一个 awaitable 类型对象。那么我们的 `read_task`
+
+不过接下来接力棒怎么传下去，C{pp} 标准并没有具体规定，就看程序员各显神通了。
+我们这里有个比较简单的实现：
+
+. `promise_type` 里面加入了一个 `std::optional<Buffer>` 的成员变量。
+. 在构造 `Task` 的时候把 coroutine state 的句柄传给它，让它能通过 `coroutine_handle` 找到对应的
+  `promise`。
+. 为 `Task` 加入一个成员方法 `value()`，让调用者能通过它获取 `Socket::read()` 在
+  promise 里设置的值。
+
+[ditaa]
+----
+
+                                /------------------\
+                                | coroutine state  |
+   /---------------\            +------------------+
+   | socket.read() | p.return_  | suspension point |
+   +---------------+ value(buf) +------------------+    +-----------+ co_await +-----+
+   | co_return buf;+----------->|  promise         +--->| read_task +--------->| buf |
+   +---------------+            +------------------+    +-----------+          +-----+
+                                | stack frame      |
+                                +------------------+
+----
+
+需要注意的是，因为 coroutines 这个特性还比较新，GCC 需要传入 `-fcoroutines` 选项才能启用，可以用下面的命令编译 coroutines 程序：
+
+[source,shell]
+----
+$ g++ -fcoroutines -std=c++20
+----
+
+刚才囫囵吞枣，从数据流的角度出发了解了 C{pp}20 coroutines 大致的思路。但是充其量只回答了前面提出的几个关键问题中“交给谁”或者“怎么交”的问题。
+下面再以时间为轴，看看 coroutines 执行的具体步骤。试着回答余下的几个问题。
+
+=== Awaiter
+
+前面的代码里面出现了一个新的操作符，叫做 `co_return` 。它是 C{pp}20 为
+coroutines 引进的三个关键字之一，另外两个是 `co_await` 和 `co_yield`，
+我们之后会介绍它们。编译器只要发现一个函数里面使用了这三个操作符中的任意一个，
+就会把这整个函数当成 coroutine 处理。所以说，编译器并不是看到这些操作符才启动
+coroutine 相关的操作，它从函数一开始就为它创建对应的 coroutine state。
+而函数体里面每个 `co_await`、`co_yield` 或者 `co_return` 调用都会触动编译器
+敏感的神经，让它开始一连串动作，或者把当前执行暂停，等待出现转机，
+或者立即向前推进状态机的状态。
+
+`co_return` 可以看作 coroutine 版的 `return`。它俩其实很像，都用来：
+
+. 结束一个函数
+. 给调用方返回一个最终的结果。当然也可以什么都不返回。
+
+但是如果碰到了 coroutine 版的 `return`，编译器还会调用 `promise` 的
+``return_value()` 函数。
+
+如下图所示：
+
+[ditaa]
+----
+       /---------------\
+       |  dump() start |
+       \-------+-------/
+               |
+               V
+ /-------------------------------+
+ | new "coroutine state"         |
+ |  o new promise_type           |
+ |  o store the suspension point |
+ |  o store params and local vars|
+ | cEEE                          |
+ +-------------+-----------------/
+               |
+               |
+               V
+ /--------------------------------+           +-----------------+
+ |  promise.get_return_object()   +---------->| keep the result |
+ | cEEE                           |           | in "read_task"  |
+ +-------------+------------------/           | {io}            |
+               |                              +--------+--------+
+               |                                       :
+               V                                       |
+  /---------------------------\                        |
+  | promise.initial_suspend() +----------\             |
+  | cEEE                      |          |             |
+  +---------------------------+          |             |
+                                         V             |
+                               /--------------------+  |
+                               | co_await on result |  |
+                               | cEEE               |  |
+                               +---------+----------/  |
+                                         |             |
+                                         |             |
+               /-------------------------/             |
+               |                                       |
+               |                                       |
+               V                                       |
+       +---------------+                               |
+       | socket.read() |                               |
+       +-------+-------+                               |
+               |                                       |
+               V                                       |
+    +-----------------------+                          |
+    | co_await read_buffer; |                          |
+    +----------+------------+                          |
+               |                                       |
+               V                                       |
+  /------------------------------+                     |
+  | promise.return_value(buffer) |                     |
+  | cEEE                         |                     |
+  +------------+-----------------/                     |
+               |                                       |
+               V                                       |
+   +-------------------------+                         |
+   | promise.final_suspend() +-----------\             |
+   | cEEE                    |           |             |
+   \-------------------------/           |             |
+                                         V             |
+                               /-------------------+   |
+                               | co_wait on result |   |
+                               | cEEE              |   |
+                               +---------+---------/   |
+                                         |             |
+               /-------------------------/             |
+               |  /------------------------------------/
+               |  :
+               V  V
+  /--------------------------+
+  | delete "coroutine state" |
+  | cEEE                     |
+  +------------+-------------/
+               |
+               V
+       /----------------+
+       | back to main() |
+       | cEEE           |
+       +----------------/
+----
+
+图中灰色的步骤是编译器根据 coroutine 规范生成的调用，
+白色的步骤是我们显式调用的。因为 `promise_type::initial_suspend()`
+和 `promise_type::final_suspend()` 返回的都是 `std::suspend_never` 。
+这是编译器提供的一个 awaitable 实现，它表示这两个操作都立即完成，
+不需要让调用者等待。图中的虚线即表示没有等待。
+
+[source,cpp]
+----
+class Awaiter {
+ public:
+  bool await_ready() noexcept {
+    return socket->readable().size() >= nbytes;
+  }
+  void await_suspend(std::coroutine_handle<Promise> coro) noexcept {
+    socket->await_read(nbytes, coro.address());
+  }
+  Buffer await_resume() {
+    assert(socket->readable.size() >= nbytes);
+    return socket->readable.claim(nbytes);
+  }
+  const size_t nbytes;
+  const Socket* socket;
+};
+----
+
+[source,cpp]
+----
+class IOUring {
+public:
+  int read(int fd, const void* buf, unsigned nbytes, void* data) {
+    auto* sqe = io_uring_get_sqe(&ring);
+    io_uring_prep_read(sqe, fd, buf, nbytes, 0);
+    io_uring_sqe_set_data(sqe, data);
+    // submit in batch in poll()
+  }
+
+  int poll() {
+    io_uring_submit(&ring);
+
+    io_uring_cqe* cqes[BATCH_SIZE];
+    unsigned nr = io_uring_peek_batch_cqe(&ring, cqes, BATCH_SIZE);
+    if (nr == 0) {
+      return 0;
+    }
+    for (auto* cqe = cqes; cqe != cqes + nr; cqe++) {
+      void* addr = io_uring_cqe_get_data(cqe);
+      auto coro = Promise::CoroutineHandle::from_address(addr);
+      coro.resume();
+    };
+    io_uring_cq_advance(&ring, nr);
+    return nr;
+  }
+
+  io_uring ring;
+};
+----
+
+
+如果我们希望让 `sleep()` 真的 sleep 一会儿。并且让它的返回值是它 sleep 的时间长度呢？
+
+[source,cpp]
+----
+#if __has_include(<coroutine>)
+#include <coroutine>
+#else
+#include <experimental/coroutine>
+#endif
+
+struct Sleepy {
+  struct promise_type {
+    Sleepy get_return_object() {
+      return {};
+    }
+    std::suspend_always initial_suspend() {
+      return {};
+    }
+    std::suspend_never final_suspend() noexcept {
+      return {};
+    }
+    void return_void() {}
+    void unhandled_exception() {}
+  };
+};
+
+Sleepless sleep() {
+  // sleeping
+  co_return;
+}
+
+int main() {
+  auto sleepless = sleep();
+}
+----
+
+[ditaa]
+----
+          /---------\
+          | sleep() |
+          \----+----/
+               |
+               V
+ /------------------------------+
+ | new "coroutine state"        |
+ |  o new  promise_type         |
+ |  o store the suspension point|
+ |  o store local variables     |
+ | cEEE                         |
+ +-------------+----------------/
+               |
+               V
+ /--------------------------------+
+ |  promise.get_return_object()   |
+ | keep the result as a local var |
+ | cEEE                           |
+ +-------------+------------------/
+               |
+               V
+  /---------------------------\
+  | promise.initial_suspend() +-----=----\
+  | cEEE                      |          :
+  +---------------------------+          |
+                                         V
+                               /--------------------+
+                               | co_await on result |
+                               | cEEE               |
+                               +---------+----------/
+                                         :
+                                         |
+               /-------------------=-----/
+               :
+               V
+               |
+               V
+        +-------------+
+        | // sleeping |
+        +------+------+
+               |
+               V
+         +-----------+
+         | co_return |
+         +-----+-----+
+               |
+               V
+    /-----------------------+
+    | promise.return_void() |
+    | cEEE                  |
+    +----------+------------/
+               |
+               V
+   +-------------------------+
+   | promise.final_suspend() +-----------\
+   | cEEE                    |           |
+   \-------------------------/           |
+                                         V
+                               /-------------------+
+                               | co_wait on result |
+                               | cEEE              |
+                               +---------+---------/
+                                         :
+                                         |
+               /-------------------=-----/
+               :
+               V
+  /--------------------------+
+  | delete "coroutine state" |
+  | cEEE                     |
+  +------------+-------------/
+               |
+               V
+       /----------------+
+       | back to main() |
+       | cEEE           |
+       +----------------/
+----
+
+用 Python 代码来说就是：
+
+[source,python]
+----
+def my_coroutine(*args) -> ReturnType:
+  coroutine_state = CoroutineState()
+  # including the local variables and suspension point
+  # just like the continuation in the context of call/cc
+  coroutine_state.frame = frame()
+  coroutine_state.promise = Promise()
+  p = coroutine_state.promise
+  return_object = p.get_return_object()
+  try:
+    await promise.initial_suspend()
+    # do a lot of things
+  except:
+    p.unhandled_exception()
+  finally:
+    await p.final_suspend()
+  del coroutine_state.promise
+  del coroutine_state.frame
+  del coroutine_state
+----
