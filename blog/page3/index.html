@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -86,17 +77,23 @@
     <meta property="twitter:title" content="some random rants" />
     <script type="application/ld+json">
       {
-        "headline": "some random rants",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/blog/page3/",
         "@type": "WebPage",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "headline": "some random rants",
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -171,6 +168,30 @@
         </div>
 
         <div class="posts">
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="seastar::future 中的 ownership"
+                    class="post-link"
+                    href="/2020/10/16/ownership-in-seastar.html"
+                  >
+                    seastar::future 中的 ownership
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">October 16, 2020</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                seastar::future 在 get() 之后就像被掏空了一样。
+              </div>
+            </span>
+          </div>
+
           <div class="post-teaser">
             <span>
               <header>
@@ -266,28 +287,6 @@
               <div class="excerpt">
                 乱序和并发的问题无处不在，Ceph 里面也是这样。
               </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="博客维护指南"
-                    class="post-link"
-                    href="/2020/09/05/my-blog.html"
-                  >
-                    博客维护指南
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">September 05, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">工具链</div>
             </span>
           </div>
         </div>

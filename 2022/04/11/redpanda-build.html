@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.3.10
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5"
+    />
+
+    <!-- Theme Mode-->
+
+    <script>
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
+    </script>
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- KaTeX 0.13.9 -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Mermaid 8.9.2 -->
+
+    <!-- Simple Jekyll Search 1.9.1 -->
+    <script
+      src="/assets/js/vendor/simple-jekyll-search.min.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+
+    <meta property="og:type" content="website" />
+
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+    <title>redpanda 编译记录 | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="redpanda 编译记录" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta
+      name="description"
+      content="在恶劣的网络环境下编译 redpanda 也得折腾。"
+    />
+    <meta
+      property="og:description"
+      content="在恶劣的网络环境下编译 redpanda 也得折腾。"
+    />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html"
+    />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2022-04-11T00:00:00+00:00"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta property="twitter:title" content="redpanda 编译记录" />
+    <script type="application/ld+json">
+      {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "在恶劣的网络环境下编译 redpanda 也得折腾。",
+        "url": "https://blog.k3fu.xyz/2022/04/11/redpanda-build.html",
+        "@type": "BlogPosting",
+        "headline": "redpanda 编译记录",
+        "dateModified": "2022-04-11T00:00:00+00:00",
+        "datePublished": "2022-04-11T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2022/04/11/redpanda-build.html"
+        },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="redpanda 编译记录" />
+    <meta
+      name="twitter:description"
+      content="在恶劣的网络环境下编译 redpanda 也得折腾。看到 redpanda 也开始用 C&#43;&#43;20 的协程，这引起了我的好奇心。bleeding edge$ git clone git@github.com:redpanda-data/redpanda.gitredpanda 的 github 页面..."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+    <meta name="twitter:image:alt" content="redpanda 编译记录" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <a class="site-title" aria-label="some random rants" href="/">
+          some random rants
+        </a>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fas fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fas fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="redpanda 编译记录 "
+              aria-label="redpanda 编译记录"
+              onclick="themeToggle()"
+            ></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1
+              id="redpanda+%E7%BC%96%E8%AF%91%E8%AE%B0%E5%BD%95"
+              class="title"
+            >
+              redpanda 编译记录
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">April 11, 2022</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>在恶劣的网络环境下编译 redpanda 也得折腾。</p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  看到 redpanda 也开始用 C&#43;&#43;20
+                  的协程，这引起了我的好奇心。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="bleeding-edge">bleeding edge</h2>
+            <div class="sectionbody">
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="shell"><span class="nv">$ </span>git clone git@github.com:redpanda-data/redpanda.git</code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  redpanda 的
+                  <a
+                    href="https://github.com/redpanda-data/redpanda#build-manually"
+                    >github 页面</a
+                  >
+                  上有介绍，但是既然都 "live on edge" 了，那么就必须用最新的
+                  clang 啊。debian sid 打包了 clang-15，所以需要用下面的 patch：
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="diff"><span class="gh">diff --git a/install-dependencies.sh b/install-dependencies.sh
+index c6370e4d3..ad328d1f9 100755
+</span><span class="gd">--- a/install-dependencies.sh
+</span><span class="gi">+++ b/install-dependencies.sh
+</span><span class="p">@@ -26,14 +26,14 @@</span> fi
+
+ deb_deps=(
+   ccache
+<span class="gd">-  clang
+</span><span class="gi">+  clang-15
+</span>   curl
+   git
+   libsnappy-dev
+   libxxhash-dev
+   libzstd-dev
+<span class="gd">-  llvm
+-  lld
+</span><span class="gi">+  llvm-15
++  lld-15
+</span>   pkg-config
+   procps
+   python3-jinja2</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="github">GitHub</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  为了更快地下载 github 上的 repo，如果能找到可以用的 GitHub
+                  镜像的话，就可以修改 <code>$HOME/.gitconfig</code>，让
+                  <code>git</code> 重写 URL 里面的路径，用镜像替代 github。
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="ini"><span class="nn">[url "https://a.mirror.or.proxy/"]</span>
+  <span class="py">insteadOf</span> <span class="p">=</span> <span class="s">https://github.com/</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果没有镜像可用，那么用自己架设的 SOCKS5 和 HTTP
+                  代理也能抵挡一下，各家工具支持的代理设置方式不同。archlinux
+                  甚至有
+                  <a href="https://wiki.archlinux.org/title/Proxy_server"
+                    >专门的文档</a
+                  >
+                  说明如何设置代理。这里只记录用到的：
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="shell"><span class="c"># for curl and python (urllib3)</span>
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">all_proxy</span><span class="o">=</span>socks5://127.0.0.1:1080
+<span class="c"># for cipd which respects http_proxy and https_proxy</span>
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">http_proxy</span><span class="o">=</span>http://127.0.0.1:1081
+<span class="nv">$ </span><span class="nb">export </span><span class="nv">https_proxy</span><span class="o">=</span>http://127.0.0.1:1081</code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="v8">V8</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  因为 redpanda 使用 Chrome/ 的 V8 引擎来
+                  <a href="https://redpanda.com/blog/wasm-architecture/"
+                    >执行 WASM</a
+                  >，这个依赖为墙内的开发者带来了更大的挑战。因为
+                  www.chromium.org 也被官方认证了。而作为一个大型项目， Chrome
+                  使用
+                  <a
+                    href="https://www.chromium.org/developers/how-tos/install-depot-tools/"
+                    >depot-tools</a
+                  >
+                  来辅助其代码 checkout 流程。笔者租有一个墙外的
+                  VPS，用它来下载必须的依赖。下面的命令是在 VPS 上执行的：
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre>
+$ DEPOT_TOOLS_DIR=/var/depot_tools
+$ sudo DEPOT_TOOLS_DIR=${DEPOT_TOOLS_DIR} ./install-dependencies.sh</pre
+                  >
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  执行完之后，<code>/var/depot_tools</code> 的大小大约为
+                  734M。原样复制到本地。VPS
+                  上的目录和本地应该可以不一样，设置好之后命令中的
+                  <code>DEPOT_TOOLS_DIR</code> 环境变量就行。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="编译">编译</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  在编译的时候， 需要下载 v8 的代码，不知道为何
+                  <code>gclient</code> 会 hang，长时间没有动静。只能直接调用
+                  <code>gclient.py</code>。同时，把原来的 git 地址改成 gitee
+                  上的镜像，在国内访问它的速度很快。
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="diff"><span class="gh">diff --git a/cmake/oss.cmake.in b/cmake/oss.cmake.in
+index 53856c61d..f8f6b7998 100644
+</span><span class="gd">--- a/cmake/oss.cmake.in
+</span><span class="gi">+++ b/cmake/oss.cmake.in
+</span><span class="p">@@ -351,8 +351,8 @@</span> set(v8_flags
+ ExternalProject_Add(v8
+ INSTALL_DIR @REDPANDA_DEPS_INSTALL_DIR@
+ DOWNLOAD_COMMAND
+<span class="gd">-  COMMAND @DEPOT_TOOLS_DIR@/gclient configure https://github.com/v8/v8.git
+-  COMMAND @DEPOT_TOOLS_DIR@/gclient sync -r e04bb9be8542b166c4dda1a77bfb1c46552afdd8
+</span><span class="gi">+  COMMAND python3 @DEPOT_TOOLS_DIR@/gclient.py configure https://gitee.com/mirrors/V8.git
++  COMMAND python3 @DEPOT_TOOLS_DIR@/gclient.py sync -v -r e04bb9be8542b166c4dda1a77bfb1c46552afdd8
+</span> PATCH_COMMAND ""
+ CONFIGURE_COMMAND
+   COMMAND cd &lt;SOURCE_DIR&gt; # Is used for run gn inside v8 dir</code></pre>
+                </div>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre>
+$ cd redpanda
+$ CC=clang-15 CXX=clang++-15 DEPOT_TOOLS_DIR=/var/depot_tools \
+    -DCMAKE_BUILD_TYPE=Debug</pre
+                  >
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  因为 gitee 把 repo 的名字改成了大写。编译 v8
+                  的时候会找不到代码。所以得纠正这个错误：
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="shell"><span class="nv">$ </span><span class="nb">mv </span>redpanda/build/deps_build/v8-prefix/src/<span class="o">{</span>V8,v8<span class="o">}</span></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <div class="tag-list">
+          <ul>
+            <li class="meta">Tags</li>
+
+            <li>
+              <a class="button" href="#build">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> build</p>
+              </a>
+            </li>
+
+            <li>
+              <a class="button" href="#debian">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> debian</p>
+              </a>
+            </li>
+
+            <li>
+              <a class="button" href="#redpanda">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> redpanda</p>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="Seastar 和 SPDK" href="/2021/08/28/spdk-seastar.html">
+            <p>Next post</p>
+            Seastar 和 SPDK
+          </a>
+        </div>
+      </div>
+
+      <!--Utterances-->
+
+      <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis_thread"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2022-04-11-redpanda-build.adoc"
+        data-page-url="/2022/04/11/redpanda-build.html"
+        data-page-title="redpanda 编译记录"
+        data-theme="auto"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
+
+      <!-- Disqus -->
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

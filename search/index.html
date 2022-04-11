@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -84,17 +75,23 @@
     <meta property="twitter:title" content="搜索" />
     <script type="application/ld+json">
       {
-        "headline": "搜索",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/search/",
         "@type": "WebPage",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "headline": "搜索",
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -192,7 +189,7 @@
               SimpleJekyllSearch({
                 searchInput: document.getElementById("search-input"),
                 resultsContainer: document.getElementById("results-container"),
-                json: "/assets/data/search.json",
+                json: "/assets/data/search.liquid",
                 searchResultTemplate:
                   '<div class="search-title"><a href="{url}"><h3> {title}</h3></a><div class="meta">{date} <div class="right"><i class="fas fa-tag"></i> {tags}</div></div><p>{excerpt}</p></div><hr> ',
                 noResultsText: "No result found",

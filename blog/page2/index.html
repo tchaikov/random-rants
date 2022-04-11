@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -86,17 +77,23 @@
     <meta property="twitter:title" content="some random rants" />
     <script type="application/ld+json">
       {
-        "headline": "some random rants",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/blog/page2/",
         "@type": "WebPage",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "headline": "some random rants",
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -171,6 +168,28 @@
         </div>
 
         <div class="posts">
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="QoS 和 dmClock"
+                    class="post-link"
+                    href="/2021/04/24/dmclock.html"
+                  >
+                    QoS 和 dmClock
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">April 24, 2021</p>
+                </div>
+              </header>
+
+              <div class="excerpt">QoS，而且是分布式的。</div>
+            </span>
+          </div>
+
           <div class="post-teaser">
             <span>
               <header>
@@ -263,30 +282,6 @@
 
               <div class="excerpt">
                 在处理性能问题的时候，需要知道客户请求都堵在哪儿了。
-              </div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="seastar::future 中的 ownership"
-                    class="post-link"
-                    href="/2020/10/16/ownership-in-seastar.html"
-                  >
-                    seastar::future 中的 ownership
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">October 16, 2020</p>
-                </div>
-              </header>
-
-              <div class="excerpt">
-                seastar::future 在 get() 之后就像被掏空了一样。
               </div>
             </span>
           </div>

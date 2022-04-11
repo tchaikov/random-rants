@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -101,23 +92,29 @@
     />
     <script type="application/ld+json">
       {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "垃圾需要分类处理，有用的东西更应该分类。",
+        "url": "https://blog.k3fu.xyz/2021/05/16/gc-fs.html",
+        "@type": "BlogPosting",
         "headline": "Log-strucutured Filesystem 和垃圾收集",
         "dateModified": "2021-05-16T00:00:00+00:00",
         "datePublished": "2021-05-16T00:00:00+00:00",
-        "description": "垃圾需要分类处理，有用的东西更应该分类。",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/2021/05/16/gc-fs.html"
         },
-        "url": "https://blog.k3fu.xyz/2021/05/16/gc-fs.html",
-        "@type": "BlogPosting",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -1416,7 +1413,7 @@
             <li class="meta">Tag</li>
 
             <li>
-              <a class="button" href="/tags#ceph">
+              <a class="button" href="#ceph">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> ceph</p>
               </a>
             </li>
@@ -1445,10 +1442,12 @@
         </div>
       </div>
 
+      <!--Utterances-->
+
       <!-- Cusdis -->
       <div
         class="comments"
-        id="cusdis"
+        id="cusdis_thread"
         data-host="https://cusdis.com"
         data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
         data-page-id="_posts/2021-05-16-gc-fs.adoc"

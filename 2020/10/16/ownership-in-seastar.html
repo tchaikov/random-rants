@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -101,23 +92,29 @@
     <meta property="twitter:title" content="seastar::future 中的 ownership" />
     <script type="application/ld+json">
       {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "seastar::future 在 get() 之后就像被掏空了一样。",
+        "url": "https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html",
+        "@type": "BlogPosting",
         "headline": "seastar::future 中的 ownership",
         "dateModified": "2020-10-16T00:00:00+00:00",
         "datePublished": "2020-10-16T00:00:00+00:00",
-        "description": "seastar::future 在 get() 之后就像被掏空了一样。",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html"
         },
-        "url": "https://blog.k3fu.xyz/2020/10/16/ownership-in-seastar.html",
-        "@type": "BlogPosting",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -534,10 +531,10 @@ seastar::noncopyable_function&lt;void ()&gt;::operator()() const at /var/ssd/cep
 
 <span class="k">impl</span> <span class="n">Future</span> <span class="p">{</span>
   <span class="k">fn</span> <span class="nf">get</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c">// takes the ownership of self</span>
+    <span class="c1">// takes the ownership of self</span>
   <span class="p">}</span>
-  <span class="k">fn</span> <span class="mi">_</span><span class="nf">then</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c">// also takes the ownership of self</span>
+  <span class="k">fn</span> <span class="nf">_then</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// also takes the ownership of self</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
@@ -588,13 +585,13 @@ error[E0382]: use of moved value: `f`
             <li class="meta">Tags</li>
 
             <li>
-              <a class="button" href="/tags#c%2B%2B">
+              <a class="button" href="#c%2B%2B">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> c++</p>
               </a>
             </li>
 
             <li>
-              <a class="button" href="/tags#seastar">
+              <a class="button" href="#seastar">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> seastar</p>
               </a>
             </li>
@@ -620,10 +617,12 @@ error[E0382]: use of moved value: `f`
         </div>
       </div>
 
+      <!--Utterances-->
+
       <!-- Cusdis -->
       <div
         class="comments"
-        id="cusdis"
+        id="cusdis_thread"
         data-host="https://cusdis.com"
         data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
         data-page-id="_posts/2020-10-16-ownership-in-seastar.adoc"

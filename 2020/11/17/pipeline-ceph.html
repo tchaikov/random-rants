@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -101,23 +92,29 @@
     <meta property="twitter:title" content="Crimson 里面的流水线" />
     <script type="application/ld+json">
       {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "在处理性能问题的时候，需要知道客户请求都堵在哪儿了。",
+        "url": "https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html",
+        "@type": "BlogPosting",
         "headline": "Crimson 里面的流水线",
         "dateModified": "2020-11-17T00:00:00+00:00",
         "datePublished": "2020-11-17T00:00:00+00:00",
-        "description": "在处理性能问题的时候，需要知道客户请求都堵在哪儿了。",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html"
         },
-        "url": "https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html",
-        "@type": "BlogPosting",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -448,7 +445,7 @@
             <li class="meta">Tag</li>
 
             <li>
-              <a class="button" href="/tags#ceph">
+              <a class="button" href="#ceph">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> ceph</p>
               </a>
             </li>
@@ -480,10 +477,12 @@
         </div>
       </div>
 
+      <!--Utterances-->
+
       <!-- Cusdis -->
       <div
         class="comments"
-        id="cusdis"
+        id="cusdis_thread"
         data-host="https://cusdis.com"
         data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
         data-page-id="_posts/2020-11-17-pipeline-ceph.adoc"

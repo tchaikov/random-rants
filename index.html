@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -85,11 +76,11 @@
     <meta property="twitter:title" content="some random rants" />
     <script type="application/ld+json">
       {
-        "headline": "some random rants",
+        "author": { "@type": "Person", "name": "Kefu Chai" },
         "description": "我的学习记录",
         "url": "https://blog.k3fu.xyz/",
         "@type": "WebSite",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "headline": "some random rants",
         "name": "some random rants",
         "@context": "https://schema.org"
       }
@@ -97,6 +88,12 @@
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -171,6 +168,30 @@
         </div>
 
         <div class="posts">
+          <div class="post-teaser">
+            <span>
+              <header>
+                <h1>
+                  <a
+                    aria-label="redpanda 编译记录"
+                    class="post-link"
+                    href="/2022/04/11/redpanda-build.html"
+                  >
+                    redpanda 编译记录
+                  </a>
+                </h1>
+
+                <div class="post-info">
+                  <p class="meta">April 11, 2022</p>
+                </div>
+              </header>
+
+              <div class="excerpt">
+                在恶劣的网络环境下编译 redpanda 也得折腾。
+              </div>
+            </span>
+          </div>
+
           <div class="post-teaser">
             <span>
               <header>
@@ -260,28 +281,6 @@
               </header>
 
               <div class="excerpt">成年人还是得做选择。</div>
-            </span>
-          </div>
-
-          <div class="post-teaser">
-            <span>
-              <header>
-                <h1>
-                  <a
-                    aria-label="QoS 和 dmClock"
-                    class="post-link"
-                    href="/2021/04/24/dmclock.html"
-                  >
-                    QoS 和 dmClock
-                  </a>
-                </h1>
-
-                <div class="post-info">
-                  <p class="meta">April 24, 2021</p>
-                </div>
-              </header>
-
-              <div class="excerpt">QoS，而且是分布式的。</div>
             </span>
           </div>
         </div>

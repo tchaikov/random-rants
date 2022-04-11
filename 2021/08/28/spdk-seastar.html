@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.6
-    Copyright 2016-2021 Sylhare
+    Type on Strap jekyll theme v2.3.10
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,14 +30,6 @@
 
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
-
-    <!-- RSS -->
-    <link
-      rel="alternate"
-      type="application/atom+xml"
-      title="some random rants"
-      href="https://blog.k3fu.xyz/feed.xml"
-    />
 
     <!-- KaTeX 0.13.9 -->
 
@@ -95,23 +86,29 @@
     <meta property="twitter:title" content="Seastar 和 SPDK" />
     <script type="application/ld+json">
       {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "当 C++ 遇上 SPDK。",
+        "url": "https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html",
+        "@type": "BlogPosting",
         "headline": "Seastar 和 SPDK",
         "dateModified": "2021-08-28T00:00:00+00:00",
         "datePublished": "2021-08-28T00:00:00+00:00",
-        "description": "当 C++ 遇上 SPDK。",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html"
         },
-        "url": "https://blog.k3fu.xyz/2021/08/28/spdk-seastar.html",
-        "@type": "BlogPosting",
-        "author": { "@type": "Person", "name": "Kefu Chai" },
         "@context": "https://schema.org"
       }
     </script>
     <!-- End Jekyll SEO tag -->
 
     <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
     <link
       type="application/atom+xml"
       rel="alternate"
@@ -1610,19 +1607,19 @@
             <li class="meta">Tags</li>
 
             <li>
-              <a class="button" href="/tags#c%2B%2B">
+              <a class="button" href="#c%2B%2B">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> c++</p>
               </a>
             </li>
 
             <li>
-              <a class="button" href="/tags#seastar">
+              <a class="button" href="#seastar">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> seastar</p>
               </a>
             </li>
 
             <li>
-              <a class="button" href="/tags#spdk">
+              <a class="button" href="#spdk">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> spdk</p>
               </a>
             </li>
@@ -1633,6 +1630,13 @@
       <!-- Post navigation -->
 
       <div id="post-nav">
+        <div id="previous-post">
+          <a alt="redpanda 编译记录" href="/2022/04/11/redpanda-build.html">
+            <p>Previous post</p>
+            redpanda 编译记录
+          </a>
+        </div>
+
         <div id="next-post">
           <a alt="从 metaslabs allocator 说起" href="/2021/05/27/alloc-fs.html">
             <p>Next post</p>
@@ -1641,10 +1645,12 @@
         </div>
       </div>
 
+      <!--Utterances-->
+
       <!-- Cusdis -->
       <div
         class="comments"
-        id="cusdis"
+        id="cusdis_thread"
         data-host="https://cusdis.com"
         data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
         data-page-id="_posts/2021-08-28-spdk-seastar.adoc"
