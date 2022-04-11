@@ -1,0 +1,127 @@
+= redpanda 编译记录
+:page-tags: [redpanda, build, debian]
+:date: 2022-04-11 10:35:43 +0800
+:pp: {plus}{plus}
+
+在恶劣的网络环境下编译 redpanda 也得折腾。
+
+看到 redpanda 也开始用 C{pp}20 的协程，这引起了我的好奇心。
+
+== bleeding edge
+
+[source, shell]
+----
+$ git clone git@github.com:redpanda-data/redpanda.git
+----
+
+redpanda 的 https://github.com/redpanda-data/redpanda#build-manually[github 页面]
+上有介绍，但是既然都 "live on edge" 了，那么就必须用最新的 clang 啊。debian sid
+打包了 clang-15，所以需要用下面的 patch：
+
+[source, diff]
+----
+diff --git a/install-dependencies.sh b/install-dependencies.sh
+index c6370e4d3..ad328d1f9 100755
+--- a/install-dependencies.sh
++++ b/install-dependencies.sh
+@@ -26,14 +26,14 @@ fi
+
+ deb_deps=(
+   ccache
+-  clang
++  clang-15
+   curl
+   git
+   libsnappy-dev
+   libxxhash-dev
+   libzstd-dev
+-  llvm
+-  lld
++  llvm-15
++  lld-15
+   pkg-config
+   procps
+   python3-jinja2
+----
+
+== GitHub
+
+为了更快地下载 github 上的 repo，如果能找到可以用的 GitHub 镜像的话，
+就可以修改 `$HOME/.gitconfig`，让 `git` 重写 URL 里面的路径，
+用镜像替代 github。
+
+[source, ini]
+----
+[url "https://a.mirror.or.proxy/"]
+  insteadOf = https://github.com/
+----
+
+如果没有镜像可用，那么用自己架设的 SOCKS5 和 HTTP 代理也能抵挡一下，各家
+工具支持的代理设置方式不同。archlinux 甚至有 https://wiki.archlinux.org/title/Proxy_server[专门的文档] 说明如何设置代理。
+这里只记录用到的：
+
+[source, shell]
+----
+# for curl and python (urllib3)
+$ export all_proxy=socks5://127.0.0.1:1080
+# for cipd which respects http_proxy and https_proxy
+$ export http_proxy=http://127.0.0.1:1081
+$ export https_proxy=http://127.0.0.1:1081
+----
+
+== V8
+
+因为 redpanda 使用 Chrome/ 的 V8 引擎来 https://redpanda.com/blog/wasm-architecture/[执行 WASM]，
+这个依赖为墙内的开发者带来了更大的挑战。因为 www.chromium.org 也被官方认证了。而作为一个大型项目，
+Chrome 使用 https://www.chromium.org/developers/how-tos/install-depot-tools/[depot-tools]
+来辅助其代码 checkout 流程。笔者租有一个墙外的 VPS，用它来下载必须的依赖。下面的命令
+是在 VPS 上执行的：
+
+[source， shell]
+----
+$ DEPOT_TOOLS_DIR=/var/depot_tools
+$ sudo DEPOT_TOOLS_DIR=${DEPOT_TOOLS_DIR} ./install-dependencies.sh
+----
+
+执行完之后，`/var/depot_tools` 的大小大约为 734M。原样复制到本地。VPS
+上的目录和本地应该可以不一样，设置好之后命令中的 `DEPOT_TOOLS_DIR` 环境变量就行。
+
+== 编译
+
+在编译的时候， 需要下载 v8 的代码，不知道为何 `gclient` 会 hang，长时间没有动静。
+只能直接调用 `gclient.py`。同时，把原来的 git 地址改成 gitee 上的镜像，
+在国内访问它的速度很快。
+
+[source, diff]
+----
+diff --git a/cmake/oss.cmake.in b/cmake/oss.cmake.in
+index 53856c61d..f8f6b7998 100644
+--- a/cmake/oss.cmake.in
++++ b/cmake/oss.cmake.in
+@@ -351,8 +351,8 @@ set(v8_flags
+ ExternalProject_Add(v8
+ INSTALL_DIR @REDPANDA_DEPS_INSTALL_DIR@
+ DOWNLOAD_COMMAND
+-  COMMAND @DEPOT_TOOLS_DIR@/gclient configure https://github.com/v8/v8.git
+-  COMMAND @DEPOT_TOOLS_DIR@/gclient sync -r e04bb9be8542b166c4dda1a77bfb1c46552afdd8
++  COMMAND python3 @DEPOT_TOOLS_DIR@/gclient.py configure https://gitee.com/mirrors/V8.git
++  COMMAND python3 @DEPOT_TOOLS_DIR@/gclient.py sync -v -r e04bb9be8542b166c4dda1a77bfb1c46552afdd8
+ PATCH_COMMAND ""
+ CONFIGURE_COMMAND
+   COMMAND cd <SOURCE_DIR> # Is used for run gn inside v8 dir
+----
+
+[source， shell]
+----
+
+$ cd redpanda
+$ CC=clang-15 CXX=clang++-15 DEPOT_TOOLS_DIR=/var/depot_tools \
+    -DCMAKE_BUILD_TYPE=Debug
+----
+
+因为 gitee 把 repo 的名字改成了大写。编译 v8 的时候会找不到代码。所以得纠正这个错误：
+
+[source, shell]
+----
+$ mv redpanda/build/deps_build/v8-prefix/src/{V8,v8}
+----
