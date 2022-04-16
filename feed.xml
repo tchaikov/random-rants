@@ -1,4 +1,190 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-04-11T05:07:47+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">redpanda 编译记录</title><link href="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html" rel="alternate" type="text/html" title="redpanda 编译记录" /><published>2022-04-11T00:00:00+00:00</published><updated>2022-04-11T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/11/redpanda-build</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html"><![CDATA[<div id="preamble">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-04-16T06:34:32+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">auto 和 BOOST_AUTO</title><link href="https://blog.k3fu.xyz/2022/04/16/boost-auto.html" rel="alternate" type="text/html" title="auto 和 BOOST_AUTO" /><published>2022-04-16T00:00:00+00:00</published><updated>2022-04-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/16/boost-auto</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"><![CDATA[<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>auto</code> 也有不好用的时候。</p>
+</div>
+<div class="paragraph">
+<p>自从开始用上 C&#43;&#43;11，就喜欢上了 <code>auto</code> 关键字。类型名字太长？用 <code>auto</code>！类型不知道？用 <code>auto</code>！嗯？只是有点犯懒？用 <code>auto</code>！作为 "placeholder
+type specifier"， <code>auto</code> 似乎是高手的利器，懒人的福音。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="spirit-引起的-segfault">spirit 引起的 segfault</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>但是笔者前两天碰到一个 segfault，而且不是总能重现。最后发觉它是滥用 <code>auto</code> 的结果。比如说，下面的的代码片段用来匹配 <a href="https://en.wikipedia.org/wiki/Binary_prefix">IEC 的前缀</a></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="k">struct</span> <span class="nc">iec_prefix_t</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">prefix</span><span class="p">;</span>
+  <span class="kt">unsigned</span> <span class="n">order</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">static</span> <span class="k">constexpr</span> <span class="n">iec_prefix_t</span> <span class="n">iec_prefixes</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="p">{</span><span class="s">"k"</span><span class="p">,</span> <span class="mi">10</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">"m"</span><span class="p">,</span> <span class="mi">20</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">"g"</span><span class="p">,</span> <span class="mi">30</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">"t"</span><span class="p">,</span> <span class="mi">40</span><span class="p">},</span>
+<span class="p">};</span>
+<span class="c1">// ...</span>
+<span class="n">qi</span><span class="o">::</span><span class="n">symbols</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">prefix</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="p">[</span><span class="n">prefix</span><span class="p">,</span> <span class="n">order</span><span class="p">]</span> <span class="o">:</span> <span class="n">iec_prefixes</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">prefix</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">order</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">postfix</span> <span class="o">=</span> <span class="n">spirit</span><span class="o">::</span><span class="n">ascii</span><span class="o">::</span><span class="n">no_case</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="o">-</span><span class="p">(</span><span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"iB"</span><span class="p">)</span> <span class="o">|</span> <span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"B"</span><span class="p">));</span>
+<span class="kt">uint64_t</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">qi</span><span class="o">::</span><span class="n">parse</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">s</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">qi</span><span class="o">::</span><span class="n">uint_</span> <span class="o">&gt;&gt;</span> <span class="o">-</span><span class="n">postfix</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">power</span><span class="p">))</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="n">order</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">invalid_argument</span><span class="p">(</span><span class="s">"hmmm"</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>一切看起来岁月静好。但是却发现有时候 <code>qi::parse()</code> 有时候会出现 segfault。表达式这么可爱，能出什么错呢？stackoverflow 上有个很对口的问题，摘录回答如下：</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>It&#8217;s a bug in your code, nothing wrong with the compiler or the optimization levels.</p>
+</div>
+<div class="paragraph">
+<p>The cinch is with expression templates (like the ones used by Boost Proto, and hence by Boost Spirit).
+They are <strong>only valid to the end of their enclosing full expression</strong><sup>[1]</sup></p>
+</div>
+<div class="paragraph">
+<p>The canonical workaound is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"> <span class="n">BOOST_SPIRIT_AUTO</span><span class="p">(</span><span class="n">ana</span><span class="p">,</span> <span class="o">*~</span><span class="n">qi</span><span class="o">::</span><span class="n">char_</span><span class="p">(</span><span class="sc">'*'</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">+</span><span class="n">qi</span><span class="o">::</span><span class="n">char_</span><span class="p">(</span><span class="sc">'*'</span><span class="p">));</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Spirit X3 promises to remove this wart. Slightly related, I think Protox11 also removes this
+issue by being aware of references at all times.</p>
+</div>
+<hr>
+<div class="paragraph">
+<p>[1] Grep the standard for lifetime extension of temporaries. The expression templates keep
+references to the literals used (the rest has value semantics anyways), but the temporaries
+aren&#8217;t bound to (const) references. So they go out of scope.
+<a href="http://en.wikipedia.org/wiki/Undefined_behavior">Undefined Behaviour</a> results</p>
+</div>
+</blockquote>
+</div>
+<div class="paragraph">
+<p>看来是 <code>postfix</code> 持有的是个引用，被引用的对象的生命周期没能坚持很久，它们到 <code>qi::parse()</code>
+的时候已经香消玉损了。这里涉及两组熟悉又陌生的概念：</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="expression-template">expression template</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>先看看表达式模板（expression template）是什么。它是 C&#43;&#43; 魔法师们的创造，不属于 C&#43;&#43; 标准的范畴，见 <a href="https://en.wikipedia.org/wiki/Expression_templates">wikipedia 上的条目</a>。总结下来，表达式模板有这么几个特点：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>往往使用嵌套模板的方式组织成一个树。</p>
+</li>
+<li>
+<p>表达式通过 <code>const</code> 引用保存子表达式。为了避免复制产生的开销，更不消说有的类型不支持复制，仅仅保存引用。</p>
+</li>
+<li>
+<p>惰性求值。只有表达式参与真正的求值的时候，才会开始计算。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>因此，</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="k">auto</span> <span class="n">postfix</span> <span class="o">=</span> <span class="n">spirit</span><span class="o">::</span><span class="n">ascii</span><span class="o">::</span><span class="n">no_case</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="o">-</span><span class="p">(</span><span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"iB"</span><span class="p">)</span> <span class="o">|</span> <span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"B"</span><span class="p">));</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>并不是普通的值语义的标量对象，它是一个嵌套的表达式模板实例。如下所示：</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/images/diag-55cacf693e6cfc618d2741427a20859a.png" alt="Diagram" width="510" height="546">
+</div>
+</div>
+<div class="paragraph">
+<p>每个操作符分别都产生了新的表达式，而这些表达式都通过 <code>const</code> 引用持有保存其子表达式的引用，从里到外的每个表达式都是临时对象。即使我们通过 <code>postfix</code> 保存了最外面的表达式，即图中的绿色方块。但是里面的所有其他表达式都在 <code>auto postfix</code> 这个语句中等号右侧的表达式求值完毕之后就析构了。更不用说 <code>qi::string("iB")</code> 它们了。难怪，在 <code>qi::parse()</code> 使用 <code>postfix</code> 的时候会碰到 segfault。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="临时对象和引用">临时对象和引用</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>那我们看看 C&#43;&#43; 标准（草案）的原文怎么说</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>The lifetime of a reference begins when its initialization is complete. The lifetime of a
+reference ends as if it were a scalar object requiring storage.</p>
+</div>
+</blockquote>
+<div class="attribution">
+&#8212; ISO/IEC JTC1 SC22 WG21 N 4860
+</div>
+</div>
+<div class="paragraph">
+<p>关键是后面一句。简单说，就是引用还在，因为它只是块儿内存，只要那块内存还没有重写，引用就活着。不过……
+引用毕竟是引用，它和值是两码事。因此，会不会代码犯了和下面程序类似的错误？</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="cp">#include &lt;iostream&gt;
+#include &lt;string&gt;
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">string</span><span class="o">&amp;</span> <span class="n">hello</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">string</span> <span class="n">s</span><span class="p">(</span><span class="s">"hello"</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">s</span> <span class="o">=</span> <span class="n">hello</span><span class="p">();</span>
+  <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">s</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>GCC 碰到这种明显的错误会看不下去，</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>test.cc: In function ‘std::string&amp; hello()’:
+test.cc:9:10: warning: reference to local variable ‘s’ returned [-Wreturn-local-addr]
+    9 |   return s;
+      |          ^
+test.cc:8:10: note: declared here
+    8 |   string s("hello");
+      |          ^</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>当然，有的情况下，引用可以 <a href="https://en.cppreference.com/w/cpp/language/reference_initialization#Lifetime_of_a_temporary">帮助临时对象续命</a>。但是如果不属于上面的情况，要是被引用的对象析构了，那么就算引用还是有效的，我们一样会碰到我们的老朋友——
+undefined behavior。这也是这个问题在不同环境下可能没法重现的原因。因为对象即使析构，它的内存在被重写之前，数据还是保存着它生前的样子。而内存重用是我们通常没法直接控制的。</p>
+</div>
+<div class="paragraph">
+<p>所以问题的原委已经明白了。上图中绿色方块的 <code>lhs</code> 和 <code>rhs</code> 作为引用，在对 <code>postfix</code>
+赋值之后仍然是有效的，但是它们指向的对象就销毁了。为了能够把整个表达式树完整地保存下来，我们必须进行一次 <code>deep copy</code>。Spirit 的维护者 <a href="http://boost-spirit.com/home/articles/qi-example/zero-to-60-mph-in-2-seconds/">实现的 <code>BOOST_SPIRIT_AUTO</code> 宏</a>
+解决的的就是这个问题。也许根据 <a href="https://www.boost.org/doc/libs/1_79_0/libs/spirit/example/qi/typeof.cpp">最新的例子</a>，我们最好用 <code>boost::spirit::qi::copy()</code>。</p>
+</div>
+</div>
+</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author></entry><entry><title type="html">redpanda 编译记录</title><link href="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html" rel="alternate" type="text/html" title="redpanda 编译记录" /><published>2022-04-11T00:00:00+00:00</published><updated>2022-04-11T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/11/redpanda-build</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html"><![CDATA[<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
 <p>在恶劣的网络环境下编译 redpanda 也得折腾。</p>
@@ -2986,170 +3172,4 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 <p>因为 OSD 会定期发送 <code>osd_beacon</code> 给 monitor，所以如果有疑似的失联 OSD 发送 beacon 给 monitor，那么是不是也能说明这个 OSD 并不是真正的脱离了组织呢？但是，如果因为网络的问题，这个 OSD 只是不能和举报的 OSD 联系，那么我们也需要把它踢出 osdmap。但是因为 <code>osd_beacon</code> 的发送周期非常长，达 300 秒之久。所以经过这么长的时间，monitor 都无法做出裁决。大概率也能说明集群很难有效地在指定时间内有效地标记失联 OSD 了，至于原因可能是当初发送报告的 OSD 重启，或者干脆是严重的网络分裂问题。但是如果是 OSD 重启的话，我们不应该继续保留 <code>SLOW_OPS</code> 了，它逗留的时间已经够久了。</p>
 </li>
 </ul>
-</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[有时候，failure 报告会化身 SLOW_OPS，并获得永生。]]></summary></entry><entry><title type="html">Crimson 里面的流水线</title><link href="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html" rel="alternate" type="text/html" title="Crimson 里面的流水线" /><published>2020-11-17T00:00:00+00:00</published><updated>2020-11-17T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2020/11/17/pipeline-ceph</id><content type="html" xml:base="https://blog.k3fu.xyz/2020/11/17/pipeline-ceph.html"><![CDATA[<div class="paragraph">
-<p>在处理性能问题的时候，需要知道客户请求都堵在哪儿了。</p>
-</div>
-<div class="paragraph">
-<p>具体说，有这么两个需求</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>能够知道客户请求阻塞在什么地方了。比方说，最好能够列出当前还没有完成的请求都是什么状态。是在等 osdmap，还是在等 PG，还是在等它希望访问的 object？</p>
-</li>
-<li>
-<p>提供一个机制，能阻塞客户请求。我们有时候甚至希望有计划有策略地阻塞客户端请求。实现一些 QoS 的功能。</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Crimson 为了解决这些需求，引入了一组概念</p>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>Operation</code></dt>
-<dd>
-<p>代表一种操作。比如说刚才提到的客户发来的请求就是一种 <code>Operation</code>。</p>
-</dd>
-<dt class="hdlist1"><code>Blocker</code></dt>
-<dd>
-<p>代表处理操作的一个特定的阶段。像刚才提到的 “等 osdmap”，就可以作为一个 <code>Blocker</code>。</p>
-</dd>
-<dt class="hdlist1"><code>Pipeline</code></dt>
-<dd>
-<p>代表系列 <code>Blocker</code>。在做限流或者 QoS 的时候，pipeline 也是一个资源。</p>
-</dd>
-</dl>
-</div>
-<div class="paragraph">
-<p>为了集中跟踪当前的 <code>Operation</code> ，我们定义了 <code>ShardServices::start_operation()</code> ，用一个全局的数据结构分门别类记录各种操作。这里以简化版的 <code>ClientRequest::process_op()</code> 为例，解释一下用法</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="n">seastar</span><span class="o">::</span><span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">ClientRequest</span><span class="o">::</span><span class="n">start</span><span class="p">(</span><span class="n">PG</span><span class="o">&amp;</span> <span class="n">pg</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">handle</span><span class="p">.</span><span class="n">enter</span><span class="p">(</span><span class="n">connection_pipeline</span><span class="p">().</span><span class="n">await_map</span><span class="p">)</span>
-  <span class="p">).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">osd</span><span class="p">.</span><span class="n">osdmap_gate</span><span class="p">.</span><span class="n">wait_for_map</span><span class="p">(</span><span class="n">req</span><span class="p">.</span><span class="n">min_epoch</span><span class="p">));</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">handle</span><span class="p">.</span><span class="n">enter</span><span class="p">(</span><span class="n">connection_pipeline</span><span class="p">().</span><span class="n">get_pg</span><span class="p">));</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">osd</span><span class="p">.</span><span class="n">wait_for_pg</span><span class="p">(</span><span class="n">req</span><span class="p">.</span><span class="n">spg</span><span class="p">));</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">handle</span><span class="p">.</span><span class="n">enter</span><span class="p">(</span><span class="n">pg_pipeline</span><span class="p">(</span><span class="n">pg</span><span class="p">).</span><span class="n">wait_for_active</span><span class="p">));</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">pg</span><span class="p">.</span><span class="n">wait_for_active_blocker</span><span class="p">.</span><span class="n">wait</span><span class="p">())</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">handle_enter</span><span class="p">(</span><span class="n">pg_pipeline</span><span class="p">(</span><span class="n">pg</span><span class="p">).</span><span class="n">recover_missing</span><span class="p">));</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">maybe_recover</span><span class="p">(</span><span class="n">get_oid</span><span class="p">());</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">handle</span><span class="p">.</span><span class="n">enter</span><span class="p">(</span><span class="n">pg_pipeline</span><span class="p">(</span><span class="n">pg</span><span class="p">).</span><span class="n">get_obc</span><span class="p">));</span>
-  <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">pg</span><span class="p">.</span><span class="n">with_locked_obc</span><span class="p">(</span><span class="n">get_op_info</span><span class="p">(),</span> <span class="p">[</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="n">with_blocking_future</span><span class="p">(</span><span class="n">handle_enter</span><span class="p">(</span><span class="n">pg_pipeline</span><span class="p">(</span><span class="n">pg</span><span class="p">).</span><span class="n">process</span><span class="p">)).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="n">process</span><span class="p">(</span><span class="n">req</span><span class="p">);</span>
-      <span class="p">}).</span><span class="n">then</span><span class="p">([</span><span class="o">&amp;</span><span class="p">](</span><span class="k">auto</span> <span class="n">reply</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="n">conn</span><span class="o">-&gt;</span><span class="n">send</span><span class="p">(</span><span class="n">reply</span><span class="p">);</span>
-      <span class="p">});</span>
-    <span class="p">});</span>
-  <span class="p">});</span>
-<span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>处理一个请求有多个步骤，它们构成一条流水线</p>
-</div>
-<div class="imageblock">
-<div class="content">
-<img src="/images/diag-f8331bd7a8dba669aefa098f93365f15.png" alt="Diagram" width="330" height="518">
-</div>
-</div>
-<div class="paragraph">
-<p>其中，绿色和蓝色分别代表一条小流水线。</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>绿色的是 connection pipeline。每个客户端来的链接都有一条。它分两个阶段</p>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>wait until osd gets osdmap</p>
-</li>
-<li>
-<p>wait for PG</p>
-</li>
-</ol>
-</div>
-</li>
-<li>
-<p>蓝色的是 PG pipeline。每个 PG 都有一条。</p>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>wait until PG gets osdmap</p>
-</li>
-<li>
-<p>wait for active</p>
-</li>
-<li>
-<p>wait for object recovery</p>
-</li>
-<li>
-<p>wait for object context</p>
-</li>
-<li>
-<p>wait for process</p>
-</li>
-</ol>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>一条流水线就像博物馆的一层楼。流水线分多个阶段，每个阶段就像一层楼里面的一个个展厅。第一次去一个博物馆或者艺术馆，我一般会拿着小册子，按照顺序，一个展厅一个展厅地逛。因为不会分身大法，所以也没办法同时在几个展厅参观。这个设定和 Ceph 处理客户端请求是很像的。但是即使是在疫情期间，博物馆的展厅也能同时容纳不止一个人。那么这些 pipeline 呢？在同一时刻，我们允许多个请求停留在同一阶段吗？</p>
-</div>
-<div class="paragraph">
-<p>答案是“不可以”。</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="n">blocking_future</span><span class="o">&lt;&gt;</span>
-<span class="n">OrderedPipelinePhase</span><span class="o">::</span><span class="n">Handle</span><span class="o">::</span><span class="n">enter</span><span class="p">(</span><span class="n">OrderedPipelinePhase</span> <span class="o">&amp;</span><span class="n">new_phase</span><span class="p">)</span>
-<span class="p">{</span>
-  <span class="k">auto</span> <span class="n">fut</span> <span class="o">=</span> <span class="n">new_phase</span><span class="p">.</span><span class="n">mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-  <span class="n">exit</span><span class="p">();</span>
-  <span class="n">phase</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">new_phase</span><span class="p">;</span>
-  <span class="k">return</span> <span class="n">new_phase</span><span class="p">.</span><span class="n">make_blocking_future</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">fut</span><span class="p">));</span>
-<span class="p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>其中 <code>new_phase</code> 就是即将进入的新展厅：</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="rouge highlight"><code data-lang="c++"><span class="k">class</span> <span class="nc">OrderedPipelinePhase</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Blocker</span> <span class="p">{</span>
-  <span class="c1">// ...</span>
-  <span class="n">seastar</span><span class="o">::</span><span class="n">shared_mutex</span> <span class="n">mutex</span><span class="p">;</span>
-<span class="p">};</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>要是不熟悉 <code>seastar::shared_mutex</code>，可以把它理解成和 <code>std::shared_mutex</code> 有类似语义的共享锁。但是这里调用的是霸气的 <code>lock()</code> 而不是 <code>lock_shared()</code> 。所以在别人离开展厅之前，你是没法进去的。同样，要是你在里面，别人只能止步。</p>
-</div>
-<div class="paragraph">
-<p>这个气氛好像很不和谐。就像好多人希望去一个很大的展厅，他们想看的展品其实都不一样，但是因为里面已经有
-<strong>一个人</strong> 了，所以大家只能依次在门外排队，等出来一个人，才能进去一个人。这个情形倒很像是高峰时段的厕所。</p>
-</div>
-<div class="paragraph">
-<p>如果有多个不同的请求正好访问同一 PG，即使它们对应的是不同的 object，也不得不互相保持二十米的距离，挨个等待 <code>PG.client_request_pg_pipeline.process</code> 。前面一个人不完事儿，后面的人必须等着。</p>
-</div>
-<div class="paragraph">
-<p>这不又是 PG 大锁嘛。我在例会上提出来这个问题。Sam 提醒我。可以从另外一个角度看这个问题。每个 OSD
-都有上百个 PG，而一个集群有成百上千个 OSD。如果 PG 的分布很均匀，那么每个 PG 同时需要处理的请求其实是不多的。而且，我一直有个误解，就是觉得 PG 大锁是现有 OSD 性能不彰的原因之一。但是 Sam 告诉我，问题不在于 lock contention，而在于 CPU 的使用率居高不下。这才想起来，官方的文档建议一个 OSD 一般需要配备两个核。</p>
-</div>
-<div class="paragraph">
-<p>不过还是有点放不下心，最好我们能在各个“展厅”前面设置一个计时器，看看大家都在门外面等了多久。这也是流水线机制设立的一个初衷。</p>
-</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[在处理性能问题的时候，需要知道客户请求都堵在哪儿了。]]></summary></entry></feed>
+</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[有时候，failure 报告会化身 SLOW_OPS，并获得永生。]]></summary></entry></feed>

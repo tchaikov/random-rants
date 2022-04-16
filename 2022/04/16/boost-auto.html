@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.3.10
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5"
+    />
+
+    <!-- Theme Mode-->
+
+    <script>
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
+    </script>
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- KaTeX 0.13.9 -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Mermaid 8.9.2 -->
+
+    <!-- Simple Jekyll Search 1.9.1 -->
+    <script
+      src="/assets/js/vendor/simple-jekyll-search.min.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+
+    <meta property="og:type" content="website" />
+
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+    <title>auto 和 BOOST_AUTO | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="auto 和 BOOST_AUTO" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta name="description" content="我的学习记录" />
+    <meta property="og:description" content="我的学习记录" />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"
+    />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2022-04-16T00:00:00+00:00"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta property="twitter:title" content="auto 和 BOOST_AUTO" />
+    <script type="application/ld+json">
+      {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "我的学习记录",
+        "url": "https://blog.k3fu.xyz/2022/04/16/boost-auto.html",
+        "@type": "BlogPosting",
+        "headline": "auto 和 BOOST_AUTO",
+        "dateModified": "2022-04-16T00:00:00+00:00",
+        "datePublished": "2022-04-16T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2022/04/16/boost-auto.html"
+        },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta
+      name="twitter:title"
+      content="<code>auto</code> 和 <code>BOOST_AUTO</code>"
+    />
+    <meta name="twitter:description" content="auto
+    也有不好用的时候。自从开始用上 C&#43;&#43;11，就喜欢上了 auto
+    关键字。类型名字太长？用 auto！类型不知道？用 auto！嗯？只是有点犯懒？用
+    auto！作为 "placeholdertype specifier"， auto
+    似乎是高手的利器，懒人的福音。spirit 引起的 s...">
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+    <meta
+      name="twitter:image:alt"
+      content="<code>auto</code> 和 <code>BOOST_AUTO</code>"
+    />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <a class="site-title" aria-label="some random rants" href="/">
+          some random rants
+        </a>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fas fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fas fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="<code>auto</code> 和 <code>BOOST_AUTO</code> "
+              aria-label="<code>auto</code> 和 <code>BOOST_AUTO</code>"
+              onclick="themeToggle()"
+            ></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1
+              id="%3Ccode%3Eauto%3C%2Fcode%3E+%E5%92%8C+%3Ccode%3EBOOST_AUTO%3C%2Fcode%3E"
+              class="title"
+            >
+              <code>auto</code> 和 <code>BOOST_AUTO</code>
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">April 16, 2022</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p><code>auto</code> 也有不好用的时候。</p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  自从开始用上 C&#43;&#43;11，就喜欢上了
+                  <code>auto</code> 关键字。类型名字太长？用
+                  <code>auto</code>！类型不知道？用
+                  <code>auto</code>！嗯？只是有点犯懒？用
+                  <code>auto</code>！作为 "placeholder type specifier"，
+                  <code>auto</code> 似乎是高手的利器，懒人的福音。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="spirit-引起的-segfault">spirit 引起的 segfault</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  但是笔者前两天碰到一个
+                  segfault，而且不是总能重现。最后发觉它是滥用
+                  <code>auto</code> 的结果。比如说，下面的的代码片段用来匹配
+                  <a href="https://en.wikipedia.org/wiki/Binary_prefix"
+                    >IEC 的前缀</a
+                  >
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="k">struct</span> <span class="nc">iec_prefix_t</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string_view</span> <span class="n">prefix</span><span class="p">;</span>
+  <span class="kt">unsigned</span> <span class="n">order</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">static</span> <span class="k">constexpr</span> <span class="n">iec_prefix_t</span> <span class="n">iec_prefixes</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="p">{</span><span class="s">"k"</span><span class="p">,</span> <span class="mi">10</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">"m"</span><span class="p">,</span> <span class="mi">20</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">"g"</span><span class="p">,</span> <span class="mi">30</span><span class="p">},</span>
+  <span class="p">{</span><span class="s">"t"</span><span class="p">,</span> <span class="mi">40</span><span class="p">},</span>
+<span class="p">};</span>
+<span class="c1">// ...</span>
+<span class="n">qi</span><span class="o">::</span><span class="n">symbols</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">,</span> <span class="kt">unsigned</span><span class="o">&gt;</span> <span class="n">prefix</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="k">auto</span> <span class="p">[</span><span class="n">prefix</span><span class="p">,</span> <span class="n">order</span><span class="p">]</span> <span class="o">:</span> <span class="n">iec_prefixes</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">prefix</span><span class="p">.</span><span class="n">add</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">order</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">auto</span> <span class="n">postfix</span> <span class="o">=</span> <span class="n">spirit</span><span class="o">::</span><span class="n">ascii</span><span class="o">::</span><span class="n">no_case</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="o">-</span><span class="p">(</span><span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"iB"</span><span class="p">)</span> <span class="o">|</span> <span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"B"</span><span class="p">));</span>
+<span class="kt">uint64_t</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="n">order</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">qi</span><span class="o">::</span><span class="n">parse</span><span class="p">(</span><span class="n">s</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">s</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">qi</span><span class="o">::</span><span class="n">uint_</span> <span class="o">&gt;&gt;</span> <span class="o">-</span><span class="n">postfix</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">power</span><span class="p">))</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="n">order</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">invalid_argument</span><span class="p">(</span><span class="s">"hmmm"</span><span class="p">);</span>
+<span class="p">}</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  一切看起来岁月静好。但是却发现有时候
+                  <code>qi::parse()</code> 有时候会出现
+                  segfault。表达式这么可爱，能出什么错呢？stackoverflow
+                  上有个很对口的问题，摘录回答如下：
+                </p>
+              </div>
+              <div class="quoteblock">
+                <blockquote>
+                  <div class="paragraph">
+                    <p>
+                      It&#8217;s a bug in your code, nothing wrong with the
+                      compiler or the optimization levels.
+                    </p>
+                  </div>
+                  <div class="paragraph">
+                    <p>
+                      The cinch is with expression templates (like the ones used
+                      by Boost Proto, and hence by Boost Spirit). They are
+                      <strong
+                        >only valid to the end of their enclosing full
+                        expression</strong
+                      ><sup>[1]</sup>
+                    </p>
+                  </div>
+                  <div class="paragraph">
+                    <p>The canonical workaound is:</p>
+                  </div>
+                  <div class="listingblock">
+                    <div class="content">
+                      <pre
+                        class="rouge highlight"
+                      ><code data-lang="c++"> <span class="n">BOOST_SPIRIT_AUTO</span><span class="p">(</span><span class="n">ana</span><span class="p">,</span> <span class="o">*~</span><span class="n">qi</span><span class="o">::</span><span class="n">char_</span><span class="p">(</span><span class="sc">'*'</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">+</span><span class="n">qi</span><span class="o">::</span><span class="n">char_</span><span class="p">(</span><span class="sc">'*'</span><span class="p">));</span></code></pre>
+                    </div>
+                  </div>
+                  <div class="paragraph">
+                    <p>
+                      Spirit X3 promises to remove this wart. Slightly related,
+                      I think Protox11 also removes this issue by being aware of
+                      references at all times.
+                    </p>
+                  </div>
+                  <hr />
+                  <div class="paragraph">
+                    <p>
+                      [1] Grep the standard for lifetime extension of
+                      temporaries. The expression templates keep references to
+                      the literals used (the rest has value semantics anyways),
+                      but the temporaries aren&#8217;t bound to (const)
+                      references. So they go out of scope.
+                      <a href="http://en.wikipedia.org/wiki/Undefined_behavior"
+                        >Undefined Behaviour</a
+                      >
+                      results
+                    </p>
+                  </div>
+                </blockquote>
+              </div>
+              <div class="paragraph">
+                <p>
+                  看来是
+                  <code>postfix</code>
+                  持有的是个引用，被引用的对象的生命周期没能坚持很久，它们到
+                  <code>qi::parse()</code>
+                  的时候已经香消玉损了。这里涉及两组熟悉又陌生的概念：
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="expression-template">expression template</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  先看看表达式模板（expression template）是什么。它是
+                  C&#43;&#43; 魔法师们的创造，不属于 C&#43;&#43; 标准的范畴，见
+                  <a href="https://en.wikipedia.org/wiki/Expression_templates"
+                    >wikipedia 上的条目</a
+                  >。总结下来，表达式模板有这么几个特点：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>往往使用嵌套模板的方式组织成一个树。</p>
+                  </li>
+                  <li>
+                    <p>
+                      表达式通过
+                      <code>const</code>
+                      引用保存子表达式。为了避免复制产生的开销，更不消说有的类型不支持复制，仅仅保存引用。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      惰性求值。只有表达式参与真正的求值的时候，才会开始计算。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>因此，</p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="k">auto</span> <span class="n">postfix</span> <span class="o">=</span> <span class="n">spirit</span><span class="o">::</span><span class="n">ascii</span><span class="o">::</span><span class="n">no_case</span><span class="p">[</span><span class="n">prefix</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="o">-</span><span class="p">(</span><span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"iB"</span><span class="p">)</span> <span class="o">|</span> <span class="n">qi</span><span class="o">::</span><span class="n">string</span><span class="p">(</span><span class="s">"B"</span><span class="p">));</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  并不是普通的值语义的标量对象，它是一个嵌套的表达式模板实例。如下所示：
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-55cacf693e6cfc618d2741427a20859a.png"
+                    alt="Diagram"
+                    width="510"
+                    height="546"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  每个操作符分别都产生了新的表达式，而这些表达式都通过
+                  <code>const</code>
+                  引用持有保存其子表达式的引用，从里到外的每个表达式都是临时对象。即使我们通过
+                  <code>postfix</code>
+                  保存了最外面的表达式，即图中的绿色方块。但是里面的所有其他表达式都在
+                  <code>auto postfix</code>
+                  这个语句中等号右侧的表达式求值完毕之后就析构了。更不用说
+                  <code>qi::string("iB")</code> 它们了。难怪，在
+                  <code>qi::parse()</code> 使用
+                  <code>postfix</code> 的时候会碰到 segfault。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="临时对象和引用">临时对象和引用</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>那我们看看 C&#43;&#43; 标准（草案）的原文怎么说</p>
+              </div>
+              <div class="quoteblock">
+                <blockquote>
+                  <div class="paragraph">
+                    <p>
+                      The lifetime of a reference begins when its initialization
+                      is complete. The lifetime of a reference ends as if it
+                      were a scalar object requiring storage.
+                    </p>
+                  </div>
+                </blockquote>
+                <div class="attribution">
+                  &#8212; ISO/IEC JTC1 SC22 WG21 N 4860
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  关键是后面一句。简单说，就是引用还在，因为它只是块儿内存，只要那块内存还没有重写，引用就活着。不过……
+                  引用毕竟是引用，它和值是两码事。因此，会不会代码犯了和下面程序类似的错误？
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="cp">#include &lt;iostream&gt;
+#include &lt;string&gt;
+</span>
+<span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">string</span><span class="o">&amp;</span> <span class="n">hello</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">string</span> <span class="n">s</span><span class="p">(</span><span class="s">"hello"</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">auto</span> <span class="n">s</span> <span class="o">=</span> <span class="n">hello</span><span class="p">();</span>
+  <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">s</span> <span class="o">&lt;&lt;</span> <span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>GCC 碰到这种明显的错误会看不下去，</p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre>
+test.cc: In function ‘std::string&amp; hello()’:
+test.cc:9:10: warning: reference to local variable ‘s’ returned [-Wreturn-local-addr]
+    9 |   return s;
+      |          ^
+test.cc:8:10: note: declared here
+    8 |   string s("hello");
+      |          ^</pre
+                  >
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  当然，有的情况下，引用可以
+                  <a
+                    href="https://en.cppreference.com/w/cpp/language/reference_initialization#Lifetime_of_a_temporary"
+                    >帮助临时对象续命</a
+                  >。但是如果不属于上面的情况，要是被引用的对象析构了，那么就算引用还是有效的，我们一样会碰到我们的老朋友——
+                  undefined
+                  behavior。这也是这个问题在不同环境下可能没法重现的原因。因为对象即使析构，它的内存在被重写之前，数据还是保存着它生前的样子。而内存重用是我们通常没法直接控制的。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  所以问题的原委已经明白了。上图中绿色方块的 <code>lhs</code> 和
+                  <code>rhs</code> 作为引用，在对
+                  <code>postfix</code>
+                  赋值之后仍然是有效的，但是它们指向的对象就销毁了。为了能够把整个表达式树完整地保存下来，我们必须进行一次
+                  <code>deep copy</code>。Spirit 的维护者
+                  <a
+                    href="http://boost-spirit.com/home/articles/qi-example/zero-to-60-mph-in-2-seconds/"
+                    >实现的 <code>BOOST_SPIRIT_AUTO</code> 宏</a
+                  >
+                  解决的的就是这个问题。也许根据
+                  <a
+                    href="https://www.boost.org/doc/libs/1_79_0/libs/spirit/example/qi/typeof.cpp"
+                    >最新的例子</a
+                  >，我们最好用 <code>boost::spirit::qi::copy()</code>。
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <div class="tag-list"></div>
+      </article>
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="redpanda 编译记录" href="/2022/04/11/redpanda-build.html">
+            <p>Next post</p>
+            redpanda 编译记录
+          </a>
+        </div>
+      </div>
+
+      <!--Utterances-->
+
+      <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis_thread"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2022-04-16-boost-auto.adoc"
+        data-page-url="/2022/04/16/boost-auto.html"
+        data-page-title="<code>auto</code> 和 <code>BOOST_AUTO</code>"
+        data-theme="auto"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
+
+      <!-- Disqus -->
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>
