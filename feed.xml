@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-04-16T06:45:05+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">auto 和 BOOST_AUTO</title><link href="https://blog.k3fu.xyz/2022/04/16/boost-auto.html" rel="alternate" type="text/html" title="auto 和 BOOST_AUTO" /><published>2022-04-16T00:00:00+00:00</published><updated>2022-04-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/16/boost-auto</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"><![CDATA[<div id="preamble">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-04-16T06:49:07+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">auto 和 BOOST_AUTO</title><link href="https://blog.k3fu.xyz/2022/04/16/boost-auto.html" rel="alternate" type="text/html" title="auto 和 BOOST_AUTO" /><published>2022-04-16T00:00:00+00:00</published><updated>2022-04-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/16/boost-auto</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"><![CDATA[<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
 <p><code>auto</code> 也有不好用的时候。</p>
@@ -76,7 +76,7 @@ aren&#8217;t bound to (const) references. So they go out of scope.
 </blockquote>
 </div>
 <div class="paragraph">
-<p>看来是 <code>postfix</code> 持有的是个引用，被引用的对象的生命周期没能坚持很久，它们到 <code>qi::parse()</code>
+<p>看来是 <code>postfix</code> 指向的对象含有一些引用，被引用的对象的生命周期没能坚持很久，它们到 <code>qi::parse()</code>
 的时候已经香消玉损了。这里涉及两组熟悉又陌生的概念：</p>
 </div>
 </div>
