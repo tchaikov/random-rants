@@ -1,0 +1,73 @@
+= a bottle of ceph
+:page-tags: [homebrew, ceph]
+:data: 2022-05-04 11:42:00 +0800
+
+记录一下怎么更新 homebrew bottle。
+
+因为有些小坑，所以又是个 howto。
+
+. 把 homebrew formula 加入 homebrew。这里注明 formula 的地址，否则 brew 缺省使用 HTTPS，而 git 会问我们要 github 的 credentials。有点麻烦。
++
+[source,shellsession]
+----
+$ brew tap tchaikov/ceph-client git@github.com:tchaikov/homebrew-ceph-clientbrew.git
+----
+. 更新 formula
+** 直接编辑，假设你的编辑器是全副武装的 IDE。
++
+[source,shellsession]
+----
+$ brew edit ceph-client
+----
+** 或者进入 tap 的 repo 慢慢来
++
+[source,shellsession]
+----
+$ cd $(brew --repository tchaikov/homebrew-ceph-clientbrew)
+----
+. 编译。这一步要下载编译时用的依赖，所以会很慢。
++
+[source,shellsession]
+----
+$ brew install --build-bottle tchaikov/ceph-clientbrew/ceph-client
+----
+. 把编译好的软件包装瓶。`brew bottle` 会在当前目录生成一个 bottle，文件名类似 `ceph-client--17.2.0.arm64_monterey.bottle.2.tar.gz`。这个命令还会很贴心地打印出使用这个 bottle 需要用到的 formula 代码片段加入，所以需要编译一下 formula。
++
+[source,shellsession]
+----
+$ brew bottle tchaikov/ceph-clientbrew/ceph-client
+$ brew edit tchaikov/ceph-clientbrew/ceph-client
+----
+. 打 tag 并更新 github，以便接下来发布。
++
+[source,shellsession]
+----
+$ git remote -v
+me	git@github.com:tchaikov/homebrew-ceph-client.git (fetch)
+me	git@github.com:tchaikov/homebrew-ceph-client.git (push)
+$ git tag quincy-17.2.0-1
+$ git push me master
+$ git push me quincy-17.2.0-1
+----
+. 发布，并上传。
+.. 有意思的是，如果没有指定 `version`，那么 `brew bottle` 生成的文件名和 `brew install` 期望的名字是不一致的。所以这里要修改一下：
++
+[source,shellsession]
+----
+$ mv ceph-client{-,}-17.2.0.arm64_monterey.bottle.1.tar.gz
+----
+.. 因为 GitHub 提供发布的功能，它也允许我们在发布页面上传一些文件。所以，
+... 在 github 上点击 "tags"，
+... 点击刚才创建的 tag
+... 点击 "Create release from tag"
+... 点击 "Attach binaries by dropping them here or selecting them"，上传刚才改名后的 tar.gz 文件
+... "Publish release"!
+. 测试一下
++
+[source,shellsession]
+----
+$ brew remove ceph-client
+$ brew install tchaikov/ceph-clientbrew/ceph-client
+----
+
+NOTE: 如果是新建 tap，那么应该直接参考 https://brew.sh/2020/11/18/homebrew-tap-with-bottles-uploaded-to-github-releases/ 。
