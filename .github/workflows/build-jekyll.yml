@@ -19,7 +19,7 @@ jobs:
       - name: install packages
         run: |
           sudo apt-get update
-          sudo apt-get -y install ditaa graphviz
+          sudo apt-get -y install ditaa graphviz python3-seqdiag
       - name: build and push the jekyll site
         uses: limjh16/jekyll-action-ts@v2
         with:
