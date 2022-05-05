@@ -1,0 +1,178 @@
+= 从核酸检测到 RPC
+:page-tags: [c++, coroutine]
+:data: 2022-04-23 12:46:40 +0800
+:pp: {plus}{plus}
+
+说说在协程的框架下RPC 的典型设计。
+
+== 下一个！
+
+大家在排队的时候，常常会听到队伍前面传来这样的声音“下一个！”。于是队伍往前移动一点点。
+在封控区的朋友可能最近每天都会有类似的体验。用程序员的话说，这就是服务器准备好处理请求队列里面的下一个请求了。
+核酸检测中，收集样本只是处理请求的第一步，对样本进行 PCR 检测，得到最后结果才是真正的完成了请求。
+因为考虑到检测条件和效率，PCR 检测一般在专门的 PCR 实验室由专业人员批量完成。
+被检测的人在采集完样本之后就可以回家等待结果了。
+
+从我们程序员的角度来说，这个处理方式是流式的，全异步的，而且在某些阶段进行了
+批量的优化处理。把这个设计应用到高性能服务器上，那么它可能会有多级的流水线，
+能并发处理多个请求。如果服务使用流式的传输层，只有把整个请求从网络上读进来之后，
+服务器才能继续处理下一个请求。但是一个连接上可能会传输多种请求，
+而每个请求的的格式和大小可能又各自不同。
+为了这种灵活性，RPC 框架常常让请求的 handler 自己负责读取和解析请求。
+让它们注册的时候就声明自己的
+
+- 参数和返回值类型，
+- 序列化和反序列化的方式，
+- 处理请求的方式
+
+当然，有些成熟的 RPC 框架会选用一套成型的序列化规则，
+用来把结构化的有类型的一组数据成一系列 byte。比如 protobuf，ONC RPC，XML，JSON 等等。
+这些序列化的协议不外乎三种：
+
+- 自描述的。描述结构的元数据也被编码到序列化的 byte 序列里面了，所以 parser 可以在解析的时候，
+  根据里面包含的元数据的指示来解释数据。比如说 XML 和 JSON 就是这样的序列化协议。
+- 有 schema 的。比如说 protobuf 和 ONC RPC 这样的序列化的协议。它们或者用自己的 IDL
+  定义格式，或者借助编程语言内置的设施，用模板或者宏来定义数据结构。
+- 无 schema 的。这类协议一般成型比较早，或者对应的应用对于形式化的描述要求比较低，
+  不要求与第三方应用的互操作性，所以 RPC 的 API 也没有用 DSL 定义了。它们的解析
+  一般直接用编写应用的语言硬编码。像 Ceph 的 messenger 就是属于这类。
+
+前两种协议一般都会有标准的参考实现，或者事实标准的工具，为各种主流语言生成对应的绑定代码。
+
+刚才分析了一下在应用层，RPC 需要关注的问题。我们再退一步看看一个 RPC 框架，还需要和解决其他什么问题：
+
+- 传输层。比如 TCP 还是 UDP，或者是 RDMA。
+- 会话层。双方是不是开始之前先客套一下？比如鉴权，看看对方支持什么协议，支持什么压缩算法。
+- 协议层。比如 protobuf，还是 HTTP，或者是 protobuf over HTTP！
+- 应用层。比如 GET，PUT 还是 LIST。这些操作的参数和返回值怎么传递和解析。
+
+== pipelined RPC
+
+我们设计一下刚才的高性能服务器。服务器希望能同时处理这个客户端传来的多个请求，
+所以它读完一个完整的请求之后，立即就会转身读下一个请求，
+把处理请求的工作交给另外一个协程去做。下图中，`protocol` 从 `input_stream`
+不停地读取请求的 header，把 header 交给 `dispatch_method` 全权处理。但是
+`dispatch_method` 除了负责这个请求之外，还有个责任：一旦读完当前请求的 payload
+就通知 `protocol`，让后者继续读下一个请求。我们一般把这种支持并发的处理方式叫做 pipelined RPC，
+有的时候也称为异步的 RPC。
+[seqdiag, format=svg, height=600]
+----
+seqdiag {
+  client -> server [diagonal, label = '(1)' ];
+  client -> server [diagonal, label = '(2)' ];
+  client <- server [diagonal, label = '(1)' ];
+  client <- server [diagonal, label = '(2)' ];
+}
+----
+
+如果是同步的 RPC，那么客户端总是等到当前请求的结果返回之后，
+再发送下一个请求。见下图：
+[seqdiag, format=svg, height=600]
+----
+seqdiag {
+  client => server [diagonal, label = '(1)' ];
+  client => server [diagonal, label = '(2)' ];
+}
+----
+
+我们可以这样实现：
+[seqdiag, format=svg, height=800]
+----
+seqdiag {
+  loop {
+    protocol => input_stream [ label = "read_iobuf(sizeof(rpc_header))", return = "header" ];
+    protocol -> dispatch_method [ label = "spawn_with_gate" ];
+    dispatch_method -> method [ label = "handle" ];
+    method -> service [ label = "raw_method" ];
+    service -> execution_helper [ label = "exec" ];
+    execution_helper => context [label = "reserve_memory" ];
+    execution_helper => input_stream [label = "read_iobuf(h.payload_size)" ];
+    dispatch_method <<-- execution_helper [ label = "signal_body_parse" ];
+    protocol <<-- dispatch_method;
+  }
+  execution_helper => service [ label = "method" ];
+  method <<-- service;
+}
+----
+
+图中，`dispatch_method` 返回的 future 是在调用 `dispatch_method` 时，从 `context` 取出的。
+后者保存着完成请求所需的上下文，其中就包含了 future 对应的 promise。`execution_helper`
+在接收完 payload 后，立即设置 promise 的 值。
+
+[source, c++]
+----
+task<> protocol::dispatch_method(header h, input in) {
+  auto ctx = make_ctx(h)
+  auto fut = ctx->payload_consumed.get_future();
+  spawn_with_gate(gate, [this, h] {
+    method* m = find_method(h.method_id);
+    co_await m->handle(ctx, in);
+  }
+  return fut;
+}
+// in Service class
+task<message_t> raw_ping(input in, context ctx) {
+  return execution_helper(ctx, in, [this](request_t req, context ctx) {
+    return this->ping(req, ctx);
+  }
+}
+
+// registry of methods
+methods = {
+  method([this](input in, context ctx) {
+    return this->raw_echo(in, ctx);
+  }),
+  method([this](input in, context ctx) {
+    return this->raw_ping(in, ctx);
+  }),
+  // ...
+};
+// ...
+template<typename Request,
+         typename Response,
+task<message_t> execution_helper(context ctx,
+                                 input in,
+                                 std::function<task<Response>(Request),
+                                               context>&& func) {
+  auto request = co_await read_payload<Request>(in, ctx.header);
+  ctx.payload_consumed.set_value();
+  auto response = co_return func(request, ctx);
+  return response.to_message();
+}
+----
+
+所以 `protocol` 接到通知，就能继续读下一个请求了。
+当然，要支持 pipeline，上面这种设计并不是唯一的选择。另外一个设计将
+
+* 读取请求
+* 处理请求
+
+两个步骤分开，分别作为 `method` 的成员函数。如下：
+[seqdiag, format=svg, height=800]
+----
+seqdiag {
+  loop {
+    protocol => input_stream [ label = "read_iobuf(sizeof(rpc_header))", return = "header" ];
+    protocol => dispatch_method [ label = "read_request" ] {
+      dispatch_method => method [ label = "read_request" ] {
+        method => service [ label = "read_request" ];
+      }
+    }
+  }
+  dispatch_method => method [ label = "handle_request" ] {
+    method => service [ label = "handle_request" ];
+  }
+}
+----
+图中，`dispatch_method` 在接收完请求之后，一方面调度一个新的协程，让它继续处理请求，
+一方面返回 `protocol`，让它继续读取下一个请求。
+
+第一种设计的好处把通知的方式嵌入到 `context` 里面，把 RPC 的特异性限制在 `method`
+的 `handle` 成员变量中。`handle` 是一个 `std::function<>` 总的来说 method 的设计内聚性更好。
+第二种设计把 `method` 拆开成两个阶段，因为每个 RPC 调用的 request 和 response
+类型都各不相同，为了避免单根继承的尴尬设计，就必须为每个 RPC 分别实现一套的接口
+payload 放在它的好处可能是让 `method` 的内聚性更好。
+
+
+[source, c++]
+== `SemiFuture`
