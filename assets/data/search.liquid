@@ -1,6 +1,16 @@
 [
   
   {
+    "title"    : "a bottle of ceph",
+    "category" : "",
+    "tags"     : " homebrew, ceph",
+    "url"      : "/2022/05/04/homebrew-bottle.html",
+    "date"     : "May 4, 2022",
+    "excerpt"  : "\n记录一下怎么更新 homebrew bottle。\n\n\n因为有些小坑，所以又是个 howto。\n\n\n\n\n把 homebrew formula 加入 homebrew。这里注明 formula 的地址，否则 brew 缺省使用 HTTPS，而 git 会问我们要 github 的 credentials。有点麻烦。\n\n\n$ brew tap tchaikov/ceph-client git@github.com:tchaikov/homebrew-ceph-clientbrew.git\n\n...",
+  "content"  : "\n记录一下怎么更新 homebrew bottle。\n\n\n因为有些小坑，所以又是个 howto。\n\n\n\n\n把 homebrew formula 加入 homebrew。这里注明 formula 的地址，否则 brew 缺省使用 HTTPS，而 git 会问我们要 github 的 credentials。有点麻烦。\n\n\n$ brew tap tchaikov/ceph-client git@github.com:tchaikov/homebrew-ceph-clientbrew.git\n\n\n\n\n更新 formula\n\n\n\n直接编辑，假设你的编辑器是全副武装的 IDE。\n\n\n$ brew edit ceph-client\n\n\n\n\n或者进入 tap 的 repo 慢慢来\n\n\n$ cd $(brew --repository tchaikov/homebrew-ceph-clientbrew)\n\n\n\n\n\n\n\n编译。这一步要下载编译时用的依赖，所以会很慢。\n\n\n$ brew install --build-bottle tchaikov/ceph-clientbrew/ceph-client\n\n\n\n\n把编译好的软件包装瓶。brew bottle 会在当前目录生成一个 bottle，文件名类似 ceph-client&amp;#8212;&amp;#8203;17.2.0.arm64_monterey.bottle.2.tar.gz。这个命令还会很贴心地打印出使用这个 bottle 需要用到的 formula 代码片段加入，所以需要编译一下 formula。\n\n\n$ brew bottle tchaikov/ceph-clientbrew/ceph-client\n$ brew edit tchaikov/ceph-clientbrew/ceph-client\n\n\n\n\n打 tag 并更新 github，以便接下来发布。\n\n\n$ git remote -v\nme\tgit@github.com:tchaikov/homebrew-ceph-client.git (fetch)\nme\tgit@github.com:tchaikov/homebrew-ceph-client.git (push)\n$ git tag quincy-17.2.0-1\n$ git push me master\n$ git push me quincy-17.2.0-1\n\n\n\n\n发布，并上传。\n\n\n\n有意思的是，如果没有指定 version，那么 brew bottle 生成的文件名和 brew install 期望的名字是不一致的。所以这里要修改一下：\n\n\n$ mv ceph-client{-,}-17.2.0.arm64_monterey.bottle.1.tar.gz\n\n\n\n\n因为 GitHub 提供发布的功能，它也允许我们在发布页面上传一些文件。所以，\n\n\n\n在 github 上点击 &quot;tags&quot;，\n\n\n点击刚才创建的 tag\n\n\n点击 &quot;Create release from tag&quot;\n\n\n点击 &quot;Attach binaries by dropping them here or selecting them&quot;，上传刚才改名后的 tar.gz 文件\n\n\n&quot;Publish release&quot;!\n\n\n\n\n\n\n\n\n测试一下\n\n\n$ brew remove ceph-client\n$ brew install tchaikov/ceph-clientbrew/ceph-client\n\n\n\n\n\n\n\n\n\n\n\n\n如果是新建 tap，那么应该直接参考 https://brew.sh/2020/11/18/homebrew-tap-with-bottles-uploaded-to-github-releases/ 。\n\n\n\n"
+} ,
+  
+  {
     "title"    : "&lt;code&gt;auto&lt;/code&gt; 和 &lt;code&gt;BOOST_AUTO&lt;/code&gt;",
     "category" : "",
     "tags"     : " ",

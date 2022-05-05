@@ -1,4 +1,132 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-04-16T06:49:07+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">auto 和 BOOST_AUTO</title><link href="https://blog.k3fu.xyz/2022/04/16/boost-auto.html" rel="alternate" type="text/html" title="auto 和 BOOST_AUTO" /><published>2022-04-16T00:00:00+00:00</published><updated>2022-04-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/16/boost-auto</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"><![CDATA[<div id="preamble">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-05-05T02:27:20+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
+<p>记录一下怎么更新 homebrew bottle。</p>
+</div>
+<div class="paragraph">
+<p>因为有些小坑，所以又是个 howto。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>把 homebrew formula 加入 homebrew。这里注明 formula 的地址，否则 brew 缺省使用 HTTPS，而 git 会问我们要 github 的 credentials。有点麻烦。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ brew tap tchaikov/ceph-client git@github.com:tchaikov/homebrew-ceph-clientbrew.git</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>更新 formula</p>
+<div class="ulist">
+<ul>
+<li>
+<p>直接编辑，假设你的编辑器是全副武装的 IDE。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ brew edit ceph-client</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>或者进入 tap 的 repo 慢慢来</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ cd $(brew --repository tchaikov/homebrew-ceph-clientbrew)</code></pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>编译。这一步要下载编译时用的依赖，所以会很慢。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ brew install --build-bottle tchaikov/ceph-clientbrew/ceph-client</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>把编译好的软件包装瓶。<code>brew bottle</code> 会在当前目录生成一个 bottle，文件名类似 <code>ceph-client&#8212;&#8203;17.2.0.arm64_monterey.bottle.2.tar.gz</code>。这个命令还会很贴心地打印出使用这个 bottle 需要用到的 formula 代码片段加入，所以需要编译一下 formula。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ brew bottle tchaikov/ceph-clientbrew/ceph-client
+$ brew edit tchaikov/ceph-clientbrew/ceph-client</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>打 tag 并更新 github，以便接下来发布。</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ git remote -v
+me	git@github.com:tchaikov/homebrew-ceph-client.git (fetch)
+me	git@github.com:tchaikov/homebrew-ceph-client.git (push)
+$ git tag quincy-17.2.0-1
+$ git push me master
+$ git push me quincy-17.2.0-1</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>发布，并上传。</p>
+<div class="olist loweralpha">
+<ol class="loweralpha" type="a">
+<li>
+<p>有意思的是，如果没有指定 <code>version</code>，那么 <code>brew bottle</code> 生成的文件名和 <code>brew install</code> 期望的名字是不一致的。所以这里要修改一下：</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ mv ceph-client{-,}-17.2.0.arm64_monterey.bottle.1.tar.gz</code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>因为 GitHub 提供发布的功能，它也允许我们在发布页面上传一些文件。所以，</p>
+<div class="olist lowerroman">
+<ol class="lowerroman" type="i">
+<li>
+<p>在 github 上点击 "tags"，</p>
+</li>
+<li>
+<p>点击刚才创建的 tag</p>
+</li>
+<li>
+<p>点击 "Create release from tag"</p>
+</li>
+<li>
+<p>点击 "Attach binaries by dropping them here or selecting them"，上传刚才改名后的 tar.gz 文件</p>
+</li>
+<li>
+<p>"Publish release"!</p>
+</li>
+</ol>
+</div>
+</li>
+</ol>
+</div>
+</li>
+<li>
+<p>测试一下</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shellsession">$ brew remove ceph-client
+$ brew install tchaikov/ceph-clientbrew/ceph-client</code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+如果是新建 tap，那么应该直接参考 <a href="https://brew.sh/2020/11/18/homebrew-tap-with-bottles-uploaded-to-github-releases/" class="bare">https://brew.sh/2020/11/18/homebrew-tap-with-bottles-uploaded-to-github-releases/</a> 。
+</td>
+</tr>
+</table>
+</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="homebrew" /><category term="ceph" /><summary type="html"><![CDATA[记录一下怎么更新 homebrew bottle。]]></summary></entry><entry><title type="html">auto 和 BOOST_AUTO</title><link href="https://blog.k3fu.xyz/2022/04/16/boost-auto.html" rel="alternate" type="text/html" title="auto 和 BOOST_AUTO" /><published>2022-04-16T00:00:00+00:00</published><updated>2022-04-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/16/boost-auto</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/16/boost-auto.html"><![CDATA[<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
 <p><code>auto</code> 也有不好用的时候。</p>
@@ -3075,101 +3203,4 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 </div>
 <div class="paragraph">
 <p>类似的，在写磁盘的时候也需要保证顺序，因为相同的读写操作以不同顺序发送到后端存储，得到的结果是不一样的。这个道理和之前《多核和顺序》一文中讨论的问题类似。所以在写磁盘的时候也需要保序。我们使用流水线的设计解决这个问题。</p>
-</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[请求 client.io-42 在第三圈超过了 client.io-17！]]></summary></entry><entry><title type="html">永不消逝的 failure 报告</title><link href="https://blog.k3fu.xyz/2021/03/11/failure-reports.html" rel="alternate" type="text/html" title="永不消逝的 failure 报告" /><published>2021-03-11T00:00:00+00:00</published><updated>2021-03-11T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/03/11/failure-reports</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/03/11/failure-reports.html"><![CDATA[<div class="paragraph">
-<p>有时候，failure 报告会化身 SLOW_OPS，并获得永生。</p>
-</div>
-<div class="paragraph">
-<p>Ceph 集群里面，OSD 和 OSD 会定时互相发送心跳。如果有人很长时间不回应，那么另外一方就会打个小报告给 monitor。告诉 monitor，对方很可能已经停摆了。当然，这只是一家之言，monitor 不会因此就断定那个不回消息的人失联了。但是如果收到多个不同来源的报告，都指向同一个 OSD，那么 monitor 就会认为该 OSD 的确是有问题的。而且，本着认真负责的精神，monitor 把所有的小报告的原件都保存了起来。</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>monitor 这边</p>
-<div class="ulist">
-<ul>
-<li>
-<p>如果 osdmap 已经把失联的 OSD 标记成了 <code>down</code>，它会逐个联系打报告的 OSD，给他们发送最新版的 osdmap。告诉相关人士，"众卿这下可以放心了"。如果自己变成了 peon，也会把这些小报告重新处理一遍，小报告会被转发给新的 leader，让它定夺。</p>
-</li>
-<li>
-<p>如果打小报告的 OSD 不在 osdmap 里面了，它会直接把这个 OSD 发送的报告全部删除。</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>报告人</p>
-<div class="ulist">
-<ul>
-<li>
-<p>如果打小报告的 OSD 准备重启，或者因为网络故障打算停止运行，它也会主动发消息，让 monitor 取消自己的报告。</p>
-</li>
-<li>
-<p>另外，报告人一旦和失联 OSD 取得了联系，它也会取消自己的报告。</p>
-</li>
-<li>
-<p>或者它不再和失联 OSD 互发心跳了，那么它同样会把之前的报告撤销。</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>失联的人</p>
-<div class="ulist">
-<ul>
-<li>
-<p>如果失联的人其实并没有脱离组织，但是它发现 monitor 已经把自己从 osdmap 除名。那么它会向 monitor 发消息澄清。monitor 收到它的请求，会把所有关于它的报告作废。</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>另外一方面，为了跟踪集群里面的性能问题，Ceph 设计了一个机制，叫 <code>TrackedOp</code>。我们认为每个请求都有它的生命周期。如果集群出现问题的话，可能会导致请求有很长时间的延迟。这就是我们常说"hang"。最极端的情况就是一个请求永远得不到相应。这里所说的请求包罗万象，从客户端发来的 IO 请求，到 <code>ceph</code> 命令行发到 monitor 的查询，甚至刚才提到的"小报告"都是所谓的 <code>TrackedOp</code>。每个对自己服务质量有要求的 daemnon 都有个注册表叫做 <code>OpTracker</code>。每收到一个 <code>TrackedOp</code> 请求，都会把它记录在案。在 <code>OpTracker</code> 的析构函数里面，则会把自己从注册表里面注销掉。所以这个表里面保存着当前所有的 <code>TrackedOp</code> 的引用，如果一个 <code>TrackedOp</code> 收到之后很快就销毁了，那么就认为这个 op 的处理是及时的。但是如果有请求躺在注册表里很长时间，都没有把自己注销，那么很可能它就"hang"住了。处理这个请求的服务在定期汇报健康状况的时候，会把这个问题也一起报告给 monitor。monitor 会进一步汇总，把这类问题一起报告给管理员。这种问题叫做
-<code>SLOW_OPS</code>。</p>
-</div>
-<div class="paragraph">
-<p>所以，只要可能失联的 OSD 仍然在 osdmap 里面，那么 leader monitor 就会把针对它的小报告一直保留下来。直到 leader 收集到足够的证据，或者举报的人主动撤销或者自己出局。</p>
-</div>
-<div class="paragraph">
-<p>但是也有可能证据一直不够充分，那么 leader 无法做出判断。而这些报告经 <code>prepare_failure()</code> 处理后，就一直放在 <code>OpTracker</code> 里面，变成了 <code>SLOW_OPS</code> 的一员。对于系统管理员来说，它们成了很碍眼的报警信息。</p>
-</div>
-<div class="paragraph">
-<p>这里其实有两个问题：</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><code>prepare_failure()</code> 处理过了小报告，是不是就可以说，monitor 完成了这个请求？从而把它从 <code>OpTracker</code> 里面注销？</p>
-</li>
-<li>
-<p>monitor、报告人和疑似失联者三方都尽心尽力对报告负责。但是如果报告人因为异常重启没有撤销报告，那么这个它发送的报告就永远无法撤销了。</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>解决这个问题可能有下面几个方案，他们相对独立：</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>处理完毕失联报告，就直接销毁对应的请求，让 <code>OpTracker</code> 不再跟踪它。这样即使这个报告在短时间之内没有举报成功也不会出现在 <code>SLOW_OP</code> 里面。但是问题在于</p>
-<div class="ulist">
-<ul>
-<li>
-<p>如果失联报告暂时没有下文，我们能说处理完毕了吗？换言之，如果一个疑似失联的人没有被及时澄清，或者没有踢出 osdmap，那么这个集群的设计很可能是有问题的。它表示这个集群很可能有严重的网络分裂问题，导致一部分 OSD 之间无法互相通信，但是另外一部分 OSD 之间的网络是联通的，导致疑似失联的 OSD 没有办法在短时间之内获得足够数量的报告。所以把这个问题以 <code>SLOW_OPS</code> 的方式暴露出来也是一个办法，让管理员觉察到问题，虽然这个错误信息比较隐晦。</p>
-</li>
-<li>
-<p>报告人这里对报告也有周密的跟踪机制，它把还未发出去的报告保存在 <code>failure_queue</code> 里面，已经发出去的报告则保存在 <code>failure_pending</code> 里面。 如果发出的报告没有下文，也就是说如果它没有撤销，而新版的 osdmap 也没有把失联的 OSD 标记成 "down"，那么这些报告会一直保存在 OSD 里面。</p>
-</li>
-</ul>
-</div>
-</li>
-<li>
-<p>在 monitor 这边加入衰退的机制，如果失联报告很长时间没有其他方的证据坐实这个问题，那么就取消报告。但是在大规模的集群里面，如果集群有突发情况，比如产生大规模的网络分裂，那么短时间之内 <code>failure_info</code> 中会出现大量积压的 failure 报告，如果在持有 <code>Monitor::lock</code> 大锁的时候遍历数据它，可能会加重 monitor 的负担，提高 monitor 处理消息的延迟。请注意，<code>Monitor::timer</code> 是一个 <code>SafeTimer</code>，而这个 "safe" 是由 <code>Monitor::lock</code> 保障的。而 <code>Monitor::ms_dispatch()</code> 也是在 <code>Monitor::lock</code> 里面处理消息的。为了缓解这个问题，可以引入一个 <code>int</code> 型的 "指针"，每次在 <code>tick()</code> 里面仅仅处理一定数量的 failure，如果超过这个数量，就把工作留到下次 <code>tick()</code> 再做。这个 "指针" 就用来保存下次开始的位置。如果在某次处理部分报告的时候，正好错过了某些刚加入的信息也没关系，以后就会轮到的。除非 <code>failure_info</code> 增长的速度大大超过每次 <code>tick()</code> 处理的速度。</p>
-</li>
-<li>
-<p>因为 OSD 会定期发送 <code>osd_beacon</code> 给 monitor，所以如果有疑似的失联 OSD 发送 beacon 给 monitor，那么是不是也能说明这个 OSD 并不是真正的脱离了组织呢？但是，如果因为网络的问题，这个 OSD 只是不能和举报的 OSD 联系，那么我们也需要把它踢出 osdmap。但是因为 <code>osd_beacon</code> 的发送周期非常长，达 300 秒之久。所以经过这么长的时间，monitor 都无法做出裁决。大概率也能说明集群很难有效地在指定时间内有效地标记失联 OSD 了，至于原因可能是当初发送报告的 OSD 重启，或者干脆是严重的网络分裂问题。但是如果是 OSD 重启的话，我们不应该继续保留 <code>SLOW_OPS</code> 了，它逗留的时间已经够久了。</p>
-</li>
-</ul>
-</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[有时候，failure 报告会化身 SLOW_OPS，并获得永生。]]></summary></entry></feed>
+</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[请求 client.io-42 在第三圈超过了 client.io-17！]]></summary></entry></feed>
