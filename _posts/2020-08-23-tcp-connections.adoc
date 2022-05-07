@@ -16,8 +16,8 @@
 
 * source ip: 32 bit for IPv4
 * source port: 16 bit
-* destination ip: 16 bit (fixed)
-* destination port: 32 bit for IPv4 (fixed)
+* destination ip: 32 bit (fixed)
+* destination port: 16 bit for IPv4 (fixed)
 
 所以这四个数字合起来，就是数据库的复合主键。其中，目标服务的 IP 和端口都是固定的，所以我们只能从客户端这边发掘潜力：
 
