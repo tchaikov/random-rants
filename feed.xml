@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-05-07T01:59:03+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-05-07T02:15:54+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
 <p>记录一下怎么更新 homebrew bottle。</p>
 </div>
 <div class="paragraph">
@@ -309,7 +309,7 @@ undefined behavior。这也是这个问题在不同环境下可能没法重现�
 <div class="paragraph">
 <p>所以问题的原委已经明白了。上图中绿色方块的 <code>lhs</code> 和 <code>rhs</code> 作为引用，在对 <code>postfix</code>
 赋值之后仍然是有效的，但是它们指向的对象就销毁了。为了能够把整个表达式树完整地保存下来，我们必须进行一次 <code>deep copy</code>。Spirit 的维护者 <a href="http://boost-spirit.com/home/articles/qi-example/zero-to-60-mph-in-2-seconds/">实现的 <code>BOOST_SPIRIT_AUTO</code> 宏</a>
-解决的的就是这个问题。也许根据 <a href="https://www.boost.org/doc/libs/1_79_0/libs/spirit/example/qi/typeof.cpp">最新的例子</a>，我们最好用 <code>boost::spirit::qi::copy()</code>。</p>
+解决的就是这个问题。也许根据 <a href="https://www.boost.org/doc/libs/1_79_0/libs/spirit/example/qi/typeof.cpp">最新的例子</a>，我们最好用 <code>boost::spirit::qi::copy()</code>。</p>
 </div>
 </div>
 </div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author></entry><entry><title type="html">redpanda 编译记录</title><link href="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html" rel="alternate" type="text/html" title="redpanda 编译记录" /><published>2022-04-11T00:00:00+00:00</published><updated>2022-04-11T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/04/11/redpanda-build</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/04/11/redpanda-build.html"><![CDATA[<div id="preamble">
@@ -2817,7 +2817,7 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 <div class="sect3">
 <h4 id="大小有别">大小有别</h4>
 <div class="paragraph">
-<p>IO 请求有的大，有的小，不能等同视之。因为我们不追求绝对的延迟数值，比如说一个 4k 的读请求需要多少毫秒。我们希望得3到的是一个比例，即大小为 S 的 IO 请求产生的延迟相当于多少个单位大小的 IO 请求。</p>
+<p>IO 请求有的大，有的小，不能等同视之。因为我们不追求绝对的延迟数值，比如说一个 4k 的读请求需要多少毫秒。我们希望得到的是一个比例，即大小为 S 的 IO 请求产生的延迟相当于多少个单位大小的 IO 请求。</p>
 </div>
 <div class="stemblock">
 <div class="content">
