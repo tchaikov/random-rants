@@ -183,4 +183,4 @@ undefined behavior。这也是这个问题在不同环境下可能没法重现�
 所以问题的原委已经明白了。上图中绿色方块的 `lhs` 和 `rhs` 作为引用，在对 `postfix`
 赋值之后仍然是有效的，但是它们指向的对象就销毁了。为了能够把整个表达式树完整地保存下来，
 我们必须进行一次 `deep copy`。Spirit 的维护者 http://boost-spirit.com/home/articles/qi-example/zero-to-60-mph-in-2-seconds/[实现的 `BOOST_SPIRIT_AUTO` 宏]
-解决的的就是这个问题。也许根据 https://www.boost.org/doc/libs/1_79_0/libs/spirit/example/qi/typeof.cpp[最新的例子]，我们最好用 `boost::spirit::qi::copy()`。
+解决的就是这个问题。也许根据 https://www.boost.org/doc/libs/1_79_0/libs/spirit/example/qi/typeof.cpp[最新的例子]，我们最好用 `boost::spirit::qi::copy()`。
