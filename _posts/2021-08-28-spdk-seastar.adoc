@@ -466,7 +466,7 @@ poller 的输入可能就是前一个 poller 的输出。这样同时也有助�
 . `reap_spdk_completions_pollfn`: 调用 `spdk_thread_poll()`
   收集完成了的请求。
 
-当然，我们也可以从简处理
+当然也可以从简处理
 
 . 不用 `smp_pollfn`。即不支持跨 shard 发送 IO 请求，每个 shard 都用自己的 io channel。
 . 不用第一个 `reap_spdk_completions_pollfn`。因为我们觉得这是个优化，以后慢慢加。
@@ -480,7 +480,7 @@ ____
 回调函数的参数呢？
 ____
 
-只要我们能把 I/O 请求包装成某种类似 `io_completion` 的类型，让它
+只要能把 I/O 请求包装成某种类似 `io_completion` 的类型，让它
 
 . 能跟踪当初调用异步操作时，返回的 `promise<>` 以及
 . 能包含在回调函数的参数 `cb_arg` 中，以便在 I/O 完成的时候，
@@ -532,7 +532,7 @@ ____
 - 使用 `sock` 模块
 
 把上面这些功能组合起来，足以实现一个功能完备的 `reactor_backend`。
-但是我们也可以保留 Seastar 的 reactor，像 DPDK 那样另外再注册
+但是也可以保留 Seastar 的 reactor，像 DPDK 那样另外再注册
 `spdk::ThreadGroup` 的 poller。牵涉面小，而且工作量也少些。
 对于两者的集成这可能是更稳妥的第一步。也许这也是 SPDK 支持在
 Seastar 中更合适的定位--即提供块设备的访问，而非作为通用的基础设施提供文件系统的访问。
@@ -548,7 +548,7 @@ Seastar 中更合适的定位--即提供块设备的访问，而非作为通用�
 
 === 典型的用例
 
-我们用假象中的 Seastar + SPDK 重写 `examples/bdev/hello_world` 试试看
+我们用假想中的 Seastar + SPDK 重写 `examples/bdev/hello_world` 试试看
 
 [source, c++]
 ----
