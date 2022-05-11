@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-05-07T02:15:54+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-05-11T05:06:52+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
 <p>记录一下怎么更新 homebrew bottle。</p>
 </div>
 <div class="paragraph">
@@ -1157,7 +1157,7 @@ core 负责的 bdev。</p>
 </ol>
 </div>
 <div class="paragraph">
-<p>当然，我们也可以从简处理</p>
+<p>当然也可以从简处理</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -1190,7 +1190,7 @@ core 负责的 bdev。</p>
 </blockquote>
 </div>
 <div class="paragraph">
-<p>只要我们能把 I/O 请求包装成某种类似 <code>io_completion</code> 的类型，让它</p>
+<p>只要能把 I/O 请求包装成某种类似 <code>io_completion</code> 的类型，让它</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -1288,7 +1288,7 @@ core 负责的 bdev。</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>把上面这些功能组合起来，足以实现一个功能完备的 <code>reactor_backend</code>。但是我们也可以保留 Seastar 的 reactor，像 DPDK 那样另外再注册
+<p>把上面这些功能组合起来，足以实现一个功能完备的 <code>reactor_backend</code>。但是也可以保留 Seastar 的 reactor，像 DPDK 那样另外再注册
 <code>spdk::ThreadGroup</code> 的 poller。牵涉面小，而且工作量也少些。对于两者的集成这可能是更稳妥的第一步。也许这也是 SPDK 支持在
 Seastar 中更合适的定位&#8212;&#8203;即提供块设备的访问，而非作为通用的基础设施提供文件系统的访问。这两者有共性，但是也有一些不一样的地方。比如说文件系统可以用 <code>open_directory()</code>
 和 <code>list_directory()</code> 来枚举一个目录下的所有文件，更进一步，块设备的枚举方式根据块设备的类型各自不同。SPDK 提供 <code>spdk_nvme_probe()</code>
@@ -1301,7 +1301,7 @@ Seastar 中更合适的定位&#8212;&#8203;即提供块设备的访问，而非�
 <div class="sect2">
 <h3 id="典型的用例">典型的用例</h3>
 <div class="paragraph">
-<p>我们用假象中的 Seastar + SPDK 重写 <code>examples/bdev/hello_world</code> 试试看</p>
+<p>我们用假想中的 Seastar + SPDK 重写 <code>examples/bdev/hello_world</code> 试试看</p>
 </div>
 <div class="listingblock">
 <div class="content">
