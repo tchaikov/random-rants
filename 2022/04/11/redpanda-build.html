@@ -347,6 +347,32 @@ $ sudo DEPOT_TOOLS_DIR=${DEPOT_TOOLS_DIR} ./install-dependencies.sh</pre
             </div>
           </div>
           <div class="sect1">
+            <h2 id="没有-rtti-的-snappy">没有 RTTI 的 snappy</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  因为新版 snappy 关掉了
+                  RTTI，导致很多使用它的应用都出现了链接失败的问题。虽然有
+                  <a href="https://github.com/google/snappy/pull/129"
+                    >snappy 的 PR</a
+                  >，无奈谷歌的工程师只希望对 Google Chrome
+                  的编译负责。所以我们需要把
+                  <code>CMakeLists.txt</code> 里面关于 RTTI
+                  的代码注释掉，再重新编译安装
+                  snappy。否则会出现下面的链接错误：
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre>
+lib/libv_v_compression.a(snappy_standard_compressor.cc.o):(.data.rel.ro._ZTIN11compression17snappy_iobuf_sinkE[_ZTIN11compression17snappy_iobuf_sinkE]+0x10): undefined reference to `typeinfo for snappy::Sink'
+/usr/bin/ld: lib/libv_v_compression.a(snappy_standard_compressor.cc.o):(.data.rel.ro._ZTIN11compression19snappy_iobuf_sourceE[_ZTIN11compression19snappy_iobuf_sourceE]+0x10): undefined reference to `typeinfo for snappy::Source'</pre
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
             <h2 id="编译">编译</h2>
             <div class="sectionbody">
               <div class="paragraph">
