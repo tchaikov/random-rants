@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<!--
+    Type on Strap jekyll theme v2.3.10
+    Theme free for personal and commercial use under the MIT license
+    https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, minimum-scale=0.5, maximum-scale=5"
+    />
+
+    <!-- Theme Mode-->
+
+    <script>
+      const isAutoTheme = true;
+      document.documentElement.setAttribute(
+        "data-theme",
+        sessionStorage.getItem("theme")
+      );
+    </script>
+
+    <!-- Main JS (navbar.js, katex_init.js and masonry_init.js)-->
+    <script defer src="/assets/js/main.min.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/assets/css/main.css" />
+
+    <!--Favicon-->
+    <link rel="shortcut icon" href="" type="image/x-icon" />
+
+    <!-- KaTeX 0.13.9 -->
+
+    <script defer src="/assets/js/vendor/katex.min.js"></script>
+    <script
+      defer
+      src="/assets/js/vendor/auto-render.min.js"
+      onload="renderMathInElement(document.body);"
+    ></script>
+
+    <!-- Mermaid 8.9.2 -->
+
+    <!-- Simple Jekyll Search 1.9.1 -->
+    <script
+      src="/assets/js/vendor/simple-jekyll-search.min.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Google Analytics / Cookie Consent -->
+    <script>
+      const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
+      const isCookieConsent = "";
+      const analyticsName = "";
+    </script>
+
+    <!-- seo tags -->
+    <meta property="og:image" content="https://blog.k3fu.xyz/" />
+
+    <meta property="og:type" content="website" />
+
+    <!-- Begin Jekyll SEO tag v2.7.1 -->
+    <title>C++20 的 move-only iterators | some random rants</title>
+    <meta name="generator" content="Jekyll v4.1.1" />
+    <meta property="og:title" content="C++20 的 move-only iterators" />
+    <meta name="author" content="Kefu Chai" />
+    <meta property="og:locale" content="en" />
+    <meta name="description" content="如无必要，勿增实体。" />
+    <meta property="og:description" content="如无必要，勿增实体。" />
+    <link
+      rel="canonical"
+      href="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html"
+    />
+    <meta
+      property="og:url"
+      content="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html"
+    />
+    <meta property="og:site_name" content="some random rants" />
+    <meta property="og:type" content="article" />
+    <meta
+      property="article:published_time"
+      content="2022-07-16T00:00:00+00:00"
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta property="twitter:title" content="C++20 的 move-only iterators" />
+    <script type="application/ld+json">
+      {
+        "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "如无必要，勿增实体。",
+        "url": "https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html",
+        "@type": "BlogPosting",
+        "headline": "C++20 的 move-only iterators",
+        "dateModified": "2022-07-16T00:00:00+00:00",
+        "datePublished": "2022-07-16T00:00:00+00:00",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html"
+        },
+        "@context": "https://schema.org"
+      }
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <!-- RSS -->
+    <link
+      rel="alternate"
+      type="application/atom+xml"
+      title="some random rants"
+      href="https://blog.k3fu.xyz/feed.xml"
+    />
+    <link
+      type="application/atom+xml"
+      rel="alternate"
+      href="https://blog.k3fu.xyz/feed.xml"
+      title="some random rants"
+    />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="C++20 的 move-only iterators" />
+    <meta
+      name="twitter:description"
+      content="如无必要，勿增实体。曾经，iterator 必须支持拷贝。但是很多情况下这个要求甚至算不上锦上添花，而会直接限制 iterator 的使用场景。 p0902r0把这个窘境总结了一下，提出了 move-only iterator。本文试着以笔者自己的语言去重复这篇提议。希望这样可以更好地理解它的来龙去脉。一些背景平..."
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://blog.k3fu.xyz/" />
+    <meta name="twitter:image:alt" content="C++20 的 move-only iterators" />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <!-- Logo and title -->
+      <div class="branding">
+        <a class="site-title" aria-label="some random rants" href="/">
+          some random rants
+        </a>
+      </div>
+
+      <!-- Toggle menu -->
+      <nav class="clear">
+        <a aria-label="pull" id="pull" class="toggle" href="#">
+          <i class="fas fa-bars fa-lg"></i>
+        </a>
+
+        <!-- Menu -->
+        <ul class="hide">
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="关于" title="关于" href="/about/">
+              关于
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="搜索" title="搜索" href="/search/">
+              <i class="fas fa-search" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a class="clear" aria-label="Tags" title="Tags" href="/tags/">
+              <i class="fas fa-tags" aria-hidden="true"></i>
+            </a>
+          </li>
+
+          <li class="separator">|</li>
+          <li>
+            <a
+              id="theme-toggle"
+              title="C++20 的 move-only iterators "
+              aria-label="C++20 的 move-only iterators"
+              onclick="themeToggle()"
+            ></a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="content">
+      <article>
+        <header id="main" style="">
+          <div class="title-padder">
+            <h1 id="C%2B%2B20+%E7%9A%84+move-only+iterators" class="title">
+              C++20 的 move-only iterators
+            </h1>
+
+            <div class="post-info">
+              <p class="meta">July 16, 2022</p>
+            </div>
+          </div>
+        </header>
+
+        <section class="post-content">
+          <div id="preamble">
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>如无必要，勿增实体。</p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  曾经，<code>iterator</code>
+                  必须支持拷贝。但是很多情况下这个要求甚至算不上锦上添花，而会直接限制
+                  <code>iterator</code> 的使用场景。
+                  <a href="http://wg21.link/P0902R0">p0902r0</a>
+                  把这个窘境总结了一下，提出了
+                  <strong>move-only iterator</strong
+                  >。本文试着以笔者自己的语言去重复这篇提议。希望这样可以更好地理解它的来龙去脉。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="一些背景">一些背景</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  平时编程的时候，我们常常使用一些容器，比如
+                  <code>std::vector</code> 和
+                  <code>std::map</code>
+                  来跟踪一组数据。尽管这两类容器的访问模式可以很不同，前者支持用下标进行随机的访问，而且用游标可以在里面前后游走，后者的也可以用游标前后移动，访问游标指向的
+                  KV 对，但是它无法用下标访问。<code>std::map</code>
+                  是一种关联型 (associative) 容器，用 key
+                  作为索引才是存取它的正确手段。但是不管它们的访问模式如何，我们发明了
+                  iterator 作为抽象的索引机制，能兼容这两种不同的访问模式。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>它大约有下面几类功能</p>
+              </div>
+              <div class="olist arabic">
+                <ol class="arabic">
+                  <li>
+                    <p>
+                      作为点查询 (point query) 的返回值，比如说
+                      <code>std::map::find()</code> 的返回值。 当然，iterator
+                      也需要能表示一个无效的返回值，说明找不到符合的元素。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      用来表示一个区间，对于有序的容器，两个 iterator
+                      中间的那些元素不正好也是这个有序容器的一个部分吗？
+                    </p>
+                  </li>
+                  <li>
+                    <p>作为游标能在容器里面移动，访问其他容器的部分。</p>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="老马的实时菜单">老马的实时菜单</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  iterator 除了用来访问现成的容器里的数据，我们似乎也能用它来
+                  <strong>存取</strong>
+                  一些即时生成的数据呢？问题来源于生活，让我们还是从生活出发。老王来到一个新开的饭馆，也许他看错了店招：
+                </p>
+              </div>
+              <div class="quoteblock">
+                <div class="title">
+                  不知所措的食客老王在面馆里面质问店里面的伙计:
+                </div>
+                <blockquote>
+                  啊，面馆里面竟然不卖面？那你们都有什么呢？
+                </blockquote>
+              </div>
+              <div class="quoteblock">
+                <div class="title">大义凛然的伙计（其实是掌柜老马）:</div>
+                <blockquote>
+                  我们有，普通泡馍，优质泡馍，纯羊肉泡馍，腊牛肉夹馍，羊杂汤。
+                </blockquote>
+              </div>
+              <div class="paragraph">
+                <p>
+                  老马作为店主，显然对小店提供的服务烂熟于心，他结合当前的剩余物资和食客可能的消费水平，对这张实时渲染生成的菜单进行了定制化，如果食客身着“锦衣”，那肯定也能负担“玉食”。这时候，老马的答案可能就是：
+                </p>
+              </div>
+              <div class="quoteblock">
+                <div class="title">眉开眼笑的伙计（其实还是老马）:</div>
+                <blockquote>
+                  客官里面请！我们有，正黄旗金枪鱼，苏州龙虾，花毛一体盖浇饭，特优质泡馍，超纯羊肉泡馍，顶级羊杂汤。
+                </blockquote>
+              </div>
+              <div class="paragraph">
+                <p>为了更便于理解，两人的对话化为程序</p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">tour_in_casa_de_mars</span><span class="p">(</span><span class="n">Mars</span><span class="o">&amp;</span> <span class="n">mars</span><span class="p">,</span> <span class="n">Wong</span><span class="o">&amp;</span> <span class="n">wong</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">range</span> <span class="o">=</span> <span class="n">mars</span><span class="p">.</span><span class="n">menu</span><span class="p">(</span><span class="n">wong</span><span class="p">.</span><span class="n">appearance</span><span class="p">());</span>
+  <span class="k">auto</span> <span class="n">end</span> <span class="o">=</span> <span class="n">range</span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+  <span class="k">auto</span> <span class="n">begin</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">range</span><span class="p">).</span><span class="n">begin</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">dish</span> <span class="o">=</span> <span class="n">wong</span><span class="p">.</span><span class="n">pick_in_menu</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">);</span> <span class="n">dish</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">meal</span> <span class="o">=</span> <span class="n">co_await</span> <span class="n">wong</span><span class="p">.</span><span class="n">put_order</span><span class="p">(</span><span class="o">*</span><span class="n">dish</span><span class="p">)</span>
+    <span class="n">co_await</span> <span class="n">wong</span><span class="p">.</span><span class="n">consume</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">meal</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="n">co_return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">Wong</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Iterator</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Sentinel</span><span class="p">)</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Dish</span><span class="p">&gt;</span> <span class="n">pick_in_menu</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span> <span class="n">Sentinel</span> <span class="n">last</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(;</span> <span class="n">first</span> <span class="o">!=</span> <span class="n">last</span><span class="p">;</span> <span class="o">++</span><span class="n">first</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">want_to_try</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="o">*</span><span class="n">first</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{};</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  其中，<code>mars.menu()</code> 返回的是一份神奇的可定制菜单
+                </p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="k">class</span> <span class="nc">CustomizedMenu</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;</span> <span class="n">mars</span><span class="p">;</span>
+  <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+  <span class="n">CustomizedMenu</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;&amp;&amp;</span> <span class="n">mars</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">)</span>
+    <span class="o">:</span> <span class="n">mars</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mars</span><span class="p">)},</span> <span class="n">affordable</span><span class="p">{</span><span class="n">affordable</span><span class="p">}</span>
+  <span class="p">{}</span>
+  <span class="k">class</span> <span class="nc">sentinel</span> <span class="p">{};</span>
+  <span class="k">class</span> <span class="nc">iterator</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;</span> <span class="n">mars</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Dish</span><span class="o">&gt;</span> <span class="n">dish</span><span class="p">;</span>
+  <span class="nl">public:</span>
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">Dish</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">reference_type</span> <span class="o">=</span> <span class="n">Dish</span><span class="o">&amp;</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">pointer_type</span> <span class="o">=</span> <span class="n">Dish</span><span class="o">*</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">difference_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">ptrdiff_t</span><span class="p">;</span>
+
+    <span class="n">iterator</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;&amp;&amp;</span> <span class="n">mars</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">)</span>
+      <span class="o">:</span> <span class="n">mars</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mars</span><span class="p">)},</span> <span class="n">affordable</span><span class="p">{</span><span class="n">affordable</span><span class="p">}</span> <span class="p">{</span>
+      <span class="n">dish</span> <span class="o">=</span> <span class="n">mars</span><span class="p">.</span><span class="n">dish_with_price_higher_than</span><span class="p">(</span><span class="n">affordable</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">iterator</span><span class="p">(</span><span class="n">iterator</span><span class="o">&amp;&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+    <span class="n">iterator</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">iterator</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+    <span class="n">iterator</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">++</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">dish</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">out_of_range</span><span class="p">();</span>
+      <span class="p">}</span>
+      <span class="n">dish</span> <span class="o">=</span> <span class="n">mars</span><span class="o">-&gt;</span><span class="n">dish_with_price_higher_than</span><span class="p">(</span><span class="n">dish</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">);</span>
+      <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="n">iterator</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">it</span><span class="p">,</span> <span class="n">sentinel</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="o">!</span><span class="n">it</span><span class="p">.</span><span class="n">has_more</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">reference_type</span> <span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+      <span class="n">assert</span><span class="p">(</span><span class="n">has_more</span><span class="p">());</span>
+      <span class="k">return</span> <span class="o">*</span><span class="n">dish</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="nl">private:</span>
+    <span class="kt">bool</span> <span class="n">has_more</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">dish</span> <span class="o">&amp;&amp;</span> <span class="n">dish</span><span class="o">-&gt;</span><span class="n">price</span> <span class="o">&lt;=</span> <span class="n">affordable</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+  <span class="n">iterator</span> <span class="n">begin</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mars</span><span class="p">),</span> <span class="n">affordable</span><span class="p">};</span>
+  <span class="p">}</span>
+  <span class="n">sentinel</span> <span class="n">end</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{};</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  这里面 <code>Mars</code> 代表老马的灵感，<code
+                    >CustomizedMenu</code
+                  >
+                  是由灵感激发得到的菜单。其中， iterator
+                  承担的功能和之前大相径庭：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      iterator
+                      只能往前走。因为菜单是即兴发挥的成果，老王是没法插话问老马，上面一个是啥，什么盖浇饭？老马回答不出来，但是如果你直接告诉他“花毛一体盖浇饭”，他一定会在你的耐心消失之前把它做出来。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      iterator
+                      无法复制。老马的灵感稍纵即逝，无法要求他从“苏州龙虾”开始再重复一遍菜谱。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      iterator
+                      是只读的。虽然老王也充满了创造力，在相熟的菜馆他或许能破例要求把“苏州龙虾”改成
+                      更亲民的“扬州炒饭”，但是在老马这里行不通。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>用 C&#43;&#43; 20 的话说，</p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>
+                      它是一个 <code>std::input_iterator</code>。即我们可以通过
+                      dereference 它（即
+                      <code>std::indirectly_readable</code>，从 iterator
+                      读取数据。
+                    </p>
+                  </li>
+                  <li>
+                    <p>
+                      但是它不是 <code>std::forward_iterator</code>，因为这个
+                      iterator 只能带我们走过一程，
+                      之后就不能再用它了。如果老王的点菜算法需要多次遍历菜单，除非他自带速记功能，
+                      否则的话很难在老马的面馆吃到东西了。所幸老王是个爽快人，
+                      <code>Wong::pick_in_menu()</code>
+                      只需要遍历一遍菜单就可以得出结果。我们把这类 iterator 称作
+                      “single-pass” iterator。 这种算法也就是 “single-pass”
+                      algorithm 了。
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  问题在于，在 C&#43;&#43;20 之前，我们对这种 single-pass
+                  iterator
+                  没有良好的定义，也缺乏支持。那时候的标准库过于粗线条，认为
+                  iterator 必须支持拷贝。所以很可能
+                  <code>Wong::pick_in_menu()</code> 是没办法使用
+                  <code>std::find_if()</code> 来帮助老王选择他要的午饭的。
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="sect1">
+            <h2 id="p1207-和-c20">P1207 和 C++20</h2>
+            <div class="sectionbody">
+              <div class="paragraph">
+                <p>
+                  在 C&#43;&#43;20 采纳的
+                  <a href="http://wg21.link/P1207R4">p1207r4</a> 里对 move-only
+                  iterator 做了深入的回顾，它同时主张：只支持 move 的 iterator
+                  也能被划为
+                  <code>InputIterator</code
+                  >，而且它进一步指出，很多标准库里面使用
+                  <code>InputIterator</code> 的算法其实是 single-pass
+                  的，它们的实现没有必要拷贝 iterator。很明显
+                  <code>InputIterator</code> 是
+                  <code>Iterator</code>
+                  的特殊形式，它需要满足后者的所有要求。为了和 C&#43;&#43;20
+                  的新式 "Iterator" 相区别，我们把之前的 "Iterator" 叫做
+                  "LegacyIterator"。在 C&#43;&#43;20 之前，C&#43;&#43;
+                  标准要求它
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>CopyConstructible</p>
+                  </li>
+                  <li>
+                    <p>CopyAssignable</p>
+                  </li>
+                  <li>
+                    <p>Destructible</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>换成 C&#43;&#43;20 concept，就是</p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">I</span><span class="p">&gt;</span>
+<span class="n">concept</span> <span class="n">__LegacyIterator</span> <span class="o">=</span>
+  <span class="n">requires</span><span class="p">(</span><span class="n">I</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">{</span>   <span class="o">*</span><span class="n">i</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n">__Referenceable</span><span class="p">;</span>
+    <span class="p">{</span>  <span class="o">++</span><span class="n">i</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="n">I</span><span class="o">&amp;&gt;</span><span class="p">;</span>
+    <span class="p">{</span> <span class="o">*</span><span class="n">i</span><span class="o">++</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n">__Referenceable</span><span class="p">;</span>
+  <span class="p">}</span> <span class="o">&amp;&amp;</span> <span class="n">std</span><span class="o">::</span><span class="n">copyable</span><span class="o">&lt;</span><span class="n">I</span><span class="o">&gt;</span><span class="p">;</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  在 <a href="http://wg21.link/P1207R4">p1207r4</a>看来，<code
+                    >*i++</code
+                  >
+                  和 <code>std::copyable&lt;I&gt;</code> 的要求就是束缚 iterator
+                  发展的裹脚布。但是鉴于相当多的标准库实现是基于
+                  "LegacyIterator" 实现的。它们的实现在不经意之间就使用了
+                  iterator
+                  的拷贝函数，更不用说大量的用户代码了，它们可能也自觉或者不自觉地依赖着
+                  "LegacyIterator"
+                  提供的“裹脚布”实现了自己的功能。所以为了确保新的标准库继续向后兼容，
+                  <a href="http://wg21.link/P1207R4">p1207r4</a> 借 Ranges
+                  的东风，仅仅要求新的 <code>ranges</code> 库能加入对应的
+                  concept，类型，以及相应的支持，而不会波及
+                  <code>std</code> 库。如果 <code>std</code> 里面的 single-pass
+                  函数能去掉对 InputIterator 的拷贝调用，那肯定会锦上添花……
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>
+                  为了让那些真正的 multi-pass
+                  算法有章可循、有法可依，C&#43;&#43;20 为它们定义了
+                  <code>std::forward_iterator</code>。
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-63f0c1aed729fe127bc40ae3fc570189.png"
+                    alt="Diagram"
+                    width="600"
+                    height="588"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  其中，<code>std::incrementable</code>
+                  是之前“裹脚布”的标准定义：
+                </p>
+              </div>
+              <div class="imageblock">
+                <div class="content">
+                  <img
+                    src="/images/diag-3a8861dc7f7f50bc51b13ad101a791f6.png"
+                    alt="Diagram"
+                    width="610"
+                    height="770"
+                  />
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  有了这个标准的框架，特别是
+                  <code>std::input_iterator</code> 的标准化，我们就可以定义
+                  <code>ranges::input_range</code> 了。虽然
+                  <code>ranges::input_range</code> 只是个
+                  concept。但是在它之上，我们可以定义一系列
+                  views。它们都从底下的
+                  <code>input_range</code>
+                  取出元素，加以处理和判断，然后再生成新的 range。这些 view
+                  都使用 single-pass 算法，自然也只需要
+                  <code>ranges::input_range</code> 了：
+                </p>
+              </div>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p><code>std::ranges::views::filter</code></p>
+                  </li>
+                  <li>
+                    <p><code>std::ranges::views::take_while</code></p>
+                  </li>
+                  <li>
+                    <p><code>std::ranges::views::drop_while</code></p>
+                  </li>
+                  <li>
+                    <p><code>std::ranges::views::transform</code></p>
+                  </li>
+                  <li>
+                    <p><code>std::ranges::views::elements</code></p>
+                  </li>
+                </ul>
+              </div>
+              <div class="paragraph">
+                <p>
+                  如果程序员希望使用 C&#43;&#43;20
+                  开发类似的范型算法，也可以使用
+                  <code>ranges::input_range</code> 或者更底层的
+                  <code>std::input_iterator</code>。这样程序一方面能兼容各种
+                  <code>ranges::input_range</code> 或者
+                  <code>std::input_iterator</code>，可扩展性和维护性自然也更好。
+                </p>
+              </div>
+              <div class="paragraph">
+                <p>刚才老王点菜的函数就可以重构一下，变成：</p>
+              </div>
+              <div class="listingblock">
+                <div class="content">
+                  <pre
+                    class="rouge highlight"
+                  ><code data-lang="c++"><span class="k">class</span> <span class="nc">Wong</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Dishes</span><span class="p">&gt;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Dish</span><span class="o">&gt;</span> <span class="n">pick_in_menu</span><span class="p">(</span><span class="n">Dishes</span><span class="o">&amp;&amp;</span> <span class="n">dishes</span><span class="p">)</span>
+  <span class="n">requires</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">input_range</span><span class="o">&lt;</span><span class="n">Dishes</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span>
+           <span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">range_value_t</span><span class="o">&lt;</span><span class="n">Dishes</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Dish</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">find_if</span><span class="p">(</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">dishes</span><span class="p">),</span>
+        <span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="k">const</span> <span class="n">Dish</span><span class="o">&amp;</span> <span class="n">dish</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="n">want_to_try</span><span class="p">(</span><span class="n">dish</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">end</span><span class="p">(</span><span class="n">dishes</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">{};</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+                </div>
+              </div>
+              <div class="paragraph">
+                <p>
+                  和原来的版本相比，可能更啰嗦了一些。但是新版本更抽象，可读性更好一些，因为采用了
+                  <code>ranges</code> 的 concept
+                  和函数能对参数的类型进行合法性的检测，所以如果参数类型不符合要求，也能给出更有意义的错误信息。同时，因为避免了手工编写循环，可以避免因为某些类型的
+                  iterator 不支持 <code>i++</code> 导致出错，提高了可维护性。
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social media shares -->
+
+        <!-- Tag list -->
+
+        <div class="tag-list">
+          <ul>
+            <li class="meta">Tag</li>
+
+            <li>
+              <a class="button" href="#c%2B%2B">
+                <p><i class="fas fa-tag fa-fw fa-sm"></i> c++</p>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Post navigation -->
+
+      <div id="post-nav">
+        <div id="next-post">
+          <a alt="a bottle of ceph" href="/2022/05/04/homebrew-bottle.html">
+            <p>Next post</p>
+            a bottle of ceph
+          </a>
+        </div>
+      </div>
+
+      <!--Utterances-->
+
+      <!-- Cusdis -->
+      <div
+        class="comments"
+        id="cusdis_thread"
+        data-host="https://cusdis.com"
+        data-app-id="12e099bc-c554-4827-aeb8-e425c83d8176"
+        data-page-id="_posts/2022-07-16-move-only-iterators.adoc"
+        data-page-url="/2022/07/16/move-only-iterators.html"
+        data-page-title="C++20 的 move-only iterators"
+        data-theme="auto"
+      ></div>
+
+      <script async src="https://cusdis.com/js/cusdis.es.js"></script>
+
+      <!-- Disqus -->
+
+      <!-- To change color of links in the page -->
+      <style>
+        header#main {
+          background-size: cover;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+      </style>
+    </div>
+    <footer class="site-footer">
+      <p class="text">
+        Powered by <a href="https://jekyllrb.com/">Jekyll</a> with
+        <a href="https://github.com/sylhare/Type-on-Strap">Type on Strap</a>
+      </p>
+      <div class="footer-icons">
+        <ul>
+          <!-- Social icons from Font Awesome, if enabled -->
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

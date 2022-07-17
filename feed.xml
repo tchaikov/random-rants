@@ -1,4 +1,313 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-05-12T15:00:05+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-07-17T09:47:33+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">C++20 的 move-only iterators</title><link href="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html" rel="alternate" type="text/html" title="C++20 的 move-only iterators" /><published>2022-07-16T00:00:00+00:00</published><updated>2022-07-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/07/16/move-only-iterators</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html"><![CDATA[<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>如无必要，勿增实体。</p>
+</div>
+<div class="paragraph">
+<p>曾经，<code>iterator</code> 必须支持拷贝。但是很多情况下这个要求甚至算不上锦上添花，而会直接限制 <code>iterator</code> 的使用场景。 <a href="http://wg21.link/P0902R0">p0902r0</a>
+把这个窘境总结了一下，提出了 <strong>move-only iterator</strong>。本文试着以笔者自己的语言去重复这篇提议。希望这样可以更好地理解它的来龙去脉。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="一些背景">一些背景</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>平时编程的时候，我们常常使用一些容器，比如 <code>std::vector</code> 和 <code>std::map</code> 来跟踪一组数据。尽管这两类容器的访问模式可以很不同，前者支持用下标进行随机的访问，而且用游标可以在里面前后游走，后者的也可以用游标前后移动，访问游标指向的 KV 对，但是它无法用下标访问。<code>std::map</code> 是一种关联型 (associative) 容器，用 key
+作为索引才是存取它的正确手段。但是不管它们的访问模式如何，我们发明了 iterator
+作为抽象的索引机制，能兼容这两种不同的访问模式。</p>
+</div>
+<div class="paragraph">
+<p>它大约有下面几类功能</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>作为点查询 (point query) 的返回值，比如说 <code>std::map::find()</code> 的返回值。
+当然，iterator 也需要能表示一个无效的返回值，说明找不到符合的元素。</p>
+</li>
+<li>
+<p>用来表示一个区间，对于有序的容器，两个 iterator
+中间的那些元素不正好也是这个有序容器的一个部分吗？</p>
+</li>
+<li>
+<p>作为游标能在容器里面移动，访问其他容器的部分。</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="老马的实时菜单">老马的实时菜单</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>iterator 除了用来访问现成的容器里的数据，我们似乎也能用它来 <strong>存取</strong> 一些即时生成的数据呢？问题来源于生活，让我们还是从生活出发。老王来到一个新开的饭馆，也许他看错了店招：</p>
+</div>
+<div class="quoteblock">
+<div class="title">不知所措的食客老王在面馆里面质问店里面的伙计:</div>
+<blockquote>
+啊，面馆里面竟然不卖面？那你们都有什么呢？
+</blockquote>
+</div>
+<div class="quoteblock">
+<div class="title">大义凛然的伙计（其实是掌柜老马）:</div>
+<blockquote>
+我们有，普通泡馍，优质泡馍，纯羊肉泡馍，腊牛肉夹馍，羊杂汤。
+</blockquote>
+</div>
+<div class="paragraph">
+<p>老马作为店主，显然对小店提供的服务烂熟于心，他结合当前的剩余物资和食客可能的消费水平，对这张实时渲染生成的菜单进行了定制化，如果食客身着“锦衣”，那肯定也能负担“玉食”。这时候，老马的答案可能就是：</p>
+</div>
+<div class="quoteblock">
+<div class="title">眉开眼笑的伙计（其实还是老马）:</div>
+<blockquote>
+客官里面请！我们有，正黄旗金枪鱼，苏州龙虾，花毛一体盖浇饭，特优质泡馍，超纯羊肉泡馍，顶级羊杂汤。
+</blockquote>
+</div>
+<div class="paragraph">
+<p>为了更便于理解，两人的对话化为程序</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="n">future</span><span class="o">&lt;&gt;</span> <span class="n">tour_in_casa_de_mars</span><span class="p">(</span><span class="n">Mars</span><span class="o">&amp;</span> <span class="n">mars</span><span class="p">,</span> <span class="n">Wong</span><span class="o">&amp;</span> <span class="n">wong</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">auto</span><span class="o">&amp;&amp;</span> <span class="n">range</span> <span class="o">=</span> <span class="n">mars</span><span class="p">.</span><span class="n">menu</span><span class="p">(</span><span class="n">wong</span><span class="p">.</span><span class="n">appearance</span><span class="p">());</span>
+  <span class="k">auto</span> <span class="n">end</span> <span class="o">=</span> <span class="n">range</span><span class="p">.</span><span class="n">end</span><span class="p">()</span>
+  <span class="k">auto</span> <span class="n">begin</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">range</span><span class="p">).</span><span class="n">begin</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">auto</span> <span class="n">dish</span> <span class="o">=</span> <span class="n">wong</span><span class="p">.</span><span class="n">pick_in_menu</span><span class="p">(</span><span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">);</span> <span class="n">dish</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">meal</span> <span class="o">=</span> <span class="n">co_await</span> <span class="n">wong</span><span class="p">.</span><span class="n">put_order</span><span class="p">(</span><span class="o">*</span><span class="n">dish</span><span class="p">)</span>
+    <span class="n">co_await</span> <span class="n">wong</span><span class="p">.</span><span class="n">consume</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">meal</span><span class="p">));</span>
+  <span class="p">}</span>
+  <span class="n">co_return</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">class</span> <span class="nc">Wong</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Iterator</span><span class="p">,</span> <span class="k">class</span> <span class="nc">Sentinel</span><span class="p">)</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Dish</span><span class="p">&gt;</span> <span class="n">pick_in_menu</span><span class="p">(</span><span class="n">Iterator</span> <span class="n">first</span><span class="p">,</span> <span class="n">Sentinel</span> <span class="n">last</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(;</span> <span class="n">first</span> <span class="o">!=</span> <span class="n">last</span><span class="p">;</span> <span class="o">++</span><span class="n">first</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">want_to_try</span><span class="p">(</span><span class="o">*</span><span class="n">first</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="o">*</span><span class="n">first</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="p">{};</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>其中，<code>mars.menu()</code> 返回的是一份神奇的可定制菜单</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="k">class</span> <span class="nc">CustomizedMenu</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;</span> <span class="n">mars</span><span class="p">;</span>
+  <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+  <span class="n">CustomizedMenu</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;&amp;&amp;</span> <span class="n">mars</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">)</span>
+    <span class="o">:</span> <span class="n">mars</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mars</span><span class="p">)},</span> <span class="n">affordable</span><span class="p">{</span><span class="n">affordable</span><span class="p">}</span>
+  <span class="p">{}</span>
+  <span class="k">class</span> <span class="nc">sentinel</span> <span class="p">{};</span>
+  <span class="k">class</span> <span class="nc">iterator</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;</span> <span class="n">mars</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Dish</span><span class="o">&gt;</span> <span class="n">dish</span><span class="p">;</span>
+  <span class="nl">public:</span>
+    <span class="k">using</span> <span class="n">value_type</span> <span class="o">=</span> <span class="n">Dish</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">reference_type</span> <span class="o">=</span> <span class="n">Dish</span><span class="o">&amp;</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">pointer_type</span> <span class="o">=</span> <span class="n">Dish</span><span class="o">*</span><span class="p">;</span>
+    <span class="k">using</span> <span class="n">difference_type</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="kt">ptrdiff_t</span><span class="p">;</span>
+
+    <span class="n">iterator</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">Mars</span><span class="o">&gt;&amp;&amp;</span> <span class="n">mars</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">affordable</span><span class="p">)</span>
+      <span class="o">:</span> <span class="n">mars</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mars</span><span class="p">)},</span> <span class="n">affordable</span><span class="p">{</span><span class="n">affordable</span><span class="p">}</span> <span class="p">{</span>
+      <span class="n">dish</span> <span class="o">=</span> <span class="n">mars</span><span class="p">.</span><span class="n">dish_with_price_higher_than</span><span class="p">(</span><span class="n">affordable</span> <span class="o">/</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">iterator</span><span class="p">(</span><span class="n">iterator</span><span class="o">&amp;&amp;</span> <span class="n">rhs</span><span class="p">)</span> <span class="k">noexcept</span> <span class="o">=</span> <span class="k">default</span><span class="p">;</span>
+    <span class="n">iterator</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">iterator</span> <span class="k">const</span><span class="o">&amp;</span><span class="p">)</span> <span class="o">=</span> <span class="k">delete</span><span class="p">;</span>
+    <span class="n">iterator</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">++</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">dish</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="n">std</span><span class="o">::</span><span class="n">out_of_range</span><span class="p">();</span>
+      <span class="p">}</span>
+      <span class="n">dish</span> <span class="o">=</span> <span class="n">mars</span><span class="o">-&gt;</span><span class="n">dish_with_price_higher_than</span><span class="p">(</span><span class="n">dish</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">);</span>
+      <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">friend</span> <span class="kt">bool</span> <span class="k">operator</span><span class="o">==</span><span class="p">(</span><span class="n">iterator</span> <span class="k">const</span><span class="o">&amp;</span> <span class="n">it</span><span class="p">,</span> <span class="n">sentinel</span><span class="p">)</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="o">!</span><span class="n">it</span><span class="p">.</span><span class="n">has_more</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="n">reference_type</span> <span class="k">operator</span><span class="o">*</span><span class="p">()</span> <span class="k">const</span> <span class="p">{</span>
+      <span class="n">assert</span><span class="p">(</span><span class="n">has_more</span><span class="p">());</span>
+      <span class="k">return</span> <span class="o">*</span><span class="n">dish</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="nl">private:</span>
+    <span class="kt">bool</span> <span class="n">has_more</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">dish</span> <span class="o">&amp;&amp;</span> <span class="n">dish</span><span class="o">-&gt;</span><span class="n">price</span> <span class="o">&lt;=</span> <span class="n">affordable</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+  <span class="n">iterator</span> <span class="n">begin</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">mars</span><span class="p">),</span> <span class="n">affordable</span><span class="p">};</span>
+  <span class="p">}</span>
+  <span class="n">sentinel</span> <span class="n">end</span><span class="p">()</span> <span class="k">const</span> <span class="k">noexcept</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{};</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>这里面 <code>Mars</code> 代表老马的灵感，<code>CustomizedMenu</code> 是由灵感激发得到的菜单。其中，
+iterator 承担的功能和之前大相径庭：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>iterator 只能往前走。因为菜单是即兴发挥的成果，老王是没法插话问老马，上面一个是啥，什么盖浇饭？老马回答不出来，但是如果你直接告诉他“花毛一体盖浇饭”，他一定会在你的耐心消失之前把它做出来。</p>
+</li>
+<li>
+<p>iterator 无法复制。老马的灵感稍纵即逝，无法要求他从“苏州龙虾”开始再重复一遍菜谱。</p>
+</li>
+<li>
+<p>iterator 是只读的。虽然老王也充满了创造力，在相熟的菜馆他或许能破例要求把“苏州龙虾”改成
+更亲民的“扬州炒饭”，但是在老马这里行不通。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>用 C&#43;&#43; 20 的话说，</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>它是一个 <code>std::input_iterator</code>。即我们可以通过 dereference 它（即 <code>std::indirectly_readable</code>，从 iterator 读取数据。</p>
+</li>
+<li>
+<p>但是它不是 <code>std::forward_iterator</code>，因为这个 iterator 只能带我们走过一程，
+之后就不能再用它了。如果老王的点菜算法需要多次遍历菜单，除非他自带速记功能，
+否则的话很难在老马的面馆吃到东西了。所幸老王是个爽快人， <code>Wong::pick_in_menu()</code>
+只需要遍历一遍菜单就可以得出结果。我们把这类 iterator 称作 “single-pass” iterator。
+这种算法也就是 “single-pass” algorithm 了。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>问题在于，在 C&#43;&#43;20 之前，我们对这种 single-pass iterator 没有良好的定义，也缺乏支持。那时候的标准库过于粗线条，认为 iterator 必须支持拷贝。所以很可能 <code>Wong::pick_in_menu()</code>
+是没办法使用 <code>std::find_if()</code> 来帮助老王选择他要的午饭的。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="p1207-和-c20">P1207 和 C++20</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>在 C&#43;&#43;20 采纳的 <a href="http://wg21.link/P1207R4">p1207r4</a> 里对 move-only iterator 做了深入的回顾，它同时主张：只支持 move 的 iterator 也能被划为
+<code>InputIterator</code>，而且它进一步指出，很多标准库里面使用 <code>InputIterator</code> 的算法其实是 single-pass 的，它们的实现没有必要拷贝
+iterator。很明显 <code>InputIterator</code> 是 <code>Iterator</code> 的特殊形式，它需要满足后者的所有要求。为了和 C&#43;&#43;20 的新式 "Iterator" 相区别，我们把之前的 "Iterator" 叫做 "LegacyIterator"。在 C&#43;&#43;20 之前，C&#43;&#43; 标准要求它</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CopyConstructible</p>
+</li>
+<li>
+<p>CopyAssignable</p>
+</li>
+<li>
+<p>Destructible</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>换成 C&#43;&#43;20 concept，就是</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">I</span><span class="p">&gt;</span>
+<span class="n">concept</span> <span class="n">__LegacyIterator</span> <span class="o">=</span>
+  <span class="n">requires</span><span class="p">(</span><span class="n">I</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">{</span>   <span class="o">*</span><span class="n">i</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n">__Referenceable</span><span class="p">;</span>
+    <span class="p">{</span>  <span class="o">++</span><span class="n">i</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="n">I</span><span class="o">&amp;&gt;</span><span class="p">;</span>
+    <span class="p">{</span> <span class="o">*</span><span class="n">i</span><span class="o">++</span> <span class="p">}</span> <span class="o">-&gt;</span> <span class="n">__Referenceable</span><span class="p">;</span>
+  <span class="p">}</span> <span class="o">&amp;&amp;</span> <span class="n">std</span><span class="o">::</span><span class="n">copyable</span><span class="o">&lt;</span><span class="n">I</span><span class="o">&gt;</span><span class="p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>在 <a href="http://wg21.link/P1207R4">p1207r4</a>看来，<code>*i++</code> 和 <code>std::copyable&lt;I&gt;</code>
+的要求就是束缚 iterator 发展的裹脚布。但是鉴于相当多的标准库实现是基于 "LegacyIterator" 实现的。它们的实现在不经意之间就使用了 iterator 的拷贝函数，更不用说大量的用户代码了，它们可能也自觉或者不自觉地依赖着 "LegacyIterator" 提供的“裹脚布”实现了自己的功能。所以为了确保新的标准库继续向后兼容， <a href="http://wg21.link/P1207R4">p1207r4</a>
+借 Ranges 的东风，仅仅要求新的 <code>ranges</code> 库能加入对应的 concept，类型，以及相应的支持，而不会波及 <code>std</code> 库。如果 <code>std</code> 里面的 single-pass
+函数能去掉对 InputIterator 的拷贝调用，那肯定会锦上添花……</p>
+</div>
+<div class="paragraph">
+<p>为了让那些真正的 multi-pass 算法有章可循、有法可依，C&#43;&#43;20 为它们定义了 <code>std::forward_iterator</code>。</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/images/diag-63f0c1aed729fe127bc40ae3fc570189.png" alt="Diagram" width="600" height="588">
+</div>
+</div>
+<div class="paragraph">
+<p>其中，<code>std::incrementable</code> 是之前“裹脚布”的标准定义：</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="/images/diag-3a8861dc7f7f50bc51b13ad101a791f6.png" alt="Diagram" width="610" height="770">
+</div>
+</div>
+<div class="paragraph">
+<p>有了这个标准的框架，特别是 <code>std::input_iterator</code> 的标准化，我们就可以定义 <code>ranges::input_range</code> 了。虽然 <code>ranges::input_range</code>
+只是个 concept。但是在它之上，我们可以定义一系列 views。它们都从底下的 <code>input_range</code> 取出元素，加以处理和判断，然后再生成新的 range。这些 view 都使用 single-pass 算法，自然也只需要 <code>ranges::input_range</code> 了：</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>std::ranges::views::filter</code></p>
+</li>
+<li>
+<p><code>std::ranges::views::take_while</code></p>
+</li>
+<li>
+<p><code>std::ranges::views::drop_while</code></p>
+</li>
+<li>
+<p><code>std::ranges::views::transform</code></p>
+</li>
+<li>
+<p><code>std::ranges::views::elements</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>如果程序员希望使用 C&#43;&#43;20 开发类似的范型算法，也可以使用
+<code>ranges::input_range</code> 或者更底层的 <code>std::input_iterator</code>。这样程序一方面能兼容各种 <code>ranges::input_range</code> 或者 <code>std::input_iterator</code>，可扩展性和维护性自然也更好。</p>
+</div>
+<div class="paragraph">
+<p>刚才老王点菜的函数就可以重构一下，变成：</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="c++"><span class="k">class</span> <span class="nc">Wong</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">Dishes</span><span class="p">&gt;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">optional</span><span class="o">&lt;</span><span class="n">Dish</span><span class="o">&gt;</span> <span class="n">pick_in_menu</span><span class="p">(</span><span class="n">Dishes</span><span class="o">&amp;&amp;</span> <span class="n">dishes</span><span class="p">)</span>
+  <span class="n">requires</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">input_range</span><span class="o">&lt;</span><span class="n">Dishes</span><span class="o">&gt;</span> <span class="o">&amp;&amp;</span>
+           <span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">range_value_t</span><span class="o">&lt;</span><span class="n">Dishes</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">Dish</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">find_if</span><span class="p">(</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">dishes</span><span class="p">),</span>
+        <span class="p">[</span><span class="k">this</span><span class="p">](</span><span class="k">const</span> <span class="n">Dish</span><span class="o">&amp;</span> <span class="n">dish</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="n">want_to_try</span><span class="p">(</span><span class="n">dish</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">end</span><span class="p">(</span><span class="n">dishes</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="o">*</span><span class="n">result</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">{};</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>和原来的版本相比，可能更啰嗦了一些。但是新版本更抽象，可读性更好一些，因为采用了 <code>ranges</code> 的 concept 和函数能对参数的类型进行合法性的检测，所以如果参数类型不符合要求，也能给出更有意义的错误信息。同时，因为避免了手工编写循环，可以避免因为某些类型的 iterator 不支持 <code>i++</code>
+导致出错，提高了可维护性。</p>
+</div>
+</div>
+</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="c++" /><summary type="html"><![CDATA[如无必要，勿增实体。]]></summary></entry><entry><title type="html">a bottle of ceph</title><link href="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html" rel="alternate" type="text/html" title="a bottle of ceph" /><published>2022-05-04T00:00:00+00:00</published><updated>2022-05-04T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/05/04/homebrew-bottle</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/05/04/homebrew-bottle.html"><![CDATA[<div class="paragraph">
 <p>记录一下怎么更新 homebrew bottle。</p>
 </div>
 <div class="paragraph">
@@ -3145,76 +3454,4 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 </div>
 <div class="paragraph">
 <p>但是 <code>n</code> 版的 osdmap 是不是真的能替代 <code>m</code> 版 osdmap 加上中间的 <code>m..n</code> 的 inc map 呢?</p>
-</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[补丁太多了的话，加起来大小可能会比最终的版本更大。]]></summary></entry><entry><title type="html">方程式赛车和读写请求</title><link href="https://blog.k3fu.xyz/2021/03/14/lap-n-race.html" rel="alternate" type="text/html" title="方程式赛车和读写请求" /><published>2021-03-14T00:00:00+00:00</published><updated>2021-03-14T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/03/14/lap-n-race</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/03/14/lap-n-race.html"><![CDATA[<div class="paragraph">
-<p>请求 client.io-42 在第三圈超过了 client.io-17！</p>
-</div>
-<div class="paragraph">
-<p>前阵子在思考在 Ceph 里面为什么要顺序执行读写。简单说，和 CPU 的顺序执行模型一样，这个模型更容易理解和使用。顺便跑题一下，对于"人工智能是什么"一直有个争论。其中有两派:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>弱人工智能，即表现上的人工智能。 <a href="https://en.wikipedia.org/wiki/Chinese_room">中文房间</a> 中文房间和 <a href="https://en.wikipedia.org/wiki/Turing_test">图灵测试</a> 就是两个比较有名的测试，通过它们就是一定程度上的弱人工智能。这种人工智能能解决一个特定问题领域上的问题。 现在说的机器学习就是一种弱人工智能。</p>
-</li>
-<li>
-<p>强人工智能，即机理上的人工智能，或者说通用人工智能。这种人工智能需要具有知识表示，推理，规划，学习，自然语言处理等等能力，并把它们整合起来。强人工智能和弱人工智能比起来要难很多。前年看的 <a href="http://bayes.cs.ucla.edu/WHY/">The Book of Why: The New Science of Cause and Effect</a> 说明了因果关系和推理在人工智能的重要地位。</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>和人工智能一样，存储系统的顺序性也有两种</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>表现出来是顺序的</p>
-</li>
-<li>
-<p>严格在执行层面上就是顺序的</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>当然，限制越多，性能越不好。所以在实现 crimson 的时候，每当要求顺序执行的时候，我都会多问几次"为什么"。Ceph 集群里面，一个读写请求在一生中，至少有下面几个阶段</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>从客户端到 primary OSD</p>
-</li>
-<li>
-<p>从 primary OSD 分配到对应的 PG</p>
-</li>
-<li>
-<p>生成事务，并写入本地磁盘。事务包含 pglog 和对应的用户数据。</p>
-</li>
-<li>
-<p>replica OSD 也回应了请求，确认持久化完成。</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>客户端请求就像方程式赛车一样，</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>必须遵守一定的规则，比如只有在持有要求的 osdmap 的时候才能开始处理它，不能依据老版本的 osdmap 行事。</p>
-</li>
-<li>
-<p>需要跑完一定的圈数，</p>
-</li>
-<li>
-<p>而且，对于 Ceph 来说，特定客户端发来的多个请求必须顺序完成。好像来自一个车队的选手必须按照出场顺序完赛一样。</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>在 crimson 里面，满足前两个要求都比较简单直接。问题在于第三个。如果 object store 能保证先进先出，那么是不是只要保证发送请求到 object store 的顺序满足第三个要求就行了呢？</p>
-</div>
-<div class="paragraph">
-<p>答案是不行。在中间有的阶段需要有 write barrier，比如，为了保证 osd 在恢复时有个参考，pglog 保存了 PG 最近的一系列操作，它们保存在 pglog 里面。在构造 transaction 的时候，会和封装用户数据的 journal 一起刷到磁盘上。但是 pglog 是一个链表，链表上每个环节都是一次对 PG 的修改操作。为了逻辑上简单一些，我们需要 pglog 上的操作序列也按照按照客户请求的顺序安排。这样在副本不一致的时候，就可以按照顺序恢复了。不用担心因为乱序执行带来的数据依赖的问题。所以在生成 pglog 的时候，需要保证顺序。</p>
-</div>
-<div class="paragraph">
-<p>类似的，在写磁盘的时候也需要保证顺序，因为相同的读写操作以不同顺序发送到后端存储，得到的结果是不一样的。这个道理和之前《多核和顺序》一文中讨论的问题类似。所以在写磁盘的时候也需要保序。我们使用流水线的设计解决这个问题。</p>
-</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[请求 client.io-42 在第三圈超过了 client.io-17！]]></summary></entry></feed>
+</div>]]></content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html"><![CDATA[补丁太多了的话，加起来大小可能会比最终的版本更大。]]></summary></entry></feed>
