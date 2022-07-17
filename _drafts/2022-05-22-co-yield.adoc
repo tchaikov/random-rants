@@ -1,0 +1,99 @@
+= co_yield for Seastar
+:page-tags: [seastar]
+:date: 2022-05-22 09:20:43 +0800
+:pp: {plus}{plus}
+
+为 Seastar 加上 `co_yield` 支持。
+
+Seastar 已经有了比较完整的 C{pp}协程支持，但是它还缺少 generator。
+虽然有人可能说，这个不过是语法糖。但是碳水化合物谁不喜欢呢？如果 generator 再加上
+`iterator`，那样的代码应该会很赏心悦目。
+
+[source, c++]
+----
+for (auto&& conn : listener.accept()) {
+  serve(std::move(conn));
+}
+// ...
+for (auto&& req : conn.read_requests()) {
+  handle(std::move(req));
+}
+----
+
+谁能想到上面的代码会是全异步的服务器实现的一部分？ 为了实现这个语法糖。我们需要实现异步的 generator，即:
+
+* 实现一个有 `yield_value()` 方法的 `promise_type`。这个 `promise_type` 是对应 generator 类型的成员。
+* 为这个 coroutine 添加一些 helper 函数。丰俭随意。
+** “简”的话，可以仅仅提供下面几个函数
+*** `has_next()`
+*** `next()`
+*** `take_value()`
+** “丰”的话，可以为这些函数加上 iterator 的封装
+
+既然 Seastar 已经为 `seastar::future<>` 定义了 `std::coroutine_traits<>`，那么是不是可以直接基于 `seastar::future<>`，把它作为 coroutine 的返回类型呢？
+立刻能想到的，是为 `coroutine_traits_base::promise_type` 定义一个 `yield_value()`。
+[source, c++]
+----
+template <typename T = void>
+class coroutine_traits_base {
+public:
+    class promise_type final : public seastar::task {
+        seastar::promise<T> _promise;
+    public:
+        template<std::convertible_to<T> From>
+        std::suspend_always yield_value(From &&from) {
+            _promise.set_value(std::forward<U>(value)...);
+            return {};
+        }
+        //...
+    };
+    // ...
+};
+----
+那这块补丁能解决问题吗？或者说，这句话能让下面的代码工作吗？
+[source, c++]
+----
+seastar::future<int> fib(int n)
+{
+    int a = 0, b = 1;
+    for (;;) {
+        co_await seastar::sleep(1s);
+        co_yield std::exchange(a, std::exchange(b, a + b));
+    }
+}
+
+future<int> fib_n(int n) {
+  while (auto i = co_await fib.next()) {
+    if (n-- = 0) {
+      co_return i;
+    }
+  }
+}
+----
+细心的读者可能会问，`seastar::future<int>` 是一种 generator 吗？如果是的话，那么
+[source, c++]
+----
+int f = co_await fibonacci_sequence(42);
+----
+是什么意思呢？`f` 的值会是什么？笔者认为，`fib()` 返回的只能是具有 `generator` 语义的对象，
+它允许调用方依次获取 generator 产生的元素，但是不能提供
+只要定义了 `yield_value()`，那么 `seastar::future<int>` 就可以是 generator，
+虽然像上面这样使用语法上并没有什么不对，但是它的确有些反常规：明明是返回一系列值，为什么调用方拿到一个就收手了？况且，对于
+generator 并不保证能产生值，说不定人家一个值都不会返回呢。所以，我们可以确定的是：不能在 `seastar::future<int>` 上打补丁，
+`seastar::future<int>` 不是个 generator。推而广之，`seastar::future<T>` 也不是 generator。所以我们只得另外定义一个
+`seastar::async_generator<>`，它里面的 `promise_type` 提供了 `yield_value()`。
+*
+
+让我们先回过头看看 `co_yield` 是什么。这里引用 cppreference 的 https://en.cppreference.com/w/cpp/language/coroutines[看得懂版本]：
+[quote]
+____
+Yield-expression returns a value to the caller and suspends the current coroutine: it is the common building block of resumable generator functions
+[source, c++]
+----
+co_await promise.yield_value(expr)
+----
+____
+
+
+
+`seastar::future<>` 作为
