@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-07-17T09:47:33+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">C++20 的 move-only iterators</title><link href="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html" rel="alternate" type="text/html" title="C++20 的 move-only iterators" /><published>2022-07-16T00:00:00+00:00</published><updated>2022-07-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/07/16/move-only-iterators</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html"><![CDATA[<div id="preamble">
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-07-17T09:52:57+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">C++20 的 move-only iterators</title><link href="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html" rel="alternate" type="text/html" title="C++20 的 move-only iterators" /><published>2022-07-16T00:00:00+00:00</published><updated>2022-07-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/07/16/move-only-iterators</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html"><![CDATA[<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
 <p>如无必要，勿增实体。</p>
@@ -272,6 +272,10 @@ iterator。很明显 <code>InputIterator</code> 是 <code>Iterator</code> 的特
 <p><code>std::ranges::views::elements</code></p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>所以在 <a href="http://wg21.link/P0902R0">p0902r0</a> 之后，LWG 收到了一系列提议，它们都基于 move-only iterator，着眼于改进 ranges 对它的支持。比如
+<a href="http://wg21.link/P1862R1">p1862r1</a> 和 <a href="http://wg21.link/P1456R1">p1456r1</a></p>
 </div>
 <div class="paragraph">
 <p>如果程序员希望使用 C&#43;&#43;20 开发类似的范型算法，也可以使用
