@@ -3,7 +3,52 @@
 /* TYPOGRAPHY */
 /* PADDING */
 /* MOBILE */
-/* BASE16 HIGHLIGHT */
+/* THEME COLOR SCHEMES */
+html, html[data-theme="light"] {
+  --background: #ffffff;
+  --blockquote: #eef7fa;
+  --selection: #d4d4d4;
+  --meta: #595959;
+  --link: #0072B5;
+  --header-background: #24292e;
+  --header-text: #ffffff;
+  --header-link: #383838;
+  --code-background: #E0E0E0;
+  --code-inline: #24292e;
+  --text-shadow: #3f3f3f;
+  --text: #262626;
+  --h1: #262626;
+  --h2: #262626;
+  --h3: #262626;
+  --h4: #262626;
+  --h5: #262626;
+  --h6: #262626;
+  --border: rgba(0, 0, 0, 0.2); }
+
+html[data-theme="dark"] {
+  --background: #22272e;
+  --blockquote: #373e47;
+  --selection: #545d68;
+  --meta: #909dab;
+  --link: #00a8e0;
+  --header-background: #2A3444;
+  --header-text: #e7f3f4;
+  --header-link: #adbac7;
+  --code-background: #2A3444;
+  --code-inline: #d9b600;
+  --text-shadow: #2d333b;
+  --text: #cdd9e5;
+  --h1: #d40059;
+  --h2: #b37eff;
+  --h3: #ff66c2;
+  --h4: #00af9e;
+  --h5: #6bac00;
+  --h6: #ff5c00;
+  --border: rgba(255, 255, 255, 0.5);
+  --cusdis--color-text-default: var(--text);
+  --cusdis--color-comment-username-text: var(--link); }
+
+/* BASE16 CODE HIGHLIGHT */
 html, html[data-theme="light"] {
   --base00: #302f2d;
   --base01: #2e3c43;
@@ -39,53 +84,6 @@ html[data-theme="dark"] {
   --base0d: #b37eff;
   --base0e: #00af9e;
   --base0f: #ff66c2; }
-
-/* THEME COLOR SCHEMES */
-html, html[data-theme="light"] {
-  --background: #ffffff;
-  --blockquote: #eef7fa;
-  --selection: #d4d4d4;
-  --meta: #595959;
-  --link: #337ab7;
-  --header-background: #24292e;
-  --header-text: #ffffff;
-  --header-link: #383838;
-  --code-background: #E0E0E0;
-  --code-inline: #24292e;
-  --text-shadow: #3f3f3f;
-  --text: #262626;
-  --h1: #262626;
-  --h2: #262626;
-  --h3: #262626;
-  --h4: #262626;
-  --h5: #262626;
-  --h6: #262626;
-  --border: rgba(0, 0, 0, 0.1);
-  --td-border: rgba(0, 0, 0, 0.1); }
-
-html[data-theme="dark"] {
-  --background: #22272e;
-  --blockquote: #373e47;
-  --selection: #545d68;
-  --meta: #909dab;
-  --link: #00a8e0;
-  --header-background: #2A3444;
-  --header-text: #e7f3f4;
-  --header-link: #adbac7;
-  --code-background: #2A3444;
-  --code-inline: #d9b600;
-  --text-shadow: #2d333b;
-  --text: #cdd9e5;
-  --h1: #d40059;
-  --h2: #b37eff;
-  --h3: #ff66c2;
-  --h4: #00af9e;
-  --h5: #6bac00;
-  --h6: #ff5c00;
-  --border: rgba(0, 0, 0, 0.1);
-  --td-border: rgba(255, 255, 255, 0.5);
-  --cusdis--color-text-default: var(--text);
-  --cusdis--color-comment-username-text: var(--link); }
 
 /* External */
 /*! normalize.css v3.0.2 | MIT License | git.io/normalize */
@@ -6888,7 +6886,7 @@ ul.share-buttons {
   .pagination .page_number {
     display: inline-block;
     vertical-align: sub; }
-    @media (max-width: 300px) {
+    @media (max-width: 320px) {
       .pagination .page_number {
         display: none; } }
   .pagination .button {
