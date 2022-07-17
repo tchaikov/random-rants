@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.3.10
+    Type on Strap jekyll theme v2.4.3
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -31,7 +31,7 @@
     <!--Favicon-->
     <link rel="shortcut icon" href="" type="image/x-icon" />
 
-    <!-- KaTeX 0.13.9 -->
+    <!-- KaTeX 0.15.2 -->
 
     <script defer src="/assets/js/vendor/katex.min.js"></script>
     <script
@@ -40,9 +40,9 @@
       onload="renderMathInElement(document.body);"
     ></script>
 
-    <!-- Mermaid 8.9.2 -->
+    <!-- Mermaid 9.1.1 -->
 
-    <!-- Simple Jekyll Search 1.9.1 -->
+    <!-- Simple Jekyll Search 1.10.0 -->
     <script
       src="/assets/js/vendor/simple-jekyll-search.min.js"
       type="text/javascript"
@@ -53,6 +53,7 @@
       const cookieName = "cookie-notice-dismissed-https://blog.k3fu.xyz";
       const isCookieConsent = "";
       const analyticsName = "";
+      const analyticsNameGA4 = "";
     </script>
 
     <!-- seo tags -->
@@ -92,17 +93,17 @@
     <meta property="twitter:title" content="RADOS 里的顺序" />
     <script type="application/ld+json">
       {
+        "datePublished": "2020-09-20T00:00:00+00:00",
         "author": { "@type": "Person", "name": "Kefu Chai" },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html"
+        },
         "description": "乱序和并发的问题无处不在，Ceph 里面也是这样。",
         "url": "https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html",
         "@type": "BlogPosting",
         "headline": "RADOS 里的顺序",
         "dateModified": "2020-09-20T00:00:00+00:00",
-        "datePublished": "2020-09-20T00:00:00+00:00",
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": "https://blog.k3fu.xyz/2020/09/20/out-of-order-in-ceph.html"
-        },
         "@context": "https://schema.org"
       }
     </script>
@@ -686,7 +687,7 @@
             <li class="meta">Tag</li>
 
             <li>
-              <a class="button" href="#ceph">
+              <a class="button" href="/tags#ceph">
                 <p><i class="fas fa-tag fa-fw fa-sm"></i> ceph</p>
               </a>
             </li>
