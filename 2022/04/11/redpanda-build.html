@@ -405,12 +405,21 @@ index 53856c61d..f8f6b7998 100644
    COMMAND cd &lt;SOURCE_DIR&gt; # Is used for run gn inside v8 dir</code></pre>
                 </div>
               </div>
+              <div class="paragraph">
+                <p>
+                  最后，因为如果混用新版 clang 和老版本的 GNU
+                  ld，可能会出现链接出错的情况。这时候用新版的 binutils 提供的
+                  ld，或者干脆用
+                  <a href="https://lld.llvm.org">llvm 的 LLD</a>：
+                </p>
+              </div>
               <div class="listingblock">
                 <div class="content">
                   <pre>
 $ cd redpanda
 $ CC=clang-15 CXX=clang++-15 DEPOT_TOOLS_DIR=/var/depot_tools \
-    -DCMAKE_BUILD_TYPE=Debug</pre
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld</pre
                   >
                 </div>
               </div>
