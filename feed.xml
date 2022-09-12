@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T07:39:13+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T09:45:30+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 是 Seastar 用来配置系统参数的工具，目标是提高 Seastar 应用的性能。ScyllaDB 的文档有
@@ -7,7 +7,7 @@
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect1&quot;&gt;
-&lt;h2 id=&quot;rps&quot;&gt;RPS&lt;/h2&gt;
+&lt;h2 id=&quot;三个模式&quot;&gt;三个模式&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 的前身是 &lt;code&gt;posix_net_conf.sh&lt;/code&gt;。这个脚本被用来设置 IRQ 的亲和性和 RPS。它做这两件事&lt;/p&gt;
@@ -26,20 +26,9 @@
 &lt;/ol&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;这里需要解释一下 &lt;a href=&quot;https://lwn.net/Articles/370153/&quot;&gt;RPS&lt;/a&gt;。RPS 是 Receive Packet Steering
-的缩写。RPS 和 RSS 类似，目标都是希望让 CPU 核分担处理接受到数据包的工作，以提高性能。但是 RPS
-工作在纯软件的层面。所以它更灵活，可以由软件设置它分配数据包的算法。但是它也带来了 CPU 核心之间的中断，即 IPI (inter-processor interrupts)。缺省 RPS 是关掉的，即谁通过网卡 IRQ 收到的包，谁负责处理。但是要知道，接收数据包本身就意味着处理硬中断，处理软中断，执行 NAPI 轮询收包，以及把数据包在协议栈逐级向上传递。这还不包括用户态程序从 socket 读出数据后的处理。由于硬件队列的数量往往小于 CPU 的核心数，这样就会出现一核干活，七核加油的景象。为了让另外七个核心也能帮忙处理硬件队列发来的数据包，我们需要告诉操作系统，让它把第一个核从硬件队列收下来的包分配给那七个核心。另外，在 LWN 也有一篇
-&lt;a href=&quot;https://lwn.net/Articles/370153/&quot;&gt;介绍&lt;/a&gt;，可供参考。如果需要更深入的阅读，一定要看一下 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 上的文档&lt;/a&gt;。&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;div class=&quot;sect1&quot;&gt;
-&lt;h2 id=&quot;三个模式&quot;&gt;三个模式&lt;/h2&gt;
-&lt;div class=&quot;sectionbody&quot;&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;多队列网卡一般提供单独的 rx 队列配置，或者 rx 和 tx 共用的队列。后者被记为
-“combined”。为了简单起见，后面统称为 rx 队列。RSS 把接收到的数据包分散在多个 rx 队列里面，每个队列通过硬中断把“有新数据来啦”这个消息告诉负责处理这个硬中断的 CPU。请注意，这里的 CPU
-可以是多个。&lt;/p&gt;
+&lt;p&gt;先进的多队列网卡一般提供单独的 rx 队列配置，或者 rx 和 tx 共用的队列。后者被记为“combined”。为了简单起见，后面统称为 rx 队列。这种技术叫做 Receive Side Scaling，即 RSS。RSS
+把接收到的数据包分散在多个 rx 队列里面，每个队列通过硬中断把 “有新数据来啦”
+这个消息告诉负责处理这个硬中断的 CPU。请注意，这里负责处理特定中断号的 CPU 可以是多个。对于单队列网卡，只能用 RPS 队列用软件实现多队列。关于 RPS，后面 &lt;a href=&quot;#RPS&quot;&gt;[RPS]&lt;/a&gt; 一节有简单的介绍。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;listingblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
@@ -348,8 +337,82 @@ IRQ core 的模式。原版的算法还要求制定的 &lt;code&gt;cpu_mask&lt;/
 &lt;p&gt;前面把网卡的所有 IRQ 都不加区别地分给了所有凑出来的壮丁 PU，如果网卡有多个 rx 队列，那么 &lt;code&gt;perftune.py&lt;/code&gt; 还有更细致的考虑。它会分两次。第一次把负责 rx 队列的 IRQ
 均匀分布在壮丁 PU 中，第二次再把剩下的 IRQ 分布在同一个 PU 集合中。和大锅饭的统一分配相比，这样确保 rx 队列对应的 IRQ 能有更均匀的分布。&lt;/p&gt;
 &lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;rps-和-rfs&quot;&gt;RPS 和 RFS&lt;/h3&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;在网络的数据链路上，除了 IRQ 亲和性，RSS 的设置，还有 RPS，XPS。这里限于篇幅，就不再赘述了。建议大家仔细研读 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 上的文档&lt;/a&gt;，以及相关的内核代码。&lt;/p&gt;
+&lt;p&gt;RPS 是 Receive Packet Steering 的缩写。RPS 和 RSS 类似，目标都是希望让 CPU
+核分担处理接受到数据包的工作，以提高性能。但是 RPS 工作在纯软件的层面。所以它更灵活，可以由软件设置它分配数据包的算法。但是它也带来了 CPU 核心之间的中断，即 IPI
+(inter-processor interrupts)。缺省 RPS 是关掉的，即谁通过网卡 IRQ 收到的包，谁负责处理。但是要知道，接收数据包本身就意味着处理硬中断，处理软中断，执行 NAPI 轮询收包，以及把数据包在协议栈逐级向上传递。这还不包括用户态程序从 socket 读出数据后的处理。由于硬件队列的数量往往小于 CPU 的核心数，这样就会出现一核干活，七核加油的景象。为了让另外七个核心也能帮忙处理硬件队列发来的数据包，我们需要告诉操作系统，让它把第一个核从硬件队列收下来的包分配给那七个核心。另外，在 LWN 也有一篇
+&lt;a href=&quot;https://lwn.net/Articles/370153/&quot;&gt;介绍&lt;/a&gt;，可供参考。如果需要更深入的阅读，一定要看一下 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 上的文档&lt;/a&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;因为 RPS 工作在软件的层面，我们为 RPS 分配 PU 的时候顾虑就少一些。在 &lt;code&gt;perftune.py&lt;/code&gt; 里面，它把所有的 PU 分给每一个 RPS 队列：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ echo 0xffffffff &amp;gt; /sys/class/net/eno2/queues/rx-0/rps_cpus&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;kernel.org 有诗云：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;For a multi-queue system, if RSS is configured so that a hardware
+receive queue is mapped to each CPU, then RPS is probably redundant
+and unnecessary. If there are fewer hardware queues than CPUs, then
+RPS might be beneficial if the rps_cpus for each queue are the ones that
+share the same memory domain as the interrupting CPU for that queue.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&amp;#8212; Suggested Configuration&lt;br&gt;
+&lt;cite&gt;https://www.kernel.org/doc/Documentation/networking/scaling.txt&lt;/cite&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;既然 RSS 都把所有的 PU 都占满了，也没有必要再上 RPS 了。但是，这个还不是问题的最终答案。因为我们还有 Receive Flow Steering，即 RFS。RPS 是按照包的地址和端口算出来的
+hash 决定这个包会发往哪个队列，最后由负责这个队列的 CPU 处理。这些都是 Linux 内核的事情。但是绝大多数时候，最后处理数据包的还是用户态程序，那么怎么确保这个数据包的收件地址就是着这个数据包的用户态程序，即将被调度到的 CPU 核呢？换句话说，我们需要解决一个 hash 到 CPU 的问题。那么 CPU 怎么选呢？内核认为上次处理这个流中，上一个数据包的 CPU 是更可能被调度到处理下一个数据包的。就像一个浪漫的爱情故事里面，男主和女主在地铁上邂逅，那么男主要想再见到她，十有八九会再去同一趟地铁碰碰运气。虽然女主可能下次坐的地铁可能和上次不一样。但是这种惯性还是很可靠的。所以内核为这种重逢专门记录了一个数组，数组中的元素类似&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;c&quot;&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rps_sock_flow_entry&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cpu&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flow_hash_hi&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;26&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rps_sock_flow_table&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int32_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;rps_sock_flow_entry&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[];&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;当然，&lt;code&gt;cpu&lt;/code&gt; 和 &lt;code&gt;hi_flow_hash&lt;/code&gt; 合起来是个 32 位，它们分别占用多少 bit
+是根据系统里面内核数来决定的。上面的代码最多就能支持 64 个核。内核里每当发现
+&lt;s&gt;女主的身影&lt;/s&gt; 有读写网络的操作发生，都会更新 &lt;code&gt;rps_sock_flow_table&lt;/code&gt;，记录下最新的 hash &amp;#8594; cpu 的映射关系，以备查找。所以在 Linux 内核里：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;c&quot;&gt;&lt;span class=&quot;cm&quot;&gt;/* First check into global flow table if there is a match */&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;ident&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sock_flow_table&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ents&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hash&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sock_flow_table&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ident&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;^&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hash&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rps_cpu_mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;goto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;try_rps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;next_cpu&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ident&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rps_cpu_mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;所以，上面的代码中，&lt;code&gt;sock_flow_table&lt;/code&gt; 的下标是 hash 的低位。如果查出来的 flow table
+entry 和 hash 不吻合，那么就转而使用 RPS 来决定送到哪个 CPU。否则就取出表项中 CPU
+的部分，作为包的目的地。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 的设置基本按照 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 的建议设置&lt;/a&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;在网络的数据链路上，除了 IRQ 亲和性，RSS、RPS 和 RFS 的设置，还有 aRFS 和 XPS
+的设置。这里限于篇幅，就不再赘述了。建议大家仔细研读 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 上的文档&lt;/a&gt;，以及相关的内核代码。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;

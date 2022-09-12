@@ -213,7 +213,7 @@
             </div>
           </div>
           <div class="sect1">
-            <h2 id="rps">RPS</h2>
+            <h2 id="三个模式">三个模式</h2>
             <div class="sectionbody">
               <div class="paragraph">
                 <p>
@@ -244,40 +244,15 @@
               </div>
               <div class="paragraph">
                 <p>
-                  这里需要解释一下
-                  <a href="https://lwn.net/Articles/370153/">RPS</a>。RPS 是
-                  Receive Packet Steering 的缩写。RPS 和 RSS
-                  类似，目标都是希望让 CPU
-                  核分担处理接受到数据包的工作，以提高性能。但是 RPS
-                  工作在纯软件的层面。所以它更灵活，可以由软件设置它分配数据包的算法。但是它也带来了
-                  CPU 核心之间的中断，即 IPI (inter-processor interrupts)。缺省
-                  RPS 是关掉的，即谁通过网卡 IRQ
-                  收到的包，谁负责处理。但是要知道，接收数据包本身就意味着处理硬中断，处理软中断，执行
-                  NAPI
-                  轮询收包，以及把数据包在协议栈逐级向上传递。这还不包括用户态程序从
-                  socket 读出数据后的处理。由于硬件队列的数量往往小于 CPU
-                  的核心数，这样就会出现一核干活，七核加油的景象。为了让另外七个核心也能帮忙处理硬件队列发来的数据包，我们需要告诉操作系统，让它把第一个核从硬件队列收下来的包分配给那七个核心。另外，在
-                  LWN 也有一篇
-                  <a href="https://lwn.net/Articles/370153/">介绍</a
-                  >，可供参考。如果需要更深入的阅读，一定要看一下
-                  <a
-                    href="https://www.kernel.org/doc/Documentation/networking/scaling.txt"
-                    >kernel.org 上的文档</a
-                  >。
-                </p>
-              </div>
-            </div>
-          </div>
-          <div class="sect1">
-            <h2 id="三个模式">三个模式</h2>
-            <div class="sectionbody">
-              <div class="paragraph">
-                <p>
-                  多队列网卡一般提供单独的 rx 队列配置，或者 rx 和 tx
-                  共用的队列。后者被记为 “combined”。为了简单起见，后面统称为 rx
-                  队列。RSS 把接收到的数据包分散在多个 rx
-                  队列里面，每个队列通过硬中断把“有新数据来啦”这个消息告诉负责处理这个硬中断的
-                  CPU。请注意，这里的 CPU 可以是多个。
+                  先进的多队列网卡一般提供单独的 rx 队列配置，或者 rx 和 tx
+                  共用的队列。后者被记为“combined”。为了简单起见，后面统称为 rx
+                  队列。这种技术叫做 Receive Side Scaling，即 RSS。RSS
+                  把接收到的数据包分散在多个 rx 队列里面，每个队列通过硬中断把
+                  “有新数据来啦” 这个消息告诉负责处理这个硬中断的
+                  CPU。请注意，这里负责处理特定中断号的 CPU
+                  可以是多个。对于单队列网卡，只能用 RPS
+                  队列用软件实现多队列。关于 RPS，后面
+                  <a href="#RPS">[RPS]</a> 一节有简单的介绍。
                 </p>
               </div>
               <div class="listingblock">
@@ -749,10 +724,142 @@ $ nproc
                     能有更均匀的分布。
                   </p>
                 </div>
+              </div>
+              <div class="sect2">
+                <h3 id="rps-和-rfs">RPS 和 RFS</h3>
                 <div class="paragraph">
                   <p>
-                    在网络的数据链路上，除了 IRQ 亲和性，RSS 的设置，还有
-                    RPS，XPS。这里限于篇幅，就不再赘述了。建议大家仔细研读
+                    RPS 是 Receive Packet Steering 的缩写。RPS 和 RSS
+                    类似，目标都是希望让 CPU
+                    核分担处理接受到数据包的工作，以提高性能。但是 RPS
+                    工作在纯软件的层面。所以它更灵活，可以由软件设置它分配数据包的算法。但是它也带来了
+                    CPU 核心之间的中断，即 IPI (inter-processor
+                    interrupts)。缺省 RPS 是关掉的，即谁通过网卡 IRQ
+                    收到的包，谁负责处理。但是要知道，接收数据包本身就意味着处理硬中断，处理软中断，执行
+                    NAPI
+                    轮询收包，以及把数据包在协议栈逐级向上传递。这还不包括用户态程序从
+                    socket 读出数据后的处理。由于硬件队列的数量往往小于 CPU
+                    的核心数，这样就会出现一核干活，七核加油的景象。为了让另外七个核心也能帮忙处理硬件队列发来的数据包，我们需要告诉操作系统，让它把第一个核从硬件队列收下来的包分配给那七个核心。另外，在
+                    LWN 也有一篇
+                    <a href="https://lwn.net/Articles/370153/">介绍</a
+                    >，可供参考。如果需要更深入的阅读，一定要看一下
+                    <a
+                      href="https://www.kernel.org/doc/Documentation/networking/scaling.txt"
+                      >kernel.org 上的文档</a
+                    >。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    因为 RPS 工作在软件的层面，我们为 RPS 分配 PU
+                    的时候顾虑就少一些。在
+                    <code>perftune.py</code> 里面，它把所有的 PU 分给每一个 RPS
+                    队列：
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="shellsession">$ echo 0xffffffff &gt; /sys/class/net/eno2/queues/rx-0/rps_cpus</code></pre>
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>kernel.org 有诗云：</p>
+                </div>
+                <div class="quoteblock">
+                  <blockquote>
+                    <div class="paragraph">
+                      <p>
+                        For a multi-queue system, if RSS is configured so that a
+                        hardware receive queue is mapped to each CPU, then RPS
+                        is probably redundant and unnecessary. If there are
+                        fewer hardware queues than CPUs, then RPS might be
+                        beneficial if the rps_cpus for each queue are the ones
+                        that share the same memory domain as the interrupting
+                        CPU for that queue.
+                      </p>
+                    </div>
+                  </blockquote>
+                  <div class="attribution">
+                    &#8212; Suggested Configuration<br />
+                    <cite
+                      >https://www.kernel.org/doc/Documentation/networking/scaling.txt</cite
+                    >
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    既然 RSS 都把所有的 PU 都占满了，也没有必要再上 RPS
+                    了。但是，这个还不是问题的最终答案。因为我们还有 Receive
+                    Flow Steering，即 RFS。RPS 是按照包的地址和端口算出来的 hash
+                    决定这个包会发往哪个队列，最后由负责这个队列的 CPU
+                    处理。这些都是 Linux
+                    内核的事情。但是绝大多数时候，最后处理数据包的还是用户态程序，那么怎么确保这个数据包的收件地址就是着这个数据包的用户态程序，即将被调度到的
+                    CPU 核呢？换句话说，我们需要解决一个 hash 到 CPU
+                    的问题。那么 CPU
+                    怎么选呢？内核认为上次处理这个流中，上一个数据包的 CPU
+                    是更可能被调度到处理下一个数据包的。就像一个浪漫的爱情故事里面，男主和女主在地铁上邂逅，那么男主要想再见到她，十有八九会再去同一趟地铁碰碰运气。虽然女主可能下次坐的地铁可能和上次不一样。但是这种惯性还是很可靠的。所以内核为这种重逢专门记录了一个数组，数组中的元素类似
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="c"><span class="k">struct</span> <span class="n">rps_sock_flow_entry</span> <span class="p">{</span>
+  <span class="kt">unsigned</span> <span class="n">cpu</span> <span class="o">:</span> <span class="mi">6</span><span class="p">;</span>
+  <span class="kt">unsigned</span> <span class="n">flow_hash_hi</span> <span class="o">:</span> <span class="mi">26</span><span class="p">;</span>
+<span class="p">};</span>
+<span class="k">struct</span> <span class="n">rps_sock_flow_table</span> <span class="p">{</span>
+  <span class="kt">int32_t</span> <span class="n">mask</span><span class="p">;</span>
+  <span class="n">rps_sock_flow_entry</span><span class="p">[];</span>
+<span class="p">}</span></code></pre>
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    当然，<code>cpu</code> 和
+                    <code>hi_flow_hash</code> 合起来是个 32 位，它们分别占用多少
+                    bit 是根据系统里面内核数来决定的。上面的代码最多就能支持 64
+                    个核。内核里每当发现
+                    <s>女主的身影</s> 有读写网络的操作发生，都会更新
+                    <code>rps_sock_flow_table</code>，记录下最新的 hash &#8594;
+                    cpu 的映射关系，以备查找。所以在 Linux 内核里：
+                  </p>
+                </div>
+                <div class="listingblock">
+                  <div class="content">
+                    <pre
+                      class="rouge highlight"
+                    ><code data-lang="c"><span class="cm">/* First check into global flow table if there is a match */</span>
+<span class="n">ident</span> <span class="o">=</span> <span class="n">sock_flow_table</span><span class="o">-&gt;</span><span class="n">ents</span><span class="p">[</span><span class="n">hash</span> <span class="o">&amp;</span> <span class="n">sock_flow_table</span><span class="o">-&gt;</span><span class="n">mask</span><span class="p">];</span>
+<span class="k">if</span> <span class="p">((</span><span class="n">ident</span> <span class="o">^</span> <span class="n">hash</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">rps_cpu_mask</span><span class="p">)</span>
+  <span class="k">goto</span> <span class="n">try_rps</span><span class="p">;</span>
+<span class="n">next_cpu</span> <span class="o">=</span> <span class="n">ident</span> <span class="o">&amp;</span> <span class="n">rps_cpu_mask</span><span class="p">;</span></code></pre>
+                  </div>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    所以，上面的代码中，<code>sock_flow_table</code> 的下标是
+                    hash 的低位。如果查出来的 flow table entry 和 hash
+                    不吻合，那么就转而使用 RPS 来决定送到哪个
+                    CPU。否则就取出表项中 CPU 的部分，作为包的目的地。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    <code>perftune.py</code> 的设置基本按照
+                    <a
+                      href="https://www.kernel.org/doc/Documentation/networking/scaling.txt"
+                      >kernel.org 的建议设置</a
+                    >。
+                  </p>
+                </div>
+                <div class="paragraph">
+                  <p>
+                    在网络的数据链路上，除了 IRQ 亲和性，RSS、RPS 和 RFS
+                    的设置，还有 aRFS 和 XPS
+                    的设置。这里限于篇幅，就不再赘述了。建议大家仔细研读
                     <a
                       href="https://www.kernel.org/doc/Documentation/networking/scaling.txt"
                       >kernel.org 上的文档</a
