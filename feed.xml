@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T09:53:14+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T10:03:29+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;再来俩缩写，我也能承受！&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 是 Seastar 用来配置系统参数的工具，目标是提高 Seastar 应用的性能。ScyllaDB 的文档有
-&lt;a href=&quot;https://docs.scylladb.com/stable/operating-scylla/admin-tools/perftune.html&quot;&gt;类似 manpage 的粗略介绍&lt;/a&gt;。笔者在理解它的过程中，发现它的实现不仅仅有 Linux 的系统优化的原理，也反映了来自实践的经验。这些知识和经验不仅仅对 Seastar 应用有意义，也可以推广到其他多核程序的优化。&lt;/p&gt;
+&lt;a href=&quot;https://docs.scylladb.com/stable/operating-scylla/admin-tools/perftune.html&quot;&gt;类似 manpage 的粗略介绍&lt;/a&gt;。笔者在理解它的过程中，发现它的实现不仅仅源于 Linux 的文档，也包含了实践的经验。这些知识和经验不仅仅对 Seastar 应用有意义，也可以推广到其他多核程序的优化。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -247,7 +247,7 @@ IRQ core 的模式。原版的算法还要求制定的 &lt;code&gt;cpu_mask&lt;/
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;上面的命令中，&lt;/p&gt;
+&lt;p&gt;上面的输出中，&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;dlist&quot;&gt;
 &lt;dl&gt;
