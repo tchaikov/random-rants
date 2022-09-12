@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T07:38:36+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T07:39:13+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 是 Seastar 用来配置系统参数的工具，目标是提高 Seastar 应用的性能。ScyllaDB 的文档有
@@ -345,7 +345,7 @@ IRQ core 的模式。原版的算法还要求制定的 &lt;code&gt;cpu_mask&lt;/
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;前面把网卡的所有 IRQ 都不加区别地分给了所有凑出来的壮丁 PU，如果网卡有多个 rx 队列，那么 &lt;code&gt;perftune.py&lt;/code&gt; 还有更细致的考虑。它会先分两次，第一次把负责 rx 队列的 IRQ
+&lt;p&gt;前面把网卡的所有 IRQ 都不加区别地分给了所有凑出来的壮丁 PU，如果网卡有多个 rx 队列，那么 &lt;code&gt;perftune.py&lt;/code&gt; 还有更细致的考虑。它会分两次。第一次把负责 rx 队列的 IRQ
 均匀分布在壮丁 PU 中，第二次再把剩下的 IRQ 分布在同一个 PU 集合中。和大锅饭的统一分配相比，这样确保 rx 队列对应的 IRQ 能有更均匀的分布。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
