@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T10:03:29+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T11:13:52+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/seastar/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;再来俩缩写，我也能承受！&lt;/p&gt;
@@ -284,7 +284,7 @@ IRQ core 的模式。原版的算法还要求制定的 &lt;code&gt;cpu_mask&lt;/
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;这个信息和之前观察 &lt;code&gt;/proc/interrupts&lt;/code&gt; 获得的信息一般来说是一致的。不过实际使用中，也有网卡真正使用的 MSI-IRQ 只是驱动申请使用的一部分。有点像驱动申请了 10
-门牌号，但是最后只有 9 个屋子用了这些门牌号。所以 `perftune.py`取了两者的交集，作为需要分配的 IRQ。&lt;/p&gt;
+门牌号，但是最后只有 9 个屋子用了这些门牌号。所以 &lt;code&gt;perftune.py&lt;/code&gt; 取了两者的交集，作为需要分配的 IRQ。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;sect2&quot;&gt;
