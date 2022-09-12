@@ -1,4 +1,410 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-07-21T14:26:42+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">C++20 的 move-only iterators</title><link href="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html" rel="alternate" type="text/html" title="C++20 的 move-only iterators" /><published>2022-07-16T00:00:00+00:00</published><updated>2022-07-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/07/16/move-only-iterators</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2022-09-12T07:38:36+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">从 perftune.py 说起</title><link href="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html" rel="alternate" type="text/html" title="从 perftune.py 说起" /><published>2022-09-03T00:00:00+00:00</published><updated>2022-09-03T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/09/03/seastar-perftune</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/09/03/seastar-perftune.html">&lt;div id=&quot;preamble&quot;&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 是 Seastar 用来配置系统参数的工具，目标是提高 Seastar 应用的性能。ScyllaDB 的文档有
+&lt;a href=&quot;https://docs.scylladb.com/stable/operating-scylla/admin-tools/perftune.html&quot;&gt;类似 manpage 的粗略介绍&lt;/a&gt;。笔者在理解它的过程中，发现它的实现不仅仅有 Linux 的系统优化的原理，也反映了来自实践的经验。这些知识和经验不仅仅对 Seastar 应用有意义，也可以推广到其他多核程序的优化。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;rps&quot;&gt;RPS&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;code&gt;perftune.py&lt;/code&gt; 的前身是 &lt;code&gt;posix_net_conf.sh&lt;/code&gt;。这个脚本被用来设置 IRQ 的亲和性和 RPS。它做这两件事&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;olist arabic&quot;&gt;
+&lt;ol class=&quot;arabic&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;把 eth0 所有的 IRQ 都绑定到 CPU0，即让 CPU0 处理来自该网卡的中断请求&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;按照 eth0 上的 rps queue 的个数，把它分摊到机器上的所有 CPU 上。因为 CPU 的个数常常是 rps queue
+的倍数。如果是 40 核 CPU，对应 8 个 queue 的网卡，那么每 5 个 CPU 核都会分到一个 rps queue。
+这时，就需要配置 CPU 掩码，让每个 rps queue 上的包都能均匀分配到这个 queue 所对应的 5 个 CPU
+核上。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;这里需要解释一下 &lt;a href=&quot;https://lwn.net/Articles/370153/&quot;&gt;RPS&lt;/a&gt;。RPS 是 Receive Packet Steering
+的缩写。RPS 和 RSS 类似，目标都是希望让 CPU 核分担处理接受到数据包的工作，以提高性能。但是 RPS
+工作在纯软件的层面。所以它更灵活，可以由软件设置它分配数据包的算法。但是它也带来了 CPU 核心之间的中断，即 IPI (inter-processor interrupts)。缺省 RPS 是关掉的，即谁通过网卡 IRQ 收到的包，谁负责处理。但是要知道，接收数据包本身就意味着处理硬中断，处理软中断，执行 NAPI 轮询收包，以及把数据包在协议栈逐级向上传递。这还不包括用户态程序从 socket 读出数据后的处理。由于硬件队列的数量往往小于 CPU 的核心数，这样就会出现一核干活，七核加油的景象。为了让另外七个核心也能帮忙处理硬件队列发来的数据包，我们需要告诉操作系统，让它把第一个核从硬件队列收下来的包分配给那七个核心。另外，在 LWN 也有一篇
+&lt;a href=&quot;https://lwn.net/Articles/370153/&quot;&gt;介绍&lt;/a&gt;，可供参考。如果需要更深入的阅读，一定要看一下 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 上的文档&lt;/a&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;三个模式&quot;&gt;三个模式&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;多队列网卡一般提供单独的 rx 队列配置，或者 rx 和 tx 共用的队列。后者被记为
+“combined”。为了简单起见，后面统称为 rx 队列。RSS 把接收到的数据包分散在多个 rx 队列里面，每个队列通过硬中断把“有新数据来啦”这个消息告诉负责处理这个硬中断的 CPU。请注意，这里的 CPU
+可以是多个。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ ip link show
+...
+6: eno2: &amp;lt;NO-CARRIER,BROADCAST,MULTICAST,UP&amp;gt; mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether 78:ef:44:03:a8:ce brd ff:ff:ff:ff:ff:ff
+    altname enp25s0f1
+...
+$ ethtool -l eno2
+Channel parameters for eno2:
+Pre-set maximums:
+RX:             n/a
+TX:             n/a
+Other:          1
+Combined:       80
+Current hardware settings:
+RX:             n/a
+TX:             n/a
+Other:          1
+Combined:       80
+$ nproc
+80&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;如上所示， 机器上有 80 个 PU。&lt;code&gt;eno2&lt;/code&gt; 也正好有 80 个 rx 队列。如果让 &lt;code&gt;perftune.py&lt;/code&gt;
+自动配置这台机器上的 &lt;code&gt;eno2&lt;/code&gt; 的 rx 队列的话，它会按照 PU 的个数设置 rx 队列的个数。即&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;# ethtool --set-channels eno2 combined 80&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;为了优化这个数据链路，围绕硬中断的分配和 RPS 的配置， &lt;code&gt;perftune.py&lt;/code&gt;
+根据 rx 队列的个数和机器上内核的数量预定义了三种模式，希望覆盖大多数场景：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;dlist&quot;&gt;
+&lt;dl&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;multi-queue&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;对于支持多硬件队列的网卡，我们则需要把 CPU 核按照队列的数量分组，
+通过 RPS 让每一组 CPU 核分担自己的队列来的数据包。&lt;code&gt;perftune.py&lt;/code&gt; 把这种模式称为 &quot;mq&quot; 模式，
+即 multi-queue 模式。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;single-queue&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;与 mq 模式对应的就是 single-queue 模式。简称 sq 模式。它把给定网卡的所有
+IRQ 都安排给 CPU0，但是用 RPS 把软中断以及它引起的 NAPI 轮询分配给其他 CPU。
+这里的 CPU0 是 &lt;code&gt;hwloc&lt;/code&gt; 说的 PU。如果 CPU 打开了超线程的话，那么就是一颗 HT 的核。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;sq-split&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;还有一种模式叫 sq-split。它把所有 IRQ 分给 CPU0 所在的物理核。如果架构支持
+SMT (symmetric multithreading），那么一般来说，一个物理核（core）上会有两个
+HT 核（PU）。如果使用 sq-split 模式，那么 &lt;code&gt;P#0&lt;/code&gt; 和 &lt;code&gt;P#1&lt;/code&gt; 就会被用来处理特定网卡的所有 IRQ，
+剩下的核就借助 RPS 来平均分配工作。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;sq-split 的设计采纳了
+&lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 文档&lt;/a&gt; 中，
+&lt;em&gt;Suggested Configuration&lt;/em&gt; 一节的建议。这里摘录如下：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;quoteblock&quot;&gt;
+&lt;blockquote&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;Per-cpu load can be observed using the mpstat utility, but note that on
+processors with hyperthreading (HT), each hyperthread is represented as
+a separate CPU. For interrupt handling, HT has shown no benefit in
+initial tests, so limit the number of queues to the number of CPU cores
+in the system.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/blockquote&gt;
+&lt;div class=&quot;attribution&quot;&gt;
+&amp;#8212; Suggested Configuration&lt;br&gt;
+&lt;cite&gt;https://www.kernel.org/doc/Documentation/networking/scaling.txt&lt;/cite&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;所以在超线程的系统里面，为两个 HT 核心分别分配不同的 rx 队列，并不能提高
+pps (packet per second)。这个结论也很自然，因为 SMT 只不过是让 HT
+核能共享 CPU 的流水线，填充流水线气泡，提高流水线的利用率。但是对于硬中断的处理并不适用，因为硬中断处理和 NAPI 轮询是典型的单线程程序。如果两个硬中断或者 rx 队列都安排在同一个
+core 上，反而会导致这个 core 手忙脚乱穷于应付，在两个 NAPI 轮询之间来回切换，提高延迟。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;那么这些模式分别适用什么配置呢？我们分情况讨论。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;在 aws 提供的云服务器中有一些很强大的机器，它们有很多逻辑核，不过这些机器的网卡的 rx
+队列也一样多。如果按照 mq 来配置，就会导致每个 CPU 核心都会分心处理 IRQ。和专人负责负责
+IRQ 的模式相比，反而性能更差。同时，这些机器的处理能力很强，根据经验数据，专门给网卡分配一个物理核才能充分发挥网卡的性能。同时避免因为均匀地分配 IRQ，导致很多核总是被硬件中断打断，造成大量的上下文切换，影响性能。当然这也是个权衡，因为把一整个物理核用来处理中断可能会有些大材小用了。好像派五虎将之一的赵云去搞街道治安一样。在 &lt;a href=&quot;https://github.com/scylladb/seastar/pull/949&quot;&gt;PR#949&lt;/a&gt; 有一些讨论，
+Avi 就认为这样的安排很浪费。不过如果真的整体性能下降了，我们还是可以回去使用完全对称的大锅饭 multi-queue 模式。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;不过现在的处理方式仍然是启发式，或者说是经验式的：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;python&quot;&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_PUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PerfTunerBase&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SupportedModes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mq&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PerfTunerBase&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SupportedModes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sq&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PerfTunerBase&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SupportedModes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sq_split&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;简单说，就是如果你家里有超过 5 个物理核，那么推荐 sq-split，让一个 &lt;strong&gt;物理核&lt;/strong&gt; 专司 IRQ 处理，因为我们能负担得起。倘若 HT 核超过 5 个，那么我们用 single-queue，让一个 &lt;strong&gt;HT 核&lt;/strong&gt;
+负责为大家处理 IRQ。要是 HT 核少于 5，CPU 资源有点紧张了，就用 mq，因为我们希望充分利用 &lt;strong&gt;每一个&lt;/strong&gt; HT 核。这三个模式可以说是从皇帝版到乞丐版。皇帝版从让赵云专门负责核酸。而乞丐版让五虎将每个人除了阵前杀敌，业余时间还需要到营房门口检查场所码。如果说
+sq-split 是专业分化的典型，那么 mq 就是是人尽其用的极致了。至于 &lt;a href=&quot;https://github.com/scylladb/seastar/pull/949&quot;&gt;PR#949&lt;/a&gt;
+的讨论中，为什么 &lt;code&gt;IORING_SETUP_SQPOLL&lt;/code&gt; 能让 mq 的设置在这种配置的机器有更好的表现。笔者没有很好的解释，&lt;code&gt;IORING_SETUP_SQPOLL&lt;/code&gt; 让内核线程轮询 ringbuffer 里新的 sqe，避免用户态程序频繁使用 &lt;code&gt;io_uring_enter()&lt;/code&gt; 系统调用提交请求。这有点像 NAPI 的处理方式。这个设计把用户态程序从系统调用的义务中解放了出来，但是对于 IO 不是很多的应用，内核线程的轮询也仍然是一个不小的负担。当然，&lt;code&gt;sq_thread_idle&lt;/code&gt;
+可以让内核在一段时间之内没有 IO 的话，就把轮询线程停下来。不管如何，这都是 TCP/IP 四层模型之上的问题，三个模式希望解决的问题是在其之前发生的。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;不过 Seastar 最近有个 &lt;a href=&quot;https://github.com/scylladb/seastar/issues/1170&quot;&gt;新 issue&lt;/a&gt;，它认为应该停止使用 &lt;code&gt;--mode&lt;/code&gt;，而开始用 &lt;code&gt;--irq-cpu-mask&lt;/code&gt; 选项。那么什么是 &lt;code&gt;--irq-cpu-mask&lt;/code&gt; 呢？&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;irq-cpu-mask&quot;&gt;&lt;code&gt;--irq-cpu-mask&lt;/code&gt;&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;code&gt;--irq-cpu-mask&lt;/code&gt; 是 &lt;code&gt;perftune.py&lt;/code&gt; 新设计的选项。它具有更细致的配置能力。前面按照硬件条件简单地把机器分为三档，分别套用一个配置模式。但是对于非常强的多核机器，比如说 48 核的机器，就算使用 sq-split 把一整个核用来处理 IRQ，可能也忙不过来。随着多核机器配置越来越强，前面的三种模式显得不够用了。况且它们没有把 NUMA 纳入考虑。所以除了要有比 sq-split 更&lt;s&gt;浪费&lt;/s&gt;霸气的模式，我们还需要更细粒度的配置方式。前面三种模式的核心回答的是 RSS 的配置问题，即 rx
+队列的分配问题。但是在多核系统中，整个数据链路上，每个环节都可以优化。我们这里仅仅关注 IRQ、RSS 和 RPS 的配置。 把它们具体化，就是&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;olist arabic&quot;&gt;
+&lt;ol class=&quot;arabic&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;IRQ 可以分配给哪些 PU&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;有哪些 IRQ 需要分配&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;这些IRQ 和用来处理 IRQ 的 PU 的对应关系如何&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;irq-cpu-mask-2&quot;&gt;IRQ CPU mask&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;&lt;code&gt;--irq-cpu-mask&lt;/code&gt; 就是第一个问题的答案，它允许用户自己设定 IRQ 会分配给 &lt;strong&gt;哪些&lt;/strong&gt; PU。但是也和之前一样，提供了自动配置的功能。但是为了避免之前“两刀切”的粗线条解决方式，这次 &lt;code&gt;perftune.py&lt;/code&gt; 按照比例分配 IRQ。下面的算法用来分配处理 IRQ 的 CPU：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;python&quot;&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_PUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cpu_mask&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;run_hwloc_calc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'--restrict'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cpu_mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'PU:0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;elif&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cores_per_irq_core&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;run_hwloc_calc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'--restrict'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cpu_mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'core:0'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# 竟然核数超过了每个 IRQ 指定的核心数，肯定是个很强力的机器，
+&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;# 这样我们就可以按照比例分配 IRQ 核心了
+&lt;/span&gt;    &lt;span class=&quot;c1&quot;&gt;# num_irq_cores 是按照比例平摊之后，负责 IRQ 的总核心数
+&lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;num_irq_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;math&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ceil&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;num_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cores_per_irq_core&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;hwloc_args&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;numa_cores_count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;numa_ids_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;added_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;# 在每个 NUMA 节点上均匀地征集 core，直到凑够数为止
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;added_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_irq_cores&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;numa&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;numa_ids_list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;hwloc_args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;node:&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;numa&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;.core:&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;numa_cores_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;numa&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;added_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;numa_cores_count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;numa&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;added_cores&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;num_irq_cores&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;run_hwloc_calc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'--restrict'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cpu_mask&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hwloc_args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;其中&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;dlist&quot;&gt;
+&lt;dl&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;&lt;code&gt;cpu_mask&lt;/code&gt;&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;是由用户指定可用于负责 IRQ 调优的 cpu 集合。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;&lt;code&gt;cores_per_irq_core&lt;/code&gt;&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;每个 IRQ 安排对应的核数，如果这个数字是 6 的话，那么每六个核心，
+就会分出一个核心用来负责 IRQ。这个数字有点类似抽壮丁的比例。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;这个算法和之前的“三个模式”算法类似，只不过为“强力机器”专门增加了按照 NUMA 平均成比例分配
+IRQ core 的模式。原版的算法还要求制定的 &lt;code&gt;cpu_mask&lt;/code&gt; 在 NUMA 各节点是 core 数和 PU
+数是相等的。为了突出重点，在上面的代码中没有摘录。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;“抽了壮丁”之后，怎么分配这些“壮丁”呢？下面说一下第二个问题。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;有哪些-irq-需要分配&quot;&gt;有哪些 IRQ 需要分配&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;我们先了解一下中断和 rx 队列之间的对应关系：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ cat /proc/interrupts
+            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7
+...
+  91:          5          0          0          0          0          0          0          0  IR-PCI-MSI 12584961-edge      eno2-TxRx-0
+...&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;上面的命令中，&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;dlist&quot;&gt;
+&lt;dl&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;最左边一列&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;是 IRQ 的序号&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;每个 CPU 各有一列&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;能够告诉我们这个 IRQ 在对应的 CPU 上触发了多少次&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;倒数第三列&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;表示 IRQ 的类型。这里是一种叫 &lt;a href=&quot;https://docs.kernel.org/PCI/msi-howto.html&quot;&gt;Message Signaled Interrupt&lt;/a&gt; 的中断。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;倒数第二列&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;和中断控制器有关或者和中断触发的方式有关&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;倒数第一列&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;表示 IRQ 对应的设备。这里是 &lt;code&gt;eno2&lt;/code&gt; 这块网卡的第 0 个 TxRx 队列。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;要是只想知道网卡用了哪些中断，也可以用：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ ls /sys/class/net/eno2/device/msi_irqs/
+90  91  92  93  94  95  96  97  98&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;这个信息和之前观察 &lt;code&gt;/proc/interrupts&lt;/code&gt; 获得的信息一般来说是一致的。不过实际使用中，也有网卡真正使用的 MSI-IRQ 只是驱动申请使用的一部分。有点像驱动申请了 10
+门牌号，但是最后只有 9 个屋子用了这些门牌号。所以 `perftune.py`取了两者的交集，作为需要分配的 IRQ。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect2&quot;&gt;
+&lt;h3 id=&quot;排排坐分果果&quot;&gt;排排坐分果果&lt;/h3&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;完整的说法是，PU 排排坐，分 IRQ 果果。把 IRQ 分给多个 PU 处理，目标还是提高 PPS，也就让并发更高，延迟更小。这些是目标，除了 PU 和 IRQ 本身，还有哪些约束条件和考量呢？关于 IRQ 和 PU 亲和性比较权威的参考资料仍然来自
+&lt;a href=&quot;https://www.kernel.org/doc/Documentation/IRQ-affinity.txt&quot;&gt;kernel.org&lt;/a&gt;。前面摘录的建议仍然适用，所以我们不会用让多个 PU 分担同一个中断，而选择用一对一的映射。如果刚才得到的 CPU mask 是 &lt;code&gt;0xffffffff&lt;/code&gt;，那么我们可以用下面的命令分配 IRQ：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ hwloc-distrib 9 --single --restrict 0xffffffff
+0x00000001
+0x00000004
+0x00000040
+0x00000100
+0x00001000
+0x00000002
+0x00000020
+0x00000200
+0x00002000&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;其中，每一行的掩码制定一组 CPU。每一组 CPU 负责对应的要分配的元素。比如说，第一行中 &lt;code&gt;0x00000001&lt;/code&gt; 就用来处理第一个 IRQ，即前面列出的 IRQ 90。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;dlist&quot;&gt;
+&lt;dl&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;&lt;code&gt;9&lt;/code&gt;&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;指定需要分配的元素个数&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;&lt;code&gt;--single&lt;/code&gt;&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;每个元素对应一个 CPU。否则如果 CPU 供应充足的话，若是不指定
+&lt;code&gt;--single&lt;/code&gt;，&lt;code&gt;hwloc-distrib&lt;/code&gt; 返回的掩码会含有多个 CPU。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;dt class=&quot;hdlist1&quot;&gt;&lt;code&gt;--restrict&lt;/code&gt;&lt;/dt&gt;
+&lt;dd&gt;
+&lt;p&gt;指定分配的 CPU set。&lt;/p&gt;
+&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;所以在给出的 32 个 PU 中，再选出了 9 个幸运儿。现在再分别给每个 IRQ
+指定这些选出来的 PU：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ echo 00000001 &amp;gt; /proc/irq/90/smp_affinity&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;前面把网卡的所有 IRQ 都不加区别地分给了所有凑出来的壮丁 PU，如果网卡有多个 rx 队列，那么 &lt;code&gt;perftune.py&lt;/code&gt; 还有更细致的考虑。它会先分两次，第一次把负责 rx 队列的 IRQ
+均匀分布在壮丁 PU 中，第二次再把剩下的 IRQ 分布在同一个 PU 集合中。和大锅饭的统一分配相比，这样确保 rx 队列对应的 IRQ 能有更均匀的分布。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;在网络的数据链路上，除了 IRQ 亲和性，RSS 的设置，还有 RPS，XPS。这里限于篇幅，就不再赘述了。建议大家仔细研读 &lt;a href=&quot;https://www.kernel.org/doc/Documentation/networking/scaling.txt&quot;&gt;kernel.org 上的文档&lt;/a&gt;，以及相关的内核代码。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;sect1&quot;&gt;
+&lt;h2 id=&quot;lstopo&quot;&gt;&lt;code&gt;lstopo&lt;/code&gt;&lt;/h2&gt;
+&lt;div class=&quot;sectionbody&quot;&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;另外，为了更好的理解系统架构和多核，&lt;code&gt;hwloc&lt;/code&gt; 提供的工具是个好帮手，它能帮助我们理解系统的拓扑情况。比如在笔者的 Apple M1 Pro 上，就有一个 package，四个 core，八个超线程 PU。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ lstopo
+Machine (3484MB total)
+  Package L#0
+    NUMANode L#0 (P#0 3484MB)
+    L2 L#0 (4096KB)
+      L1d L#0 (64KB) + L1i L#0 (128KB) + Core L#0 + PU L#0 (P#0)
+      L1d L#1 (64KB) + L1i L#1 (128KB) + Core L#1 + PU L#1 (P#1)
+    L2 L#1 (4096KB)
+      L1d L#2 (64KB) + L1i L#2 (128KB) + Core L#2 + PU L#2 (P#2)
+      L1d L#3 (64KB) + L1i L#3 (128KB) + Core L#3 + PU L#3 (P#3)
+    L2 L#2 (4096KB)
+      L1d L#4 (64KB) + L1i L#4 (128KB) + Core L#4 + PU L#4 (P#4)
+      L1d L#5 (64KB) + L1i L#5 (128KB) + Core L#5 + PU L#5 (P#5)
+    L2 L#3 (4096KB)
+      L1d L#6 (64KB) + L1i L#6 (128KB) + Core L#6 + PU L#6 (P#6)
+      L1d L#7 (64KB) + L1i L#7 (128KB) + Core L#7 + PU L#7 (P#7)
+  CoProc(OpenCL) &quot;opencl0d0&quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;paragraph&quot;&gt;
+&lt;p&gt;同时，也建议使用终端的读者尝试一下下面的命令，获得更炫酷的视觉体验：&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class=&quot;listingblock&quot;&gt;
+&lt;div class=&quot;content&quot;&gt;
+&lt;pre class=&quot;rouge highlight&quot;&gt;&lt;code data-lang=&quot;shellsession&quot;&gt;$ lstopo -.ascii&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class=&quot;admonitionblock note&quot;&gt;
+&lt;table&gt;
+&lt;tr&gt;
+&lt;td class=&quot;icon&quot;&gt;
+&lt;i class=&quot;fa icon-note&quot; title=&quot;Note&quot;&gt;&lt;/i&gt;
+&lt;/td&gt;
+&lt;td class=&quot;content&quot;&gt;
+在 RockyLinux 9 上，&lt;code&gt;lstopo&lt;/code&gt; 的名字叫做 &lt;code&gt;lstopo-no-graphics&lt;/code&gt;，
+因为后者不能输出图形的格式，对于软件包的维护者来说，编译时和运行时的依赖更容易解决。
+如果嫌麻烦的话，也可以直接用 &lt;code&gt;hwloc-ls&lt;/code&gt;。它是 &lt;code&gt;lstopo-no-graphics&lt;/code&gt; 的软链接。
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author></entry><entry><title type="html">C++20 的 move-only iterators</title><link href="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html" rel="alternate" type="text/html" title="C++20 的 move-only iterators" /><published>2022-07-16T00:00:00+00:00</published><updated>2022-07-16T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2022/07/16/move-only-iterators</id><content type="html" xml:base="https://blog.k3fu.xyz/2022/07/16/move-only-iterators.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;如无必要，勿增实体。&lt;/p&gt;
@@ -3405,61 +3811,4 @@ ZNS 是支持同时打开多个 zone 的。这样让我们可以按照写入数�
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">QoS，而且是分布式的。</summary></entry><entry><title type="html">大批量发送增量 osdmap 对性能的影响</title><link href="https://blog.k3fu.xyz/2021/03/29/flatten-osdmaps.html" rel="alternate" type="text/html" title="大批量发送增量 osdmap 对性能的影响" /><published>2021-03-29T00:00:00+00:00</published><updated>2021-03-29T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2021/03/29/flatten-osdmaps</id><content type="html" xml:base="https://blog.k3fu.xyz/2021/03/29/flatten-osdmaps.html">&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;补丁太多了的话，加起来大小可能会比最终的版本更大。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;在 Ceph 里面，osdmap 是一个很重要的数据。比如说，&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;ulist&quot;&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;集群的拓扑&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;集群里每个数据池的 crush 规则，甚至还有&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;一个屏蔽列表，集群会拒绝向在列表里面的客户端提供服务&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是正因为 osdmap 包含了太多信息，在集群里面传递完整的 osdmap 会耗费很多带宽，而且编解码完整版本的 osdmap 也加大了对 CPU 的压力。为了缓解这个压力，我们选择仅仅发送变化的那部分。在 monitor 上，每次 osdmap 有变化，我们不仅仅保存了最新完整版本的 osdmap，也会保存它的增量部分&amp;#8201;&amp;#8212;&amp;#8201;我们用专门的对象保存这个部分，即 &lt;code&gt;OSDMap::Incremental&lt;/code&gt;，有时候干脆叫它 inc map。所以当客户端找 monitor 要 osdmap 的时候，也会告诉对方自己手里面 osdmap 的版本 &lt;code&gt;m&lt;/code&gt;，如果 monitor 的最新版 osdmap 的版本是 &lt;code&gt;n&lt;/code&gt;，那么它就会把 &lt;code&gt;m..n&lt;/code&gt; 的所有 inc map 都发给客户端。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是有时候也会适得其反，因为积少成多，要是有很多的 inc map，为了发送这些 inc map，对 monitor 甚至客户端，累加起来的开销和发送一个完整 osdmap 比起来可能会更高。而且，需要注意的是，&lt;code&gt;Monitor::ms_dispatch()&lt;/code&gt; 是在一个全局大锁里面执行的。很多其他操作也需要这个锁。所以我们应该尽量避免长时间地持有它，否则会造成很高的延迟。&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;要解决这个问题，有下面几个思路：&lt;/p&gt;
-&lt;/div&gt;
-&lt;div class=&quot;ulist&quot;&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;在 monitor 一侧&lt;/p&gt;
-&lt;div class=&quot;ulist&quot;&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;减少 monitor 对 osdmap 的更新频次。primary osd 会根据情况要求产生 pgtemp，但是 monitor 也可以主动地批次生成 pgtemp。&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;分期分批地发送 inc map。这样可以缓解因为长时间占用全局锁造成的延迟。&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;在 osd 一侧&lt;/p&gt;
-&lt;div class=&quot;ulist&quot;&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;减少 osd 对 osdmap 的请求。如果 osd 发现自己落后太多，就直接找 monitor 要完整的最新版 osdmap。而不是要求获得增量版本。减轻 monitor 的负担。&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/div&gt;
-&lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;但是 &lt;code&gt;n&lt;/code&gt; 版的 osdmap 是不是真的能替代 &lt;code&gt;m&lt;/code&gt; 版 osdmap 加上中间的 &lt;code&gt;m..n&lt;/code&gt; 的 inc map 呢?&lt;/p&gt;
-&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">补丁太多了的话，加起来大小可能会比最终的版本更大。</summary></entry></feed>
+&lt;/div&gt;</content><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><category term="ceph" /><summary type="html">QoS，而且是分布式的。</summary></entry></feed>
