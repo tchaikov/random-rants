@@ -1,0 +1,144 @@
+= iouring + Seastar
+:page-categories: [seastar]
+:date: 2022-10-03 15:27:43 +0800
+
+如何用在 Seastar 里用上 `IORING_OP_SEND_ZC`？
+
+== 引子
+
+https://lwn.net/Articles/910087/[linux 6.0] 为我们带来了 https://lwn.net/Articles/879724/[zero-copy 网络传输的 io uring 支持]。
+但是 Seastar 对 iouring 的支持仍然很有限，它仅仅支持下面几种操作
+
+. read
+. write
+. readv
+. writev
+
+迄今为止 io uring 已经支持了 https://github.com/axboe/liburing/blob/cf0b010a7b862ee6a44daa7dcb3f900bd757b04f/src/include/liburing/io_uring.h#L167[48 种异步操作]，
+所以这四种操作只是冰山一角而已。本文希望讨论一下 Seastar 加入这剩下的 44
+种操作的难点在哪里，并且试图探索一下可能的解决方式。
+
+== io_queue
+
+让我们先理解 `reactor_backend_uring` 是如何工作的。下面是 `reactor_backend_uring`
+提交 IO 请求的调用路径。可以注意到，Seastar 是成批地提交请求的。而且请求并不是在
+`poll_once()` 的时候创建的，它们往往在类似 `posix_file_impl::do_write_dma()`
+的地方创建，并加入当前访问文件所对应的 `_io_queue` 队列。
+
+[ditaa]
+{----
+               /----------------------\
+               | reactor::poll_once() +------------------------------\
+               \----------------------/                              |
+                                                                     |
+                    /------------------------------------\           |
+  /-----------------| kernel_submit_work_pollfn::poll()  |<----------/
+  |                 \------------------------------------/
+  |      /---------------------------------------------------\
+  \----->| reactor_backend_uring::kernel_submit_work()       +-------\
+         \---------------------------------------------------/       |
+                                                                     |
+                        /--------------------------------\           |
+  /---------------------+ queue_pending_file_io()        |<----------/
+  |                     \--------------------------------/
+  |   /------------------------------------------------------------\
+  |   | reactor._io_sink.drain(                                    |
+  \-->| reactor_backend_uring::submit_io_request(req, completion)  |
+      \------------------------------------------------------------/
+----
+
+那么 `_io_queue` 是什么呢？Seastar 为了解决多 shard 共享磁盘 IO，同时最大化其吞吐量的问题，
+设计了 https://www.scylladb.com/2021/04/06/scyllas-new-io-scheduler/[用户态的 IO 调度机制]。
+避免在 shard 之间搞平均主义和大锅饭，导致低效和拥塞。为了在核之间统筹规划 IO，Seastar
+为每个设备定义一个 `io_group`，同时让每个 shard 都持有和需要访问的设备对应的 `shared_ptr<io_group>`。
+为了安放还不能服务的 IO 请求，每个设备在每个shard 上的 `engine` 都有自己的 `io_queue`。
+因此可以看到所以如果程序部署在 32 核的机器上，同时有 16 块硬盘，那么每个核都会有 16 个 `io_queue`，
+分别对应自己负责访问的硬盘。
+
+另外，也需要注意 `reactor_backend_uring::submit_io_request()` 的实现，
+
+[source, c++]
+----
+auto sqe = get_sqe();
+switch (req.opcode()) {
+  case o::read:
+    ::io_uring_prep_read(sqe, req.fd(), req.address(), req.size(), req.pos());
+    break;
+  // ...
+}
+::io_uring_sqe_set_data(sqe, completion);
+_has_pending_submissions = true;
+----
+
+`get_sqe()` 是一个循环：
+----
+io_uring_sqe* sqe = nullptr;
+for (;;) {
+  sqe = io_uring_get_sqe(&_uring);
+  if (sqe) {
+    return sqe;
+  }
+  io_uring_submit(&_uring);
+  for (auto cqe : io_uring_peek_batch_cqe()) {
+    cqe->complete();
+    io_uring_cqe_seen(&_uring, cqe);
+  }
+}
+----
+
+这里有两个需要注意的地方：
+
+. IO 请求都是从 `io_queue` 里面取出来的。而 `io_queue` 是用户态 IO
+  调度器的一部分。显然，这个 IO 调度器并不包含网络 IO。
+. 和 aio 不同，io uring 后端的 `kernel_submit_work()` 除了执行 submit
+  的动作，在 sqe 不够的时候也会执行 `reap_kernel_completions()`。
+
+不过笔者认为，如果 sqe 不够用，那么收割 cqe 有可能是无济于事的。
+除非内核的网络子系统会因为用户取走 cqe 不够快而减缓 sqe 的处理。
+
+既然只有存储子系统的请求会走到这里，那么 Seastar 怎么处理网络上的 IO
+请求呢？
+
+== Seastar 的网络 IO
+
+下面是 Seastar 写入 `output_stream` 流的调用路径：
+
+[ditaa]
+{----
+  /----------------------\      /---------------------------\
+  | reactor::write_all() +----->| reactor::write_all_part() +--------\
+  \----------------------/      \---------------------------/        |
+                                                                     |
+                      /----------------------------\                 |
+  /-------------------|   backend::write_some()    |<----------------/
+  |                   \----------------------------/
+  |      /---------------------------------------------------\
+  \----->| reactor::do_write_some(pollable_fd_state, packet) +-------\
+         \---------------------------------------------------/       |
+                                                                     |
+                        /--------------------------------\           |
+  /---------------------+ file_desc::sendmsg(msg)        |<----------/
+  |                     \--------------------------------/
+  |   /----------------------------\
+  \-->| ::sendmsg(fd, msg, flags)  |
+      \----------------------------/
+----
+
+其中，`reactor::do_write_some()` 的实现类似
+
+[source, c++]
+----
+co_await writeable(fd);
+msghdr mh = {
+  .msg_iov = p.fragment_array(),
+  .msg_iovlen = p.nr_frags(),
+};
+fd.sendmsg(&mh);
+----
+
+所以 `reactor::do_write_some()` 会等到 fd 可以写入的时候，再进行系统调用，确保这个
+`::sendmsg()` 是不阻塞的。
+
+所以这两路 IO 的处理方式很不一样。如果把磁盘 IO 的用户态调度器那一套硬生生套用在网络 IO
+上可能并不合适。因为后者有硬件多队列支持，有能力把 IO 分布在不同的内核上。
+虽然网卡也有存储类似的问题，但是
