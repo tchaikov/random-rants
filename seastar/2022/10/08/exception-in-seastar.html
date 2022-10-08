@@ -245,7 +245,7 @@
               这个操作进行求值。如果在求值过程中抛出异常，那么我们就会走常规流程，比如说所有的变量都会销毁。而最顶层的函数调用因为其参数还没有准备好，所以也无法开始其求值的过程。整个表达式在一个
               <code>exception</code> 前瞬间土崩瓦解。因此上面的
               <code>f()</code> 无法 <strong>返回</strong>
-              <code>seastar::future&lt;&gt;</code> ，而是给调用方抛出一个
+              <code>seastar::future&lt;&gt;</code> ，而是给调用方抛出
               <code>exception</code>。
             </p>
           </div>
