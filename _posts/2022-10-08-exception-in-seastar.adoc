@@ -1,0 +1,89 @@
+= Exception in Seastar
+:page-categories: [seastar]
+:date: 2022-10-08 23:04:03 +0800
+:pp: {plus}{plus}
+
+时机永远很重要。
+
+先来一段代码
+
+[source, c++]
+----
+seastar::future<> fail() {
+  throw std::exception();
+}
+
+seastar::future<> f() {
+  return fail().finally([] {
+    std::cout << "cleaning up\n";
+  });
+}
+----
+
+试问 `finally()` 里面的代码会执行吗？答案是：“不会”。为什么呢？因为按照 C{pp}
+的话说，`fail().finally(...)` 是个表达式。表达式的结构类似:
+[ditaa]
+----
+                        +--------------+
+                        | () func call |
+                        +-------+------+
+                        | lhs   | rhs  |
+                        +----+--+---+--+
+                             |      |
+                 +-----------+      +----------+
+                 |                             |
+                 V                             V
+       +-----------------+              +-------------+
+       | . member access |              | lambda expr |
+       +---------+-------+              +-------------+
+       |   lhs   |  rhs  |
+       +----+----+---+---+
+            |        |
+        +---+        +--------+
+        |                     |
+        V                     V
+  +-------------+         +---------+
+  | () func call|         | finally |
+  +-------------+         +---------+
+  |   operand   |         | id expr |
+  +-----+-------+         +---------+
+        |
+        V
+    +--------+
+    |  fail  |
+    +--------+
+----
+
+表达式的参数在求值之前都会准备好。但是求值的过程有点像深度优先的遍历。
+但是又不完全是，遍历的顺序同时需要遵循 C{pp} 对各类表达式中的子表达式的求值顺序的要求。
+比如说，在 C{pp}17 之后，函数调用表达式中，其左边的参数即函数本身，
+需要在参数之前求值完毕，诸参数的求值顺序则没有要求。当所有参数都备好之后，再对函数调用，
+即 `()` 这个操作进行求值。如果在求值过程中抛出异常，那么我们就会走常规流程，
+比如说所有的变量都会销毁。而最顶层的函数调用因为其参数还没有准备好，
+所以也无法开始其求值的过程。整个表达式在一个 `exception` 前瞬间土崩瓦解。
+因此上面的 `f()` 无法 *返回* `seastar::future<>` ，而是给调用方抛出 `exception`。
+
+再看看下面的代码：
+[source, c++]
+----
+seastar::future<> fail() {
+  throw std::exception();
+}
+
+seastar::future<> f() {
+  return seastar::sleep(1s).then([] {
+    return fail();
+  }).finally([] {
+    std::cout << "cleaning up\n";
+  });
+}
+----
+
+这段代码中的 `finally()` 就会被调用。因为 `then()` 后面的 lambda
+表达式在求值的时抛出的异常会被我们的 continuation 实现捕捉住，
+放到对应的 promise 中，确保它返回的 future 的 `finally()`
+函数调用能对其做出处理。
+
+其实这个 caveat 在 https://docs.seastar.io/master/tutorial.html#exceptions-vs.-exceptional-futures[Seastar 的文档] 里面有专门的章节解释。但是我之前并没有在意。
+
+在此引以为戒。
