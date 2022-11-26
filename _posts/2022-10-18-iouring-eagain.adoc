@@ -1,0 +1,91 @@
+= io_uring 和 EAGAIN
+:page-tags: [io_uring]
+:date: 2022-10-18 20:21:43 +0800
+
+io_uring 的 cqe 到底会不会返回 `EAGAIN`？
+
+== 历史上的 `O_NONBLOCK`
+
+大家都知道 io_uring 是个异步的系统调用接口，它支持广泛的 IO 相关的调用。
+
+说到“异步”，就不得不提阻塞。我们在打开文件的时候，除了给出文件的路径之外，
+还可以指定一堆 flags。如果 flags 包含 `O_NONBLOCK`，文件就会以非阻塞的模式打开。
+
+[quote, open(2)]
+____
+When possible, the file is opened in nonblocking mode.  Neither the open() nor any subsequent I/O operations on the file descriptor which is returned will cause the calling process to wait.
+
+Note that this flag has no effect for regular files and block devices; that is, I/O operations will (briefly) block when device activity is required, regardless of  whether  O_NONBLOCK  is  set.
+____
+
+manpage 说得清楚，普通文件和块设备不支持这个 `O_NONBLOCK`。写了也白写。APUE
+解释了背后的原因：
+
+[quote, APUE 14.2]
+____
+We also said that system calls related to disk I/O are not considered slow, even though the read or write of a disk file can block the caller temporarily.
+____
+
+大概当初设计 UNIX 的大佬们认为文件读写不会 *太* 慢，所以不值得支持 `O_NONBLOCK`。
+不过用排除法可以知道，`O_NONBLOCK` 只支持
+
+* tty 或者 ptty
+* pipe (管道)
+* FIFO (即有名管道)
+* socket
+
+tty 当初是用电话线连接的，所以可能也会很慢。
+所以这些东西会涉及网络，以及一些无法确定的因素，所以有 `O_NONBLOCK` 的用武之地。
+另外，因为 pipe 和 FIFO 不是用 `open()` 调用打开的，所以需要用 `fcntl()` 设置一下。
+
+== No Wait AIO
+
+Linux 4.14 为了支持异步的 direct I/O，已经提供了返回 `EAGAIN` 的支持。见
+https://lwn.net/Articles/722784/[No wait AIO]。 https://man7.org/linux/man-pages/man2/io_submit.2.html[aio] 通过
+`iocb.aio_rw_flags` 的 `RWF_NOWAIT` 标志为应用提供非阻塞的文件或块设备
+的 IO 支持。新的 `preadv2()` 系统调用也通过 flags 参数为非阻塞的 IO 提供支持，
+
+[quote, readv(2)]
+____
+
+RWF_NOWAIT (since Linux 4.14)
+
+Do  not  wait  for  data which is not immediately available.  If this
+flag is specified, the `preadv2()` system call will return instantly if
+it would have to read data from the backing storage or wait for a lock.
+If some data was successfully read, it will return the number of bytes
+read. If no bytes were read, it will return -1 and set errno to `EAGAIN`
+(but see BUGS).  Currently,  this flag is meaningful only for `preadv2()`.
+____
+
+进一步解释一下。以读操作为例，`-EAGAIN` 并不意味着这个读操作会堵塞，而是说如果不等待读操作的话，
+是没有数据可读的。如果读取的是普通文件，那么 `RWF_NOWAIT` 会直接返回 page cache
+里面已经有的数据，如果 page cache 里没有数据的话，就需要再发一个没有 `RWF_NOWAIT`
+标记的读请求，真正的去把数据 *读* 出来。当然也可以采用预读的方式，自己实现读缓存。
+但是对于 io_uring 来说，这种设计就显得没什么必要了，因为如果数据在 page cache
+里的话，cqe 会在 submit sqe 调用返回之前就加入 cq 了。倘若数据不在 page cache 里，
+io_uring 也不会阻塞在发送请求的阶段，相反，它会在后台发起读请求，并异步地阻塞，
+等到数据来了，再发起重试，如果没有别人先把数据读走了的话，这次读操作就会触发
+completion 事件，通知调用方。
+
+== io_uring 什么时候返回 `-EAGAIN`
+
+所以说，不管是文件还是网络，如果使用新的支持 flags 的 API 进行 IO 的话，
+我们都可以进行非阻塞的 IO。刚才解释了，只要我们主动要求 `RWF_NOWAIT`，
+那么就有机会得到 `EAGAIN`。那我们这里先关注 socket。如果 socket 在创建的时候，我们指定了
+`O_NONBLOCK` 那么对它的操作时候是否会返回 `-EAGAIN` 呢？
+先看 https://github.com/torvalds/linux/commit/355afaeb578abac907217c256a844cfafb0337b2[355afaeb]。
+这个 commit 希望确立的行为是：
+
+* `-EAGAIN` 的重试处理，仅仅适用于块设备或者普通文件。如果当前操作的 fd 两个都不是，
+  那么就立即停止重试的流程。换言之，只有块设备或者普通文件才需要重试，
+  因为它们传统上是不允许返回 `-EAGAIN` 的。
+* 如果对 nonblock 文件的 IO 返回了 `-EAGAIN`，则不需要为其设置 poll handler。
+  这种情况就 *应该* 返回 `-EAGAIN`。
+
+第一个行为在 io_uring 后续的修改中加入了更细致的判断，即如果块设备或者普通文件支持前述的
+nowait
+
+在 https://github.com/torvalds/linux/commit/e697deed834de15d2322d0619d51893022c90ea2[e697de]
+中，也贯彻了这个方针。即，“如果 fd 有 `O_NONBLOCK`，那么任何操作没能立即返回数据，
+都应该返回 `-EAGAIN`”。
