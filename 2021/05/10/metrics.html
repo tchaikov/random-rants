@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.4.3
+    Type on Strap jekyll theme v2.4.4
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -96,16 +96,16 @@
     <script type="application/ld+json">
       {
         "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "成年人还是得做选择。",
+        "url": "https://blog.k3fu.xyz/2021/05/10/metrics.html",
+        "@type": "BlogPosting",
         "headline": "ceph::common::PerfCounter 和 seastar::metrics",
         "dateModified": "2021-05-10T00:00:00+00:00",
         "datePublished": "2021-05-10T00:00:00+00:00",
-        "description": "成年人还是得做选择。",
-        "url": "https://blog.k3fu.xyz/2021/05/10/metrics.html",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/2021/05/10/metrics.html"
         },
-        "@type": "BlogPosting",
         "@context": "https://schema.org"
       }
     </script>
@@ -300,7 +300,7 @@
                     ><code data-lang="c++"><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="p">&gt;</span>
 <span class="n">instance</span> <span class="nf">operator</span><span class="p">()(</span><span class="n">T</span> <span class="n">value</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
     <span class="k">return</span> <span class="n">label_instance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">value</span><span class="p">));</span>
-<span class="err">}</span></code></pre>
+<span class="p">}</span></code></pre>
                   </div>
                 </div>
                 <div class="paragraph">

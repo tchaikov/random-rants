@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Type on Strap jekyll theme v2.4.3
+    Type on Strap jekyll theme v2.4.4
     Theme free for personal and commercial use under the MIT license
     https://github.com/sylhare/Type-on-Strap/blob/master/LICENSE
 -->
@@ -88,16 +88,16 @@
     <script type="application/ld+json">
       {
         "author": { "@type": "Person", "name": "Kefu Chai" },
+        "description": "工具链",
+        "url": "https://blog.k3fu.xyz/2020/09/05/my-blog.html",
+        "@type": "BlogPosting",
         "headline": "博客维护指南",
         "dateModified": "2020-09-05T00:00:00+00:00",
         "datePublished": "2020-09-05T00:00:00+00:00",
-        "description": "工具链",
-        "url": "https://blog.k3fu.xyz/2020/09/05/my-blog.html",
         "mainEntityOfPage": {
           "@type": "WebPage",
           "@id": "https://blog.k3fu.xyz/2020/09/05/my-blog.html"
         },
-        "@type": "BlogPosting",
         "@context": "https://schema.org"
       }
     </script>
@@ -512,7 +512,9 @@
                 <div class="content">
                   <pre
                     class="rouge highlight"
-                  ><code data-lang="shell">bundle <span class="nb">install</span></code></pre>
+                  ><code data-lang="shell"><span class="nb">sudo </span>aptitude <span class="nb">install </span>ruby-bundler
+bundle config mirror.https://rubygems.org https://mirrors.tuna.tsinghua.edu.cn/rubygems/
+bundle <span class="nb">install</span></code></pre>
                 </div>
               </div>
               <div class="paragraph">
