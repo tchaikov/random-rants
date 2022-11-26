@@ -1,0 +1,278 @@
+= 可以取消的协程
+:page-tags: [seastar]
+:date: 2022-11-01 23:22:45 +0800
+:pp: {plus}{plus}
+
+如果要中止一个协程该做些什么？
+
+== with_timeout()
+
+让我们看看这个程序
+
+[source, c++]
+----
+future<> dd(socket in, socket out) {
+  while (!in.eof()) {
+    auto buffer = co_await in.read();
+    co_await out.write(std::move(buffer));
+  }
+}
+----
+
+如果 `in` 和 `out` 都很慢，我们希望加上超时中断的设计呢？熟悉 Seastar
+的朋友可能会给出下面的方案：
+
+[source, c++]
+----
+auto do_dd = with_timeout(clock::now() + 10s, dd(in, out));
+----
+
+但是这个设计其实并不能真正 *取消* 正在进行的 I/O 操作，
+它所做的只是加上定时器，在超时的时候直接设置 `timeout` 的 exception，
+如果 `dd()` 在超时之前完成，则取消定时器。但是如果在超时的那个时刻 `dd()`
+没有完成， `dd()` 会继续运行，直到它返回。这时，它对应的 future 会被显式地忽略。
+简而言之， `dd()` 仍然会完成。只不过如果它超时的话，我们就不再关心它的结果了。
+
+理想情况下，我们应该
+
+* 及时地取消当前的 I/O，
+* 或者中断正在等待的子协程
+* 如果程序正在顺利推进，那么在下一个 `co_await` 的地方应该直接返回 `timeout` exception
+* 甚至在同步操作的时候也可以允许程序主动检查协程是否被取消了
+
+对于最后一点的目标是让程序在执行某些重要的操作之前，有机会及时止损。举个例子
+
+[source, c++]
+----
+future<> process_in_batch(unsigned batch_size) {
+  while (batch_size--) {
+    auto resource = alloc_precious_resource();
+    co_await process_with_resource(std::move(resource));
+  }
+}
+----
+
+如果程序能及时终止，那么可能是这样
+[source, c++]
+----
+future<> process_in_batch(unsigned batch_size) {
+  while (batch_size--) {
+    if (cancelled()) {
+      co_return;
+    }
+    auto resource = alloc_precious_resource();
+    co_await process_with_resource(std::move(resource));
+  }
+}
+----
+
+这对于一些同步处理比较多，而且需要及时终止的场景很有用。
+
+回到刚才 `dd` 的例子。如果我们加上设想中的 cancellation 支持，
+代码可能会变成这样：
+
+[source, c++]
+----
+template<class Clock, typename T>
+future<T> with_timeout(const std::chrono::time_point<Clock, typename Clock::duration>& duration,
+                       future<T>&& f) {
+  cancellation_source cs;
+  timer<std::chrono::
+  return when_all(with_cancellation(cs.token(), dd(in, out)),
+                  [duration, &cs] -> future<> {
+                    co_await sleep(duration);
+                    cs.request_cancellation();
+                  });
+};
+----
+
+这里我们定义了一个定时器，让它到时候记得调用 `cs.request_cancellation()` ，
+通知 `with_cancellation()` 启动的协程，让它知道自己被取消了，从而触发取消的流程。
+其中， `with_cancellation` 需要可以定制，因为每个协程各自取消自己的方式可能都不一样。
+所以它很可能是个 CPO，允许所有支持 cancel 操作的协程自定义取消执行的处理方式。
+同时，我们需要把 `token` 保存在协程里面，并且需要让协程的状态机在往前推进的时候，
+把这个 `token` 传给下个子协程，这样才能实现前面提出的三个要求。
+
+[source, c++]
+----
+friend cancellable_future<T> with_cancellation(cancellation_token token,
+                                               future<T>&& fut) {
+  fut._promise->set_cancel_token(std::move(token));
+  return std::move(fut);
+}
+----
+
+因此上面的三个问题更具体了：
+
+. 允许 `cancellation_source` 把 `timeout` exception 埋在某个地方。
+. 在 `co_await` 时检查 `token` 的状态。如果 `token` 里面有个 exception，就把它挖出来，
+  把它抛给协程的调用方。
+. 在 `co_await` 恢复执行时，把 `token` 传给下一个协程。
+
+第一个问题要求 `cancellation_source` 和它产生的 `cancellation_token` 共享相同的状态。
+我们暂且称之为 `cancellation_state` 吧。这个 `cancellation_state` 必须在堆上分配，
+让 `cancellation_source` 持有它的引用。这样，一旦 `cancellation_source`
+发出取消的请求，所有订阅这个消息的协程都能知道这个消息，并及时处理。这个实现并不复杂，
+这里不再赘述。难点可能是怎么样把 `token` 往下传递。我们需要在 `co_await` 上做文章，
+而且每个 `co_await` 的行为我们都需要加入这样的操作和检查。
+
+在The Old New Thing 的 https://devblogs.microsoft.com/oldnewthing/20210428-00/?p=105160[C++ coroutines: Snooping in on the coroutine body]
+里提到：
+
+[quote, Raymond Chen, C++ coroutines: Snooping in on the coroutine body]
+____
+A coroutine promise can snoop on the coroutine body by implementing a method named `await_transform`.
+Any time the coroutine body performs a `co_await`, the thing being awaited is passed through the `await_transform`
+method, and whatever await_transform returns is the thing that is _actually_ awaited.
+____
+
+博客的作者 Raymond 甚至在 https://devblogs.microsoft.com/oldnewthing/20200722-00/?p=103997[How to get your C++/WinRT asynchronous operations to respond more quickly to cancellation]
+直接说明了
+
+[quote, Raymond Chen, C++ coroutines: Snooping in on the coroutine body]
+____
+This is the magic behind secret signals like https://devblogs.microsoft.com/oldnewthing/20200722-00/?p=103997[co_await get_cancellation_token()].
+____
+
+== await_transform
+
+我们看看 `await_transform` 到底是何方神圣。 笔者把 https://en.cppreference.com/w/cpp/language/coroutines[cppreference.com 的解释] 复述如下：
+
+[quote]
+____
+*co_await* _expr_
+
+`co_await` 是个操作符。我们需要把它的参数转换成 awaitable 来完成这个操作符的功能。
+C{pp} 标准提供了两种办法：
+
+* 如果 _expr_ 实现了 `operator co_await` 。
+  那么 `operator co_await()` 返回的 awaitable 的行为决定了这里 `co_await` 的行为。
+  可以把 `co_await` 实现成 `expr` 类型的成员函数，也可以作为全局的 free function。
+  这有些像 `operator==()` 。
+* 如果当前 coroutine 的 `promise_type` 实现了 `await_transform()` 的成员函数。
+  那么接下来就会调用 `await_transform()` ，并使用其返回值来完成 `co_await` 。
+____
+
+
+Seastar 使用的是第一种办法。它定义了 free function `operator co_await(future<T>)`。
+这个函数返回的是 `seastar::internal::awaiter` 。这个类是个胶水类，提供了对 `seastar::future<>`
+很薄的包装。所以 Seastar 中所有的 `co_await` 调用都会产生一个
+`seastar::internal::awaiter` 实例。后者定义了这个子协程的行为。
+
+而另外一种就是 Raymond 介绍的 `await_transform()` 的做法。
+ https://github.com/microsoft/cppwinrt[cppwinrt] 这样定义 `winrt::impl::promise_base`
+ 的 `await_transform()` ：
+[source, c++]
+----
+template <typename Expression>
+Expression&& await_transform(Expression&& expression)
+{
+  if (Status() == AsyncStatus::Canceled) {
+    throw winrt::hresult_canceled();
+  }
+  if constexpr (std::is_convertible_v<std::remove_reference_t<decltype(expression)>&, enable_await_cancellation&>) {
+    if (m_propagate_cancellation) {
+      static_cast<enable_await_cancellation&>(expression).set_cancellable_promise(&m_cancellable);
+      expression.enable_cancellation(&m_cancellable);
+    }
+  }
+  return std::forward<Expression>(expression);
+}
+----
+
+这样实现的好处是，
+
+* 如果调用方协程已经被取消了，那么立即终止
+* 如果被调用的协程声明自己支持取消的操作，同时调用方协程也允许把取消事件向下传播，
+  就把 `m_cancellable` 传下去。
+
+什么叫 “传下去”呢？
+
+[source, c++]
+----
+struct enable_await_cancellation {
+  // ...
+  ~enable_await_cancellation() {
+    if (m_promise) {
+      m_promise->revoke_canceller();
+    }
+  }
+  void set_cancellable_promise(cancellable_promise* promise) noexcept {
+    m_promise = promise;
+  }
+  private:
+    cancellable_promise* m_promise = nullptr;
+};
+
+template <typename Async>
+struct await_adapter : enable_await_cancellation {
+  // ...
+  void enable_cancellation(cancellable_promise* promise) {
+    promise->set_canceller([](void* parameter) {
+      cancel_asynchronously(reinterpret_cast<await_adapter*>(parameter)->async);
+    }, this);
+  }
+};
+----
+
+所以说在 “往下传” 的时候，`expression` 和 `cancellable_promise` 之间建立了双向的联系
+
+* `expression` 保存了 `cancellable_promise` 的引用。在它析构的时候，把 cancel 作废。
+* `cancellable_promise`也保存了个 lambda（事实上为了性能考虑，是个函数指针，及其参数），
+  在触发的时候执行 `set_canceller()` 指定的操作，调用 `await_adapter` 适配的操作
+  所定义的 `Cancel()` 。因为 `await_adapter` 事实上也是底层异步操作的包装。
+
+但是问题在于这两种转换的方式是互斥的。因为 Seastar 里 `co_await` 的参数常常是
+`seastar::future<>` ，为了在 `co_await` 的时候往这些 future 里面塞一点东西，
+我们就只能用 `await_transform()` 了。我们需要让 `await_transform()` 完成两个功能：
+
+. 因为 `future<>` 不是个 awaitable，需要能把 `seastar::future<>` 转换成 `internal::awaiter`
+. 根据当前 promise 的状态，为 `cancellable_promise` 或者 `cancellation_token`
+  和 `promise` 建立类似的双向联系。
+
+另外，补充一些背景知识。Seastar 通过为自己的 `seastar::future<>` 偏特化 `std::coroutine_traits` ，告诉编译器和标准库，
+“如果碰到 `seastar::future<>` ，那么偏特化模板里面的 `promise_type` 就是返回
+`seastar::future<>` 的协程所使用的 `promise_type` ”。如果我们希望继续定制 Seastar
+协程的行为，就应该从 `seastar:::internal::coroutine_traits_base::promise_type` 入手。
+
+
+所以我们也可以仿效，
+
+[source, c++]
+----
+template <typename T>
+class future {
+public:
+  void cancel() noexcept {
+    _state.set_cancelled();
+    _cancellation.cancel();
+  }
+  void enable_cancellation_propagation() {
+    _propagate_cancellation = true;
+  }
+};
+
+template <typename T = void>
+class coroutine_traits_base {
+public:
+  class promise_type final : public seastar::task {
+    seastar::promise<T> _promise;
+  public:
+    template<typename Expression>
+    auto await_transform(Expression&& expr) noexcept {
+      if (_promise.cancellation_requested()) {
+        throw cancelled_error();
+      }
+      if constexpr (Cancellable<Expression>) {
+        if (_promise.propagate_cancellation()) {
+          _promise.on_cancelled([&expr] {
+            expr.cancel();
+          });
+          expr.set_cancellation(_promise.get_cancellation());
+        }
+      }
+      return internal::awaiter<true, T>(std::move(expr));
+    }
+  };
+};
+----
