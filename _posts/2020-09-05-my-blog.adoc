@@ -118,9 +118,9 @@ mathjax_autoNumber: false
 
 [source,shell]
 ----
+sudo aptitude install ruby-bundler
+bundle config mirror.https://rubygems.org https://mirrors.tuna.tsinghua.edu.cn/rubygems/
 bundle install
 ----
 
 就行了。
-
-
