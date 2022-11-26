@@ -218,7 +218,7 @@ struct await_adapter : enable_await_cancellation {
 所以说在 “往下传” 的时候，`expression` 和 `cancellable_promise` 之间建立了双向的联系
 
 * `expression` 保存了 `cancellable_promise` 的引用。在它析构的时候，把 cancel 作废。
-* `cancellable_promise`也保存了个 lambda（事实上为了性能考虑，是个函数指针，及其参数），
+* `cancellable_promise` 也保存了个 lambda（事实上为了性能考虑，是个函数指针，及其参数），
   在触发的时候执行 `set_canceller()` 指定的操作，调用 `await_adapter` 适配的操作
   所定义的 `Cancel()` 。因为 `await_adapter` 事实上也是底层异步操作的包装。
 
@@ -226,7 +226,7 @@ struct await_adapter : enable_await_cancellation {
 `seastar::future<>` ，为了在 `co_await` 的时候往这些 future 里面塞一点东西，
 我们就只能用 `await_transform()` 了。我们需要让 `await_transform()` 完成两个功能：
 
-. 因为 `future<>` 不是个 awaitable，需要能把 `seastar::future<>` 转换成 `internal::awaiter`
+. 因为 `future<>` 不是 awaitable，需要把 `seastar::future<>` 转换成某种 awaiter
 . 根据当前 promise 的状态，为 `cancellable_promise` 或者 `cancellation_token`
   和 `promise` 建立类似的双向联系。
 
@@ -258,6 +258,9 @@ public:
   class promise_type final : public seastar::task {
     seastar::promise<T> _promise;
   public:
+    seastar::future<T> get_return_object() noexcept {
+      return _promise.get_future();
+    }
     template<typename Expression>
     auto await_transform(Expression&& expr) noexcept {
       if (_promise.cancellation_requested()) {
