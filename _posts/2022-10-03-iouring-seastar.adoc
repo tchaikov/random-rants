@@ -1,4 +1,5 @@
 = io_uring + Seastar
+:page-categories: [seastar]
 :page-tags: [io_uring,seastar]
 :date: 2022-10-03 15:27:43 +0800
 :toc: macro
