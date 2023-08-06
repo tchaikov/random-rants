@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-08-06T07:03:35+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">maybe_yield_awaiter</title><link href="https://blog.k3fu.xyz/2023/07/26/maybe-yield.html" rel="alternate" type="text/html" title="maybe_yield_awaiter" /><published>2023-07-26T00:00:00+00:00</published><updated>2023-07-26T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2023/07/26/maybe-yield</id><content type="html" xml:base="https://blog.k3fu.xyz/2023/07/26/maybe-yield.html">&lt;div id=&quot;preamble&quot;&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en"><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://blog.k3fu.xyz/feed.xml" rel="self" type="application/atom+xml" /><link href="https://blog.k3fu.xyz/" rel="alternate" type="text/html" hreflang="en" /><updated>2023-08-06T07:19:23+00:00</updated><id>https://blog.k3fu.xyz/feed.xml</id><title type="html">some random rants</title><subtitle>我的学习记录</subtitle><author><name>Kefu Chai</name><email>tchaikov@gmail.com</email></author><entry><title type="html">maybe_yield_awaiter</title><link href="https://blog.k3fu.xyz/2023/07/26/maybe-yield.html" rel="alternate" type="text/html" title="maybe_yield_awaiter" /><published>2023-07-26T00:00:00+00:00</published><updated>2023-07-26T00:00:00+00:00</updated><id>https://blog.k3fu.xyz/2023/07/26/maybe-yield</id><content type="html" xml:base="https://blog.k3fu.xyz/2023/07/26/maybe-yield.html">&lt;div id=&quot;preamble&quot;&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;说说 awaiter 的生命周期，和最近一位同事发现的 &lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 的 bug。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;Seastar 中的协程可以用 &lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 中途把 CPU 出让给 (yield)
-别人。一个协程如果流程很长，而且它运气也很好，没有被打断的话，那么就会长时间地占用 CPU，导致这个核上的其他任务被饿死。我们知道，协程之所有叫做“协”程，就是因为协程和协程大家都是谦谦君子，互相礼让，这样才能有比较好的响应和延迟。&lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 被用来检查当前是不是有正在亟待处理的事件。如果有的话，它就会抢占当前的协程，把它手里的 CPU 借用一会儿，把急事完成了，再把 CPU 还回来。&lt;/p&gt;
+&lt;p&gt;一个协程如果流程很长，而且它运气也很好，没有被打断的话，那么就会长时间地占用 CPU，导致这个核上的其他任务被饿死 (starve)。我们知道，协程之所有叫做“协”程，就是因为协程和协程大家都是谦谦君子，互相礼让协作，这样才能有比较好的响应和延迟。Seastar 中的协程用 &lt;code&gt;maybe_yield_awaiter()&lt;/code&gt;
+中途把 CPU 出让给 (yield) 别人，这个函数会检查当前是不是有正在亟待处理的事件。如果有的话，它就会抢占当前的协程，把它手里的 CPU 借用一会儿，把急事完成了，再把 CPU 还回来。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
 &lt;p&gt;比如说，如果协程有个很大的循环，处理上万个元素，那么我们很可能会在循环里面插上几个&lt;/p&gt;
@@ -16,7 +16,7 @@
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;让这个协程也能照顾一下其他人的需要，避免产生饥饿 (starve) 的情况，导致 reactor 出现 stall 告警。&lt;/p&gt;
+&lt;p&gt;让这个协程也能照顾一下其他人的需要，避免导致 reactor 出现 stall 告警。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -33,8 +33,8 @@ C&amp;#43;&amp;#43; 中的 &lt;code&gt;co_await&lt;/code&gt; 是个操作符，�
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;中的 &lt;code&gt;expr&lt;/code&gt; 需要根据具体情况转换成 awaitable，这样 &lt;code&gt;co_await&lt;/code&gt;
-才能知道下一步是&lt;span class=&quot;line-through&quot;&gt;走还是留&lt;/span&gt;继续还是歇会儿再来。在这里，
+&lt;p&gt;中的 &lt;code&gt;expr&lt;/code&gt; 需要根据具体情况通过不同方式转换成 awaitable，这样 &lt;code&gt;co_await&lt;/code&gt;
+才能知道下一步是 &lt;del&gt;走还是留&lt;/del&gt; 继续还是歇会儿再来。在这里，
 &lt;code&gt;maybe_yield()&lt;/code&gt; 构造一个 &lt;code&gt;maybe_yield&lt;/code&gt; 的 awaitable 对象，它的 &lt;code&gt;co_await&lt;/code&gt;
 操作符的实现的返回值是个 prvalue。所以按照
 &lt;a href=&quot;https://en.cppreference.com/w/cpp/language/coroutines#co_await&quot;&gt;cppreference&lt;/a&gt;
@@ -42,7 +42,7 @@ C&amp;#43;&amp;#43; 中的 &lt;code&gt;co_await&lt;/code&gt; 是个操作符，�
 &lt;a href=&quot;https://en.cppreference.com/w/cpp/language/implicit_conversion#Temporary_materialization&quot;&gt;materialized&lt;/a&gt; 之后的临时对象。&lt;/p&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;不管怎么样，我们找到了 awaitable 的最终所在：故事的主角 &lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 。这个临时对象和调用者协程定义的其他局部变量一样，存活在栈上。具体说，存活在 coroutine
+&lt;p&gt;不管怎么样，我们找到了 awaitable 的最终所在：故事的主角 &lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 。这个临时对象和调用者协程定义的其他局部变量一样，存活在栈上。具体说，是存活在 coroutine
 frame 上，在 &lt;code&gt;maybe_yield_awaiter::await_ready()&lt;/code&gt; 告诉 coroutine runtime 它要暂停运行之后，
 &lt;code&gt;maybe_yield_awaiter::await_suspend()&lt;/code&gt; 把自己直接挂到任务队列上去，要求被调度恢复执行。&lt;/p&gt;
 &lt;/div&gt;
@@ -102,7 +102,7 @@ task 不能立即返回的话，它会被当成参数传给 &lt;code&gt;::seasta
 &lt;/div&gt;
 &lt;div class=&quot;imageblock&quot;&gt;
 &lt;div class=&quot;content&quot;&gt;
-&lt;img src=&quot;/images/diag-3f2ac577e2ce911434c66496c3d3270e.png&quot; alt=&quot;Diagram&quot; width=&quot;520&quot; height=&quot;238&quot;&gt;
+&lt;img src=&quot;/images/diag-e9832d6d09e5bc54bb29cb2ed28c0101.png&quot; alt=&quot;Diagram&quot; width=&quot;540&quot; height=&quot;238&quot;&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
@@ -132,11 +132,11 @@ backtrace 的支持是必不可少的。&lt;/p&gt;
 &lt;h2 id=&quot;问题分析&quot;&gt;问题分析&lt;/h2&gt;
 &lt;div class=&quot;sectionbody&quot;&gt;
 &lt;div class=&quot;paragraph&quot;&gt;
-&lt;p&gt;在普通的程序调用中，有压栈就要有退栈。协程也是一样的，在调用子协程的时候，
+&lt;p&gt;在普通的程序调用中，有压栈就要有退栈。协程也是一样的，子协程需要把自己的 &lt;code&gt;waiting_task&lt;/code&gt; 设置成父协程的 task 指针。而在调用子协程的时候，
 &lt;code&gt;schedule(this)&lt;/code&gt; 会把自己作为 task 挂到执行队列上去，当调度器执行 task 的时候，把 &lt;code&gt;_current_task&lt;/code&gt; 设置成指向这个 &lt;code&gt;task&lt;/code&gt; 指针。结合该 task 的 &lt;code&gt;waiting_task()&lt;/code&gt;
 方法，就能一层一层地回到最外层的调用者。当子协程退出的时候，它就需要把
-&lt;code&gt;_current_task&lt;/code&gt; 改回来，设置成调用者的 task ，即 &lt;code&gt;main_coroutine_task&lt;/code&gt; 。因为 &lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 和 C&amp;#43;&amp;#43;20 之前的 Seastar 的协程不一样，它不是通过把一系列表达式串联起来形成的程序执行流程，而是借助 C&amp;#43;&amp;#43;
-编译器、标准库和用户实现的 awaiter 完成的。前者在前序 future 完成之后，后面的 future 在调度时，会执行 &lt;code&gt;schedule()&lt;/code&gt; 的动作，这样可以确保 &lt;code&gt;_current_task&lt;/code&gt; 一直指向的是最新的 task。但是后者如果通过
+&lt;code&gt;_current_task&lt;/code&gt; 改回来，设置成调用者的 task ，即 &lt;code&gt;main_coroutine_task&lt;/code&gt; 。因为 &lt;code&gt;maybe_yield_awaiter&lt;/code&gt; 和 C&amp;#43;&amp;#43;20 coroutine 之前的 Seastar 的协程不一样，它不是通过把一系列表达式串联起来形成的程序执行流程，而是借助 C&amp;#43;&amp;#43;
+编译器、标准库和用户实现的 awaiter 完成的。基于 future-promise 的协程 中，在前序 future 完成之后，后面的 future 在调度时，会执行 &lt;code&gt;schedule()&lt;/code&gt; 的动作，这样可以确保 &lt;code&gt;_current_task&lt;/code&gt; 一直指向的是最新的 task。但是后者如果通过
 awaiter 来实现子协程的话，而且子协程又是以 &lt;code&gt;task&lt;/code&gt; 的形式被调用的话，那么在子协程准备回到父协程的时候，就需要把当时调用自己时
 &lt;code&gt;schedule(this)&lt;/code&gt; 产生的副作用消除掉，即如前所述&lt;/p&gt;
 &lt;/div&gt;

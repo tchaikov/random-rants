@@ -127,7 +127,7 @@
     <meta name="twitter:title" content="maybe_yield_awaiter" />
     <meta
       name="twitter:description"
-      content="说说 awaiter 的生命周期，和最近一位同事发现的 maybe_yield_awaiter 的 bug。Seastar 中的协程可以用 maybe_yield_awaiter 中途把 CPU 出让给 (yield)别人。一个协程如果流程很长，而且它运气也很好，没有被打断的话，那么就会长时间地占用 CPU，导致..."
+      content="说说 awaiter 的生命周期，和最近一位同事发现的 maybe_yield_awaiter 的 bug。一个协程如果流程很长，而且它运气也很好，没有被打断的话，那么就会长时间地占用 CPU，导致这个核上的其他任务被饿死 (starve)。我们知道，协程之所有叫做“协”程，就是因为协程和协程大家都是谦谦君子，互..."
     />
 
     <meta name="twitter:card" content="summary" />
@@ -209,13 +209,12 @@
               </div>
               <div class="paragraph">
                 <p>
-                  Seastar 中的协程可以用 <code>maybe_yield_awaiter</code> 中途把
-                  CPU 出让给 (yield)
-                  别人。一个协程如果流程很长，而且它运气也很好，没有被打断的话，那么就会长时间地占用
-                  CPU，导致这个核上的其他任务被饿死。我们知道，协程之所有叫做“协”程，就是因为协程和协程大家都是谦谦君子，互相礼让，这样才能有比较好的响应和延迟。<code
-                    >maybe_yield_awaiter</code
-                  >
-                  被用来检查当前是不是有正在亟待处理的事件。如果有的话，它就会抢占当前的协程，把它手里的
+                  一个协程如果流程很长，而且它运气也很好，没有被打断的话，那么就会长时间地占用
+                  CPU，导致这个核上的其他任务被饿死
+                  (starve)。我们知道，协程之所有叫做“协”程，就是因为协程和协程大家都是谦谦君子，互相礼让协作，这样才能有比较好的响应和延迟。Seastar
+                  中的协程用 <code>maybe_yield_awaiter()</code> 中途把 CPU
+                  出让给 (yield)
+                  别人，这个函数会检查当前是不是有正在亟待处理的事件。如果有的话，它就会抢占当前的协程，把它手里的
                   CPU 借用一会儿，把急事完成了，再把 CPU 还回来。
                 </p>
               </div>
@@ -233,8 +232,8 @@
               </div>
               <div class="paragraph">
                 <p>
-                  让这个协程也能照顾一下其他人的需要，避免产生饥饿 (starve)
-                  的情况，导致 reactor 出现 stall 告警。
+                  让这个协程也能照顾一下其他人的需要，避免导致 reactor 出现
+                  stall 告警。
                 </p>
               </div>
             </div>
@@ -262,11 +261,9 @@
               </div>
               <div class="paragraph">
                 <p>
-                  中的 <code>expr</code> 需要根据具体情况转换成 awaitable，这样
-                  <code>co_await</code> 才能知道下一步是<span
-                    class="line-through"
-                    >走还是留</span
-                  >继续还是歇会儿再来。在这里，
+                  中的 <code>expr</code> 需要根据具体情况通过不同方式转换成
+                  awaitable，这样 <code>co_await</code> 才能知道下一步是
+                  <del>走还是留</del> 继续还是歇会儿再来。在这里，
                   <code>maybe_yield()</code> 构造一个
                   <code>maybe_yield</code> 的 awaitable 对象，它的
                   <code>co_await</code>
@@ -287,7 +284,7 @@
                 <p>
                   不管怎么样，我们找到了 awaitable 的最终所在：故事的主角
                   <code>maybe_yield_awaiter</code>
-                  。这个临时对象和调用者协程定义的其他局部变量一样，存活在栈上。具体说，存活在
+                  。这个临时对象和调用者协程定义的其他局部变量一样，存活在栈上。具体说，是存活在
                   coroutine frame 上，在
                   <code>maybe_yield_awaiter::await_ready()</code> 告诉 coroutine
                   runtime 它要暂停运行之后，
@@ -398,9 +395,9 @@
               <div class="imageblock">
                 <div class="content">
                   <img
-                    src="/images/diag-3f2ac577e2ce911434c66496c3d3270e.png"
+                    src="/images/diag-e9832d6d09e5bc54bb29cb2ed28c0101.png"
                     alt="Diagram"
-                    width="520"
+                    width="540"
                     height="238"
                   />
                 </div>
@@ -443,7 +440,9 @@
             <div class="sectionbody">
               <div class="paragraph">
                 <p>
-                  在普通的程序调用中，有压栈就要有退栈。协程也是一样的，在调用子协程的时候，
+                  在普通的程序调用中，有压栈就要有退栈。协程也是一样的，子协程需要把自己的
+                  <code>waiting_task</code> 设置成父协程的 task
+                  指针。而在调用子协程的时候，
                   <code>schedule(this)</code> 会把自己作为 task
                   挂到执行队列上去，当调度器执行 task 的时候，把
                   <code>_current_task</code> 设置成指向这个
@@ -452,12 +451,13 @@
                   方法，就能一层一层地回到最外层的调用者。当子协程退出的时候，它就需要把
                   <code>_current_task</code> 改回来，设置成调用者的 task ，即
                   <code>main_coroutine_task</code> 。因为
-                  <code>maybe_yield_awaiter</code> 和 C&#43;&#43;20 之前的
-                  Seastar
+                  <code>maybe_yield_awaiter</code> 和 C&#43;&#43;20 coroutine
+                  之前的 Seastar
                   的协程不一样，它不是通过把一系列表达式串联起来形成的程序执行流程，而是借助
-                  C&#43;&#43; 编译器、标准库和用户实现的 awaiter
-                  完成的。前者在前序 future 完成之后，后面的 future
-                  在调度时，会执行 <code>schedule()</code> 的动作，这样可以确保
+                  C&#43;&#43; 编译器、标准库和用户实现的 awaiter 完成的。基于
+                  future-promise 的协程 中，在前序 future 完成之后，后面的
+                  future 在调度时，会执行
+                  <code>schedule()</code> 的动作，这样可以确保
                   <code>_current_task</code> 一直指向的是最新的
                   task。但是后者如果通过 awaiter
                   来实现子协程的话，而且子协程又是以
